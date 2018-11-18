@@ -30,7 +30,7 @@ setup serial interface software in driver and let the transfer begin */
 */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package machine;

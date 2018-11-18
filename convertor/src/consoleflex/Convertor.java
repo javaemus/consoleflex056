@@ -30,7 +30,7 @@ import java.util.Calendar;
  */
 public class Convertor {
 
-    static final String mameversion = "0.37b7";
+    static final String mameversion = "0.56";
     static final String convertorversion="0.01";
     static FileInputStream fInput; //input 
     static FileOutputStream fOutput;//output streams
@@ -108,7 +108,7 @@ public class Convertor {
                     
                     if(destpath.indexOf('\\')==-1)//if it's parent dir just place them into mame subdir
                     {
-                        destpath= destpath+"\\mame";
+                        destpath= destpath+"\\mess";
                     }
                     packageName = destpath.replace("\\", ".");
                     packageName = packageName.replace("java_code.", "");
@@ -174,7 +174,7 @@ public class Convertor {
 
             if(destpath.indexOf('\\')==-1)//if it's parent dir just place them into mame subdir
             {
-                destpath= destpath+"\\mame";
+                destpath= destpath+"\\mess";
             }
             packageName = destpath.replace("\\", ".");
             packageName = packageName.replace("java_code.", "");

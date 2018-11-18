@@ -160,7 +160,7 @@ unsigned g65816_dasm(char *buffer, unsigned pc);
 
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package cpu.g65816;

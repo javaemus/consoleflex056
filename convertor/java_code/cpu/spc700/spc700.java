@@ -64,7 +64,7 @@ spctodo says sleep and standby modes cannot be used.
 /* ======================================================================== */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package cpu.spc700;

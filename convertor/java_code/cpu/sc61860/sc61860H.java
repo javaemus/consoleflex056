@@ -34,7 +34,7 @@
    64 kb external ram (first 8kbyte not seen for program execution?) */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package cpu.sc61860;

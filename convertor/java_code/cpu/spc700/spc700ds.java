@@ -17,7 +17,7 @@ author (Karl Stenerud) at karl@higashiyama-unet.ocn.ne.jp.
 
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package cpu.spc700;

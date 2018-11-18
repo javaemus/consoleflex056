@@ -23,7 +23,7 @@ Hardware:	PIA6820 DSP for keyboard and screen interface
 		d013	DISPLAY CTR	Bit 7 low signals display ready
 **********************************************************************/
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package systems;

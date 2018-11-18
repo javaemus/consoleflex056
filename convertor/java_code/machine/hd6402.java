@@ -2,7 +2,7 @@
 /* not optimised! */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package machine;

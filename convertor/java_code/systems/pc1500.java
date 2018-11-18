@@ -25,7 +25,7 @@ lh5811 53zd sharp
 */
 /* with this one you include nearly all necessary structure definitions */
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package systems;

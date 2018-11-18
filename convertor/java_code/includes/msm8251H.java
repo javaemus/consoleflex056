@@ -2,7 +2,7 @@
 #define __MSM8251_HEADER_INCLUDED__
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package includes;

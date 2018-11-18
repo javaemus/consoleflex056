@@ -9,7 +9,7 @@ static void MessColumnDecodeString(const char* str, void* data);
 static void MessColumnDecodeWidths(const char* str, void* data);
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package windowsui;

@@ -12,7 +12,7 @@
  registers and some words of description in the c128 user guide */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package vidhrdw;

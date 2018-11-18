@@ -4,7 +4,7 @@
   provides a centronics printer simulation (sends output to IO_PRINTER)
 */
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package machine;

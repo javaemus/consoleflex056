@@ -294,7 +294,7 @@ U102 23256 (read compatible 27256?) 32kB 1571 system rom
 */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package systems;

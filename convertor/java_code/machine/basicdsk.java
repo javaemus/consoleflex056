@@ -5,7 +5,7 @@ the data will be accessed correctly */
 
 /* THIS DISK IMAGE CODE USED TO BE PART OF THE WD179X EMULATION, EXTRACTED INTO THIS FILE */
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package machine;

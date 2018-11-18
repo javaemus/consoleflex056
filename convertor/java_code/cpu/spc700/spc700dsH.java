@@ -22,7 +22,7 @@ int spc700_disassemble(char* buff, unsigned int pc);
 unsigned int spc700_read_8_disassembler(unsigned int address);
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package cpu.spc700;

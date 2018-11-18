@@ -2,7 +2,7 @@
 /* DISK IMAGE FORMAT WHICH USED TO BE PART OF WD179X - NOW SEPERATED */
 
 /*
- * ported to v0.37b7
+ * ported to v0.56
  * using automatic conversion tool v0.01
  */ 
 package includes;
