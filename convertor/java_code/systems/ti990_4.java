@@ -25,8 +25,6 @@ package systems;
 public class ti990_4
 {
 	
-	static int ROM_paged;
-	
 	void *timer;
 	
 	static void clear_load(int dummy)
@@ -94,17 +92,17 @@ public class ti990_4
 	
 	*/
 	
-	public static ReadHandlerPtr ti990_4_panel_read  = new ReadHandlerPtr() { public int handler(int offset)
+	static READ16_HANDLER ( ti990_4_panel_read )
 	{
 		if (offset == 1)
 			return 0x08;
 	
 		return 0;
-	} };
+	}
 	
-	public static WriteHandlerPtr ti990_4_panel_write = new WriteHandlerPtr() {public void handler(int offset, int data)
+	static WRITE16_HANDLER ( ti990_4_panel_write )
 	{
-	} };
+	}
 	
 	/*
 	  TI990/4 video emulation.
@@ -130,7 +128,7 @@ public class ti990_4
 	{
 	} };
 	
-	static void ti990_4_vh_refresh(struct osd_bitmap *bitmap, int full_refresh)
+	static void ti990_4_vh_refresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	}
@@ -145,40 +143,40 @@ public class ti990_4
 	  Memory map - see description above
 	*/
 	
-	static MemoryReadAddress ti990_4_readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x1fff, MRA_RAM ),		/* dynamic RAM ? */
-		new MemoryReadAddress( 0x2000, 0xf7ff, MRA_NOP ),		/* reserved for expansion */
-		new MemoryReadAddress( 0xf800, 0xfbff, MRA_RAM ),		/* static RAM ? */
-		new MemoryReadAddress( 0xfc00, 0xffff, MRA_ROM ),		/* LOAD ROM */
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	static MEMORY_READ16_START (ti990_4_readmem)
 	
-	static MemoryWriteAddress ti990_4_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x1fff, MWA_RAM ),		/* dynamic RAM ? */
-		new MemoryWriteAddress( 0x2000, 0xf7ff, MWA_NOP ),		/* reserved for expansion */
-		new MemoryWriteAddress( 0xf800, 0xfbff, MWA_RAM ),		/* static RAM ? */
-		new MemoryWriteAddress( 0xfc00, 0xffff, MWA_ROM ),		/* LOAD ROM */
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+		{ 0x0000, 0x1fff, MRA16_RAM },		/* dynamic RAM ? */
+		{ 0x2000, 0xf7ff, MRA16_NOP },		/* reserved for expansion */
+		{ 0xf800, 0xfbff, MRA16_RAM },		/* static RAM ? */
+		{ 0xfc00, 0xffff, MRA16_ROM },		/* LOAD ROM */
+	
+	MEMORY_END
+	
+	static MEMORY_WRITE16_START (ti990_4_writemem)
+	
+		{ 0x0000, 0x1fff, MWA16_RAM },		/* dynamic RAM ? */
+		{ 0x2000, 0xf7ff, MWA16_NOP },		/* reserved for expansion */
+		{ 0xf800, 0xfbff, MWA16_RAM },		/* static RAM ? */
+		{ 0xfc00, 0xffff, MWA16_ROM },		/* LOAD ROM */
+	
+	MEMORY_END
 	
 	
 	/*
 	  CRU map
 	*/
 	
-	static IOWritePort ti990_4_writeport[] =
-	{
-		new IOWritePort( 0xff0, 0xfff, ti990_4_panel_write ),
-		new IOWritePort( -1 )	/* end of table */
-	};
+	static PORT_WRITE16_START ( ti990_4_writeport )
 	
-	static IOReadPort ti990_4_readport[] =
-	{
-		new IOReadPort( 0x1fe, 0x1ff, ti990_4_panel_read ),
-		new IOReadPort( -1 )	/* end of table */
-	};
+		{ 0xff0 << 1, 0xfff << 1, ti990_4_panel_write },
+	
+	PORT_END
+	
+	static PORT_READ16_START ( ti990_4_readport )
+	
+		{ 0x1fe << 1, 0x1ff << 1, ti990_4_panel_read },
+	
+	PORT_END
 	
 	static MachineDriver machine_driver_ti990_4 = new MachineDriver
 	(
@@ -234,41 +232,42 @@ public class ti990_4
 	
 	#if 0
 	
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION16_BE(0x10000, REGION_CPU1,0)
 	
-		/* TI990/10 ROMs set 1 */
-		ROM_LOAD_EVEN("975383.31", 0xFC00, 0x100, 0x64fcd040);
-		ROM_LOAD_ODD("975383.32", 0xFC00, 0x100, 0x64277276);
-		ROM_LOAD_EVEN("975383.29", 0xFE00, 0x100, 0xaf92e7bf);
-		ROM_LOAD_ODD("975383.30", 0xFE00, 0x100, 0xb7b40cdc);
+		/* TI990/10 : older boot ROMs for floppy-disk */
+		ROM_LOAD16_BYTE("975383.31", 0xFC00, 0x100, 0x64fcd040)
+		ROM_LOAD16_BYTE("975383.32", 0xFC01, 0x100, 0x64277276)
+		ROM_LOAD16_BYTE("975383.29", 0xFE00, 0x100, 0xaf92e7bf)
+		ROM_LOAD16_BYTE("975383.30", 0xFE01, 0x100, 0xb7b40cdc)
 	
 	#elif 1
 	
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION16_BE(0x10000, REGION_CPU1,0)
 	
-		/* TI990/10 ROMs set 2 */
-		ROM_LOAD_EVEN("975383.45", 0xFC00, 0x100, 0x391943c7);
-		ROM_LOAD_ODD("975383.46", 0xFC00, 0x100, 0xf40f7c18);
-		ROM_LOAD_EVEN("975383.47", 0xFE00, 0x100, 0x1ba571d8);
-		ROM_LOAD_ODD("975383.48", 0xFE00, 0x100, 0x8852b09e);
+		/* TI990/10 : newer "universal" boot ROMs  */
+		ROM_LOAD16_BYTE("975383.45", 0xFC00, 0x100, 0x391943c7)
+		ROM_LOAD16_BYTE("975383.46", 0xFC01, 0x100, 0xf40f7c18)
+		ROM_LOAD16_BYTE("975383.47", 0xFE00, 0x100, 0x1ba571d8)
+		ROM_LOAD16_BYTE("975383.48", 0xFE01, 0x100, 0x8852b09e)
 	
 	#else
 	
-		ROM_REGION(0x12000, REGION_CPU1);
+		ROM_REGION16_BE(0x12000, REGION_CPU1,0)
 	
 		/* TI990/12 ROMs - actually incompatible with TI990/4, but I just wanted to disassemble them. */
-		ROM_LOAD_EVEN("ti2025-7", 0xFC00, 0x1000, 0x4824f89c);
-		ROM_LOAD_ODD("ti2025-8", 0xFC00, 0x1000, 0x51fef543);
-		/* the other half of this ROM is not loaded - it makes no sense, anyway... */
+		ROM_LOAD16_BYTE("ti2025-7", 0xFC00, 0x1000, 0x4824f89c)
+		ROM_LOAD16_BYTE("ti2025-8", 0xFC01, 0x1000, 0x51fef543)
+		/* the other half of this ROM is not loaded - it makes no sense as TI990/12 machine code, it may
+		be a microcode ROM, but I am not quite sure... */
 	
 	#endif
 	
 	#else
 	
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION16_BE(0x10000, REGION_CPU1,0)
 	
 	
-		ROM_REGION(0x800, REGION_USER1 | REGIONFLAG_DISPOSE);
+		ROM_REGION(0x800, REGION_USER1, ROMREGION_DISPOSE);
 		/* boot ROMs */
 		/* since there is no support for nibble-wide ROMs on a 16-bit bus, we use a trick */
 	

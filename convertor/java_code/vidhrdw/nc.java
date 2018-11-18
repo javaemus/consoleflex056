@@ -32,14 +32,16 @@ public class nc
 	/* two colours */
 	static unsigned short nc_colour_table[NC_NUM_COLOURS] =
 	{
-		0, 1
+		0, 1,2,3
 	};
 	
 	/* black/white */
 	static unsigned char nc_palette[NC_NUM_COLOURS * 3] =
 	{
-		0x000, 0x000, 0x000,
-		0x0ff, 0x0ff, 0x0ff
+		0x080, 0x0a0, 0x060,
+	    0x000, 0x000, 0x000,
+		0x060, 0x060, 0x060,
+		0x000, 0x000, 0x000
 	};
 	
 	
@@ -52,53 +54,85 @@ public class nc
 	
 	extern int nc_display_memory_start;
 	extern char *nc_memory;
+	extern UINT8 nc_type;
+	
+	static int nc200_backlight = 0;
+	
+	void nc200_video_set_backlight(int state)
+	{
+		nc200_backlight = state;
+	}
+	
 	
 	/***************************************************************************
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function,
 	  it will be called by the main emulation engine.
 	***************************************************************************/
-	public static VhUpdatePtr nc_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void nc_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
-	        int y;
-	        int b;
-	        int x;
-	        int pen0, pen1;
+		int y;
+		int b;
+		int x;
+		int height, width;
+		int pens[2];
 	
-	        pen0 = Machine.pens[0];
-	        pen1 = Machine.pens[1];
 	
-	        for (y=0; y<NC_SCREEN_HEIGHT; y++)
-	        {
-	                int by;
-	                /* 64 bytes per line */
-	                char *line_ptr = nc_memory + nc_display_memory_start + (y<<6);
 	
-	                x = 0;
-	                for (by=0; by<NC_SCREEN_WIDTH>>3; by++)
-	                {
-	                        unsigned char byte;
-	        
-	                        byte = line_ptr[0];
-	        
-	                        for (b=0; b<8; b++)
-	                        {
-	                                if ((byte & 0x080) != 0)
-	                                {
-	                                        plot_pixel(bitmap,x+b, y, pen1);
-	                                }
-	                                else
-	                                {
-	                                        plot_pixel(bitmap,x+b, y, pen0);
-	        
-	                                }
-	                                byte = byte<<1;
-	                        }
-	        
-	                        x = x + 8;
-	                                        
-	                        line_ptr = line_ptr+1;
-	                }
-	         }
-	} };
+	    if (nc_type==NC_TYPE_200)
+	    {
+	        height = NC200_SCREEN_HEIGHT;
+	        width = NC200_SCREEN_WIDTH;
+	
+			if (nc200_backlight != 0)
+			{
+				pens[0] = Machine.pens[2];
+				pens[1] = Machine.pens[3];
+			}
+			else
+			{
+				pens[0] = Machine.pens[0];
+				pens[1] = Machine.pens[1];
+			}
+	    }
+	    else
+	    {
+			height = NC_SCREEN_HEIGHT;
+			width = NC_SCREEN_WIDTH;
+			pens[0] = Machine.pens[2];
+			pens[1] = Machine.pens[3];	
+		}
+	
+	
+	    for (y=0; y<height; y++)
+	    {
+			int by;
+			/* 64 bytes per line */
+			char *line_ptr = nc_memory + nc_display_memory_start + (y<<6);
+	
+			x = 0;
+			for (by=0; by<width>>3; by++)
+			{
+				int px;
+				unsigned char byte;
+	
+				byte = line_ptr[0];
+	
+				px = x;
+				for (b=0; b<8; b++)
+				{
+					plot_pixel(bitmap, px, y, pens[(byte>>7) & 0x01]);
+	
+					byte = byte<<1;
+					
+					px++;
+				}
+	
+				x = px;
+								
+				line_ptr = line_ptr+1;
+			}
+		}
+	}
+	
 }

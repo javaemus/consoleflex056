@@ -6,6 +6,8 @@
 
 ***************************************************************************/
 #include <ctype.h>
+#include <stdio.h>
+#include "snprintf.h"
 
 #include "driver.h"
 #include "unzip.h"
@@ -32,7 +34,7 @@ static struct
 
 	int data;
 	int motor;
-	void (*read_callback) (UINT32, UINT32);
+	void (*read_callback) (UINT32, UINT8);
 
 #define TAPE_WAV 1
 #define TAPE_PRG 2
@@ -205,7 +207,7 @@ static struct GameSample *vc20_read_wav_sample (void *f)
 
 		/* convert 8-bit data to signed samples */
 		for (temp32 = 0; temp32 < length; temp32++)
-			result->data[temp32] ^= 0x80;
+			result->data[temp32] -= 0x80;
 	}
 	else
 	{
@@ -294,7 +296,7 @@ static void vc20_wav_open (int image_type, int image_id)
 {
 	FILE *fp;
 
-	fp = (FILE*)osd_fopen (Machine->gamedrv->name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE_R, 0);
+	fp = (FILE*)osd_fopen (Machine->gamedrv->name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE, 0);
 	if (!fp)
 	{
 		logerror("tape %s file not found\n", device_filename(image_type,image_id));
@@ -432,7 +434,7 @@ static void vc20_prg_open (int image_type, int image_id)
     FILE *fp;
 	int i;
 
-	fp = (FILE*)osd_fopen (Machine->gamedrv->name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE_R, 0);
+	fp = (FILE*)osd_fopen (Machine->gamedrv->name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE, 0);
 	if (!fp)
 	{
 		logerror("tape %s file not found\n", device_filename(image_type,image_id));
@@ -1100,7 +1102,7 @@ static void vc20_zip_timer (int data)
 	vc20_prg_state ();
 }
 
-void vc20_tape_open (void (*read_callback) (UINT32, UINT32))
+void vc20_tape_open (void (*read_callback) (UINT32, UINT8))
 {
 	tape.read_callback = read_callback;
 #ifndef NEW_GAMEDRIVER
@@ -1134,10 +1136,10 @@ int vc20_tape_attach_image (int id)
 	tape.data = 0;
 
 	if (device_filename(IO_CASSETTE,id) == NULL)
-		return INIT_OK;
+		return INIT_PASS;
 
 	if ((cp = strrchr (device_filename(IO_CASSETTE,id), '.')) == NULL)
-		return INIT_FAILED;
+		return INIT_FAIL;
 	if (stricmp (cp, ".wav") == 0)
 	{
 		vc20_wav_open (IO_CASSETTE,id);
@@ -1151,8 +1153,8 @@ int vc20_tape_attach_image (int id)
 		vc20_zip_open (IO_CASSETTE,id);
 	}
 	else
-		return INIT_FAILED;
-	return INIT_OK;
+		return INIT_FAIL;
+	return INIT_PASS;
 }
 
 void vc20_tape_detach_image (int id)
@@ -1223,7 +1225,7 @@ int vc20_tape_read (void)
 			return tape.data;
 		break;
 	case TAPE_PRG:
-		if (zip.state == 3)
+		if (prg.state == 3)
 			return tape.data;
 		break;
 	case TAPE_ZIP:

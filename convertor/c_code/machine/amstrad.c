@@ -26,6 +26,7 @@ rom/ram selection
 #include "machine/8255ppi.h"
 #include "includes/nec765.h"
 #include "includes/dsk.h"
+#include "cassette.h"
 
 void AmstradCPC_GA_Write(int);
 void AmstradCPC_SetUpperRom(int);
@@ -37,13 +38,23 @@ void amstrad_handle_snapshot(unsigned char *);
 static unsigned char *snapshot = NULL;
 
 extern unsigned char *Amstrad_Memory;
-static int snapshot_loaded;
+static int snapshot_loaded = 0;
+
+int amstrad_floppy_init(int id)
+{
+	if (device_filename(IO_FLOPPY, id)==NULL)
+		return INIT_PASS;
+
+	return dsk_floppy_load(id);
+}
+
+
 
 /* used to setup computer if a snapshot was specified */
 OPBASE_HANDLER( amstrad_opbaseoverride )
 {
 	/* clear op base override */
-	cpu_setOPbaseoverride(0,0);
+	memory_set_opbase_handler(0,0);
 
 	if (snapshot_loaded)
 	{
@@ -58,7 +69,7 @@ OPBASE_HANDLER( amstrad_opbaseoverride )
 
 	}
 
-	return (cpu_get_pc() & 0x0ffff);
+	return (cpunum_get_pc(0) & 0x0ffff);
 }
 
 void amstrad_setup_machine(void)
@@ -71,7 +82,7 @@ void amstrad_setup_machine(void)
 	if (snapshot_loaded)
 	{
 		/* setup for snapshot */
-		cpu_setOPbaseoverride(0,amstrad_opbaseoverride);
+		memory_set_opbase_handler(0,amstrad_opbaseoverride);
 	}
 
 
@@ -85,36 +96,10 @@ void amstrad_setup_machine(void)
 
 int amstrad_cassette_init(int id)
 {
-	void *file;
-
-	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
-	if (file)
-	{
-		struct wave_args wa = {0,};
-		wa.file = file;
-		wa.display = 1;
-
-		if (device_open(IO_CASSETTE, id, 0, &wa))
-			return INIT_FAILED;
-
-		return INIT_OK;
-	}
-
-	/* HJB 02/18: no file, create a new file instead */
-	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_WRITE);
-	if (file)
-	{
-		struct wave_args wa = {0,};
-		wa.file = file;
-		wa.display = 1;
-		wa.smpfreq = 22050; /* maybe 11025 Hz would be sufficient? */
-		/* open in write mode */
-        if (device_open(IO_CASSETTE, id, 1, &wa))
-            return INIT_FAILED;
-		return INIT_OK;
-    }
-
-	return INIT_FAILED;
+	struct cassette_args args;
+	memset(&args, 0, sizeof(args));
+	args.create_smpfreq = 22050;	/* maybe 11025 Hz would be sufficient? */
+	return cassette_init(id, &args);
 }
 
 void amstrad_cassette_exit(int id)
@@ -132,70 +117,70 @@ void amstrad_handle_snapshot(unsigned char *pSnapshot)
 
 	/* init Z80 */
 	RegData = (pSnapshot[0x011] & 0x0ff) | ((pSnapshot[0x012] & 0x0ff)<<8);
-	cpu_set_reg(Z80_AF, RegData);
+	cpunum_set_reg(0,Z80_AF, RegData);
 
 	RegData = (pSnapshot[0x013] & 0x0ff) | ((pSnapshot[0x014] & 0x0ff)<<8);
-	cpu_set_reg(Z80_BC, RegData);
+	cpunum_set_reg(0,Z80_BC, RegData);
 
 	RegData = (pSnapshot[0x015] & 0x0ff) | ((pSnapshot[0x016] & 0x0ff)<<8);
-	cpu_set_reg(Z80_DE, RegData);
+	cpunum_set_reg(0,Z80_DE, RegData);
 
 	RegData = (pSnapshot[0x017] & 0x0ff) | ((pSnapshot[0x018] & 0x0ff)<<8);
-	cpu_set_reg(Z80_HL, RegData);
+	cpunum_set_reg(0,Z80_HL, RegData);
 
 	RegData = (pSnapshot[0x019] & 0x0ff) ;
-	cpu_set_reg(Z80_R, RegData);
+	cpunum_set_reg(0,Z80_R, RegData);
 
 	RegData = (pSnapshot[0x01a] & 0x0ff);
-	cpu_set_reg(Z80_I, RegData);
+	cpunum_set_reg(0,Z80_I, RegData);
 
 	if ((pSnapshot[0x01b] & 1)==1)
 	{
-		cpu_set_reg(Z80_IFF1, 1);
+		cpunum_set_reg(0,Z80_IFF1, 1);
 	}
 	else
 	{
-		cpu_set_reg(Z80_IFF1, 0);
+		cpunum_set_reg(0,Z80_IFF1, 0);
 	}
 
 	if ((pSnapshot[0x01c] & 1)==1)
 	{
-		cpu_set_reg(Z80_IFF2, 1);
+		cpunum_set_reg(0,Z80_IFF2, 1);
 	}
 	else
 	{
-		cpu_set_reg(Z80_IFF2, 0);
+		cpunum_set_reg(0,Z80_IFF2, 0);
 	}
 
 	RegData = (pSnapshot[0x01d] & 0x0ff) | ((pSnapshot[0x01e] & 0x0ff)<<8);
-	cpu_set_reg(Z80_IX, RegData);
+	cpunum_set_reg(0,Z80_IX, RegData);
 
 	RegData = (pSnapshot[0x01f] & 0x0ff) | ((pSnapshot[0x020] & 0x0ff)<<8);
-	cpu_set_reg(Z80_IY, RegData);
+	cpunum_set_reg(0,Z80_IY, RegData);
 
 	RegData = (pSnapshot[0x021] & 0x0ff) | ((pSnapshot[0x022] & 0x0ff)<<8);
-	cpu_set_reg(Z80_SP, RegData);
-	cpu_set_sp(RegData);
+	cpunum_set_reg(0,Z80_SP, RegData);
+	cpunum_set_sp(0,RegData);
 
 	RegData = (pSnapshot[0x023] & 0x0ff) | ((pSnapshot[0x024] & 0x0ff)<<8);
 
-	cpu_set_reg(Z80_PC, RegData);
+	cpunum_set_reg(0,Z80_PC, RegData);
 //	cpu_set_pc(RegData);
 
 	RegData = (pSnapshot[0x025] & 0x0ff);
-	cpu_set_reg(Z80_IM, RegData);
+	cpunum_set_reg(0,Z80_IM, RegData);
 
 	RegData = (pSnapshot[0x026] & 0x0ff) | ((pSnapshot[0x027] & 0x0ff)<<8);
-	cpu_set_reg(Z80_AF2, RegData);
+	cpunum_set_reg(0,Z80_AF2, RegData);
 
 	RegData = (pSnapshot[0x028] & 0x0ff) | ((pSnapshot[0x029] & 0x0ff)<<8);
-	cpu_set_reg(Z80_BC2, RegData);
+	cpunum_set_reg(0,Z80_BC2, RegData);
 
 	RegData = (pSnapshot[0x02a] & 0x0ff) | ((pSnapshot[0x02b] & 0x0ff)<<8);
-	cpu_set_reg(Z80_DE2, RegData);
+	cpunum_set_reg(0,Z80_DE2, RegData);
 
 	RegData = (pSnapshot[0x02c] & 0x0ff) | ((pSnapshot[0x02d] & 0x0ff)<<8);
-	cpu_set_reg(Z80_HL2, RegData);
+	cpunum_set_reg(0,Z80_HL2, RegData);
 
 	/* init GA */
 	for (i=0; i<17; i++)
@@ -268,7 +253,7 @@ int amstrad_load(int type, int id, unsigned char **ptr)
 {
 	void *file;
 
-	file = image_fopen(type, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+	file = image_fopen(type, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 
 	if (file)
 	{
@@ -309,41 +294,25 @@ int amstrad_load(int type, int id, unsigned char **ptr)
 /* load snapshot */
 int amstrad_snapshot_load(int id)
 {
+	/* machine can be started without a snapshot */
+	/* if filename not specified, then init is ok */
+	if (device_filename(IO_SNAPSHOT, id)==NULL)
+		return INIT_PASS;
+
+	/* filename specified */
 	snapshot_loaded = 0;
 
+	/* load and verify image */
 	if (amstrad_load(IO_SNAPSHOT,id,&snapshot))
 	{
 		snapshot_loaded = 1;
-		return INIT_OK;
+		if (memcmp(snapshot, "MV - SNA", 8)==0)
+			return INIT_PASS;
+		else
+			return INIT_FAIL;
 	}
 
-	return INIT_FAILED;
-}
-
-/* check if a snapshot file is valid to load */
-int amstrad_snapshot_id(int id)
-{
-	int valid;
-	unsigned char *snapshot_data;
-
-	valid = ID_FAILED;
-
-	/* load snapshot */
-	if (amstrad_load(IO_SNAPSHOT, id, &snapshot_data))
-	{
-		/* snapshot loaded, check it is valid */
-
-		if (memcmp(snapshot_data, "MV - SNA", 8)==0)
-		{
-			valid = ID_OK;
-		}
-
-		/* free the file */
-		free(snapshot_data);
-	}
-
-	return valid;
-
+	return INIT_FAIL;
 }
 
 void amstrad_snapshot_exit(int id)
@@ -354,3 +323,20 @@ void amstrad_snapshot_exit(int id)
 	snapshot_loaded = 0;
 
 }
+
+int	amstrad_plus_cartridge_init(int id)
+{
+	/* cpc+ requires a cartridge to be inserted to run */
+	if (device_filename(IO_CARTSLOT, id)==NULL)
+		return INIT_FAIL;
+
+	return INIT_PASS;
+}
+
+void amstrad_plus_cartridge_exit(int id)
+{
+
+
+
+}
+

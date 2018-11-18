@@ -15,8 +15,9 @@ package machine;
 public class a7800
 {
 	
-	UBytePtr a7800_cart_f000;
-	UBytePtr a7800_bios_f000;
+	
+	UBytePtr a7800_cart_f000 = NULL;
+	UBytePtr a7800_bios_f000 = NULL;
 	int a7800_ctrl_lock;
 	int a7800_ctrl_reg;
 	int maria_flag;
@@ -37,12 +38,12 @@ public class a7800
 	    }
 	} };
 	
-	void a7800_stop_machine(void) {
-		if (a7800_bios_f000 != 0)
-			free(a7800_bios_f000);
+	void a7800_stop_machine(void)
+	{
+	
+		if (a7800_bios_f000 != 0) free(a7800_bios_f000);
 		a7800_bios_f000 = NULL;
-		if (a7800_cart_f000 != 0)
-			free(a7800_cart_f000);
+		if (a7800_cart_f000 != 0) free(a7800_cart_f000);
 		a7800_cart_f000 = NULL;
 	}
 	
@@ -75,7 +76,6 @@ public class a7800
 	               Changed 53 bit 2, added bit 3
 	
 	*/
-	// extern unsigned int crc32 (unsigned int crc, const UBytePtr buf, unsigned int len);
 	
 	UINT32 a7800_partialcrc(const UBytePtr buf,unsigned int size)
 	{
@@ -86,89 +86,81 @@ public class a7800
 	return crc;
 	}
 	
-	int a7800_id_rom (int id)
-	{
-	    FILE *romfile;
-		
-	    char header[128];
-	    char tag[] = "ATARI7800";
-	
-	    logerror("A7800 IDROM\n");
-	    /* If no file was specified, don't bother */
-		if (device_filename(IO_CARTSLOT,id) == NULL ||
-			strlen(device_filename(IO_CARTSLOT,id)) == 0)
-			return ID_FAILED;
-	
-		if (!(romfile = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0))) {
-			logerror("returning ID_FAILED\n");
-			return ID_FAILED;
-		}
-		osd_fread(romfile,header,sizeof(header));
-	    osd_fclose (romfile);
-		logerror("Trying Header Compare\n");
-	
-		if (strncmp(&tag[0],&header[1],9)) {
-			logerror("Not an valid A7800 image\n");
-			return ID_FAILED;
-		}
-		logerror("returning ID_OK\n");
-	    return ID_OK;
-	}
 	
 	void a7800_exit_rom (int id)
 	{
-		if (a7800_bios_f000 != 0)
-			free(a7800_bios_f000);
+		if (a7800_bios_f000 != 0) free(a7800_bios_f000);
 		a7800_bios_f000 = NULL;
-		if (a7800_cart_f000 != 0)
-			free(a7800_cart_f000);
+		if (a7800_cart_f000 != 0) free(a7800_cart_f000);
 	    a7800_cart_f000 = NULL;
 	}
 	
-	int a7800_load_rom (int id)
+	static int a7800_verify_cart (char header[128])
 	{
-		
-	    FILE *cartfile;
+	    char tag[] = "ATARI7800";
+	
+		if (strncmp(&tag[0], &header[1],9)) {
+			logerror("Not a valid A7800 image\n");
+			return IMAGE_VERIFY_FAIL;
+		}
+		logerror("returning ID_OK\n");
+	    return IMAGE_VERIFY_PASS;
+	}
+	
+	
+	int a7800_init_cart (int id)
+	{
+	
+	    FILE *cartfile =NULL;
 	    long len,start;
 	    unsigned char header[128];
 	
 	    ROM = memory_region(REGION_CPU1);
 	
-	    /* A cartridge isn't strictly mandatory, but it's recommended */
-	    cartfile = NULL;
+	    /* A cartridge is mandatory, since it doesnt do much without one */
 		if (device_filename(IO_CARTSLOT,id) == NULL ||
 			strlen(device_filename(IO_CARTSLOT,id)) == 0)
 	    {
-	        logerror("A7800 - warning: no cartridge specified!\n");
+	        logerror("A7800 - no cartridge specified!\n");
+	        return INIT_FAIL;
 	    }
-		else
-		if (!(cartfile = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0)))
+	
+		if (!(cartfile = (FILE*)image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0)))
 	    {
 			logerror("A7800 - Unable to locate cartridge: %s\n",device_filename(IO_CARTSLOT,id) == NULL);
-	        return 1;
+	        return INIT_FAIL;
 	    }
 	
 	    /* Allocate memory for BIOS bank switching */
-	    a7800_bios_f000 = malloc(0x1000);
+	    a7800_bios_f000 = (UINT8*)malloc(0x1000);
 	    if (!a7800_bios_f000) {
 	        logerror("Could not allocate ROM memory\n");
-	        return 1;
+	        return INIT_FAIL;
 	    }
-	    a7800_cart_f000 = malloc(0x1000);
+	    a7800_cart_f000 = (UINT8*)malloc(0x1000);
 	    if (!a7800_cart_f000) {
 	        logerror("Could not allocate ROM memory\n");
 	        free(a7800_bios_f000);
-	        return 1;
+	        return INIT_FAIL;
 	    }
 	
 	    /* save the BIOS so we can switch it in and out */
 	    memcpy(a7800_bios_f000,&(ROM[0xF000]),0x1000);
 	
 	    /* No cart, exit */
-	    if (cartfile == NULL) return 0;
+	    if (cartfile == NULL)
+	    	return INIT_FAIL;
 	
 	    /* Load and decode the header */
 	    osd_fread(cartfile,header,128);
+	
+	    /* Check the cart */
+	    if (a7800_verify_cart((char *)header) == IMAGE_VERIFY_FAIL)
+	    {
+			osd_fclose(cartfile);
+			return INIT_FAIL;
+		}
+	
 	    len = (header[49] << 24) | (header[50] << 16) | (header[51] << 8) | header[52];
 	    a7800_cart_type = (header[53] << 8) | header[54];
 	    a7800_stick_type = header[55];
@@ -189,6 +181,7 @@ public class a7800
 	        /* Extra ROM at $4000 */
 	        if ((a7800_cart_type & 0x08) != 0) {
 	            osd_fread(cartfile,&(ROM[0x4000]),0x4000);
+	            len -= 0x4000;
 	        }
 	        a7800_cartridge_rom = &(ROM[0x10000]);
 	        osd_fread (cartfile, a7800_cartridge_rom, len);
@@ -209,23 +202,23 @@ public class a7800
 	
 	/******  TIA  *****************************************/
 	
-	int a7800_TIA_r(int offset) {
+	public static ReadHandlerPtr a7800_TIA_r  = new ReadHandlerPtr() { public int handler(int offset) {
 	    switch (offset) {
 	        case 0x08:
-	              return ((input_port_1_r(0) & 0x02) << 6);
+	              return ((input_port_1_r.handler(0) & 0x02) << 6);
 	        case 0x09:
-	              return ((input_port_1_r(0) & 0x08) << 4);
+	              return ((input_port_1_r.handler(0) & 0x08) << 4);
 	        case 0x0A:
-	              return ((input_port_1_r(0) & 0x01) << 7);
+	              return ((input_port_1_r.handler(0) & 0x01) << 7);
 	        case 0x0B:
-	              return ((input_port_1_r(0) & 0x04) << 5);
+	              return ((input_port_1_r.handler(0) & 0x04) << 5);
 	        case 0x0c:
-	            if ((input_port_1_r(0) & 0x08) || (input_port_1_r(0) & 0x02))
+	            if ((input_port_1_r.handler(0) & 0x08) || (input_port_1_r.handler(0) & 0x02))
 	                return 0x00;
 	            else
 	                return 0x80;
 	        case 0x0d:
-	            if ((input_port_1_r(0) & 0x01) || (input_port_1_r(0) & 0x04))
+	            if ((input_port_1_r.handler(0) & 0x01) || (input_port_1_r.handler(0) & 0x04))
 	                return 0x00;
 	            else
 	                return 0x80;
@@ -234,9 +227,9 @@ public class a7800
 	
 	    }
 	    return 0xFF;
-	}
+	} };
 	
-	void a7800_TIA_w(int offset, int data) {
+	public static WriteHandlerPtr a7800_TIA_w = new WriteHandlerPtr() {public void handler(int offset, int data) {
 	    switch(offset) {
 	        case 0x01:
 	            if ((data & 0x01) != 0) {
@@ -246,71 +239,71 @@ public class a7800
 	                a7800_ctrl_lock = data & 0x01;
 	                a7800_ctrl_reg = data;
 	                if ((data & 0x04) != 0)
-	                    memcpy(&(ROM[0xF000]),a7800_cart_f000,0x1000);
+	               		memcpy(&(ROM[0xF000]),a7800_cart_f000,0x1000);
 	                else
-	                    memcpy(&(ROM[0xF000]),a7800_bios_f000,0x1000);
+	               		memcpy(&(ROM[0xF000]),a7800_bios_f000,0x1000);
 	            }
 	        break;
 	    }
 	    tia_w(offset,data);
 	    ROM[offset] = data;
-	}
+	} };
 	
 	/****** RIOT ****************************************/
 	
-	int a7800_RIOT_r(int offset) {
+	public static ReadHandlerPtr a7800_RIOT_r  = new ReadHandlerPtr() { public int handler(int offset) {
 	    switch (offset) {
 	        case 0:
 	            if (a7800_stick_type == 0x01)
-	                return input_port_0_r(0);
+	                return input_port_0_r.handler(0);
 	            else
-	                return ((input_port_1_r(0) & 0x02) << 3);
+	                return ((input_port_1_r.handler(0) & 0x02) << 3);
 	
 	        case 2:
-	            return input_port_3_r(0);
+	            return input_port_3_r.handler(0);
 	        default:
 	            logerror("undefined RIOT read %x\n",offset);
 	    }
 	    return 0xFF;
-	}
+	} };
 	
-	void a7800_RIOT_w(int offset, int data) {
-	}
+	public static WriteHandlerPtr a7800_RIOT_w = new WriteHandlerPtr() {public void handler(int offset, int data) {
+	} };
 	
 	
 	/****** RAM Mirroring ******************************/
 	
-	int a7800_MAINRAM_r(int offset) {
+	public static ReadHandlerPtr a7800_MAINRAM_r  = new ReadHandlerPtr() { public int handler(int offset) {
 	    return ROM[0x2000 + offset];
-	}
+	} };
 	
-	void a7800_MAINRAM_w(int offset, int data) {
+	public static WriteHandlerPtr a7800_MAINRAM_w = new WriteHandlerPtr() {public void handler(int offset, int data) {
 	    ROM[0x2000 + offset] = data;
-	}
+	} };
 	
-	int a7800_RAM0_r(int offset) {
+	public static ReadHandlerPtr a7800_RAM0_r  = new ReadHandlerPtr() { public int handler(int offset) {
 	    return ROM[0x2040 + offset];
-	}
+	} };
 	
-	void a7800_RAM0_w(int offset, int data) {
+	public static WriteHandlerPtr a7800_RAM0_w = new WriteHandlerPtr() {public void handler(int offset, int data) {
 	    ROM[0x2040 + offset] = data;
 	    ROM[0x40 + offset] = data;
-	}
+	} };
 	
-	int a7800_RAM1_r(int offset) {
+	public static ReadHandlerPtr a7800_RAM1_r  = new ReadHandlerPtr() { public int handler(int offset) {
 	    return ROM[0x2140 + offset];
-	}
+	} };
 	
-	void a7800_RAM1_w(int offset, int data) {
+	public static WriteHandlerPtr a7800_RAM1_w = new WriteHandlerPtr() {public void handler(int offset, int data) {
 	    ROM[0x2140 + offset] = data;
-	}
+	} };
 	
 	
-	void a7800_cart_w(int offset, int data) {
+	public static WriteHandlerPtr a7800_cart_w = new WriteHandlerPtr() {public void handler(int offset, int data) {
 	
 	    if (offset < 0x4000) {
 	        if ((a7800_cart_type & 0x04) != 0) {
-	            ROM[0x8000 + offset] = data;
+	            ROM[0x4000 + offset] = data;
 	        }
 	        else if ((a7800_cart_type & 0x01) != 0) {
 	            pokey1_w(offset,data);
@@ -323,9 +316,9 @@ public class a7800
 	        if ((a7800_cart_type & 0x02) != 0) {
 	            data &= 0x07;
 	            cpu_setbank(1,memory_region(REGION_CPU1) + 0x10000 + (data << 14));
-	//            logerror("BANK SEL: %d\n",data);
+	/*            logerror("BANK SEL: %d\n",data); */
 	       }
 	    }
-	}
+	} };
 	
 }

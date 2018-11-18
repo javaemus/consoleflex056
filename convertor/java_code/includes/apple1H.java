@@ -3,7 +3,7 @@
 extern extern extern extern extern extern extern 
 /* vidhrdw/apple1.c */
 
-extern extern extern void apple1_vh_screenrefresh (struct osd_bitmap *bitmap,
+extern extern extern void apple1_vh_screenrefresh (struct mame_bitmap *bitmap,
 														int full_refresh);
 extern void apple1_vh_dsp_w (int data);
 extern 

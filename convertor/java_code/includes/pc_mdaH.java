@@ -1,16 +1,26 @@
 
-extern extern extern extern extern WRITE_HANDLER ( pc_mda_videoram_w );
+/*
+#if 0
+	// cutted from some aga char rom
+	// 256 9x14 in 8x16 chars, line 3 is connected to a10
+    ROM_LOAD("mda.chr",     0x00000, 0x01000, 0xac1686f3);
+#endif
+
+extern void pc_mda_init_video(struct _CRTC6845 *crtc);
+extern void pc_mda_europc_init(struct _CRTC6845 *crtc);
+
+extern extern extern extern void pc_mda_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+extern WRITE_HANDLER ( pc_mda_videoram_w );
 
 extern WRITE_HANDLER ( pc_MDA_w );
 extern READ_HANDLER ( pc_MDA_r );
 
-#if 0
-extern void pc_mda_blink_textcolors(int on);
-extern void pc_mda_index_w(int data);
-extern extern void pc_mda_port_w(int data);
-extern extern void pc_mda_mode_control_w(int data);
-extern extern void pc_mda_color_select_w(int data);
-extern extern void pc_mda_feature_control_w(int data);
-extern extern void pc_mda_lightpen_strobe_w(int data);
-extern void pc_hgc_config_w(int data);
-extern #endif
+extern unsigned char mda_palette[4][3];
+extern struct GfxLayout pc_mda_charlayout;
+extern struct GfxLayout pc_mda_gfxlayout_1bpp;
+extern struct GfxDecodeInfo pc_mda_gfxdecodeinfo[];
+extern unsigned short mda_colortable[256*2+1*2];
+void pc_mda_init_palette(UBytePtr sys_palette, unsigned short *sys_colortable,const UBytePtr color_prom);
+
+//internal use
+void pc_mda_cursor(CRTC6845_CURSOR *cursor);

@@ -16,13 +16,7 @@
 #include "driver.h"
 #include "vidhrdw/generic.h"
 
-
-/* from mame.c */
-extern int bitmap_dirty;
-
-/* from mess/vidhrdw/vtech2.c */
-extern char laser_frame_message[64+1];
-extern int laser_frame_time;
+#include "includes/vtech2.h"
 
 /* public */
 int laser_latch = -1;
@@ -72,7 +66,7 @@ static READ_HANDLER ( mra_bank3) { return mra_bank(2,offset); }
 static READ_HANDLER ( mra_bank4) { return mra_bank(3,offset); }
 
 /* read banked memory (handle memory mapped i/o) */
-static UINT32 (*mra_bank_soft[4])(UINT32) =
+static mem_read_handler mra_bank_soft[4] =
 {
     mra_bank1,  /* mapped in 0000-3fff */
     mra_bank2,  /* mapped in 4000-7fff */
@@ -81,7 +75,7 @@ static UINT32 (*mra_bank_soft[4])(UINT32) =
 };
 
 /* write banked memory (handle memory mapped i/o and videoram) */
-static void (*mwa_bank_soft[4])(UINT32,UINT32) =
+static mem_write_handler mwa_bank_soft[4] =
 {
     mwa_bank1,  /* mapped in 0000-3fff */
     mwa_bank2,  /* mapped in 4000-7fff */
@@ -90,7 +84,7 @@ static void (*mwa_bank_soft[4])(UINT32,UINT32) =
 };
 
 /* read banked memory (plain ROM/RAM) */
-static UINT32 (*mra_bank_hard[4])(UINT32) =
+static mem_read_handler mra_bank_hard[4] =
 {
     MRA_BANK1,  /* mapped in 0000-3fff */
     MRA_BANK2,  /* mapped in 4000-7fff */
@@ -99,7 +93,7 @@ static UINT32 (*mra_bank_hard[4])(UINT32) =
 };
 
 /* write banked memory (plain ROM/RAM) */
-static void (*mwa_bank_hard[4])(UINT32,UINT32) =
+static mem_write_handler mwa_bank_hard[4] =
 {
     MWA_BANK1,  /* mapped in 0000-3fff */
     MWA_BANK2,  /* mapped in 4000-7fff */
@@ -166,7 +160,7 @@ static READ_HANDLER ( mra_empty )
 	return 0xff;
 }
 
-void laser_bank_select_w(int offs, int data)
+WRITE_HANDLER( laser_bank_select_w )
 {
     static const char *bank_name[16] = {
         "ROM lo","ROM hi","MM I/O","Video RAM lo",
@@ -176,39 +170,39 @@ void laser_bank_select_w(int offs, int data)
 
     data &= 15;
 
-	if( data != laser_bank[offs] )
+	if( data != laser_bank[offset] )
     {
-        laser_bank[offs] = data;
-		logerror("select bank #%d $%02X [$%05X] %s\n", offs+1, data, 0x4000 * (data & 15), bank_name[data]);
+        laser_bank[offset] = data;
+		logerror("select bank #%d $%02X [$%05X] %s\n", offset+1, data, 0x4000 * (data & 15), bank_name[data]);
 
         /* memory mapped I/O bank selected? */
 		if (data == 2)
 		{
-			cpu_setbankhandler_r(1+offs,mra_bank_soft[offs]);
-			cpu_setbankhandler_w(1+offs,mwa_bank_soft[offs]);
+			memory_set_bankhandler_r(1+offset,0,mra_bank_soft[offset]);
+			memory_set_bankhandler_w(1+offset,0,mwa_bank_soft[offset]);
 		}
 		else
 		{
-			cpu_setbank(offs+1, &mem[0x4000*laser_bank[offs]]);
+			cpu_setbank(offset+1, &mem[0x4000*laser_bank[offset]]);
 			if( laser_bank_mask & (1 << data) )
 			{
-				cpu_setbankhandler_r(1+offs,mra_bank_hard[offs]);
+				memory_set_bankhandler_r(1+offset,0,mra_bank_hard[offset]);
 				/* video RAM bank selected? */
 				if( data == laser_video_bank )
 				{
-					logerror("select bank #%d VIDEO!\n", offs+1);
-                    cpu_setbankhandler_w(1+offs,mwa_bank_soft[offs]);
+					logerror("select bank #%d VIDEO!\n", offset+1);
+                    memory_set_bankhandler_w(1+offset,0,mwa_bank_soft[offset]);
 				}
 				else
 				{
-					cpu_setbankhandler_w(1+offs,mwa_bank_hard[offs]);
+					memory_set_bankhandler_w(1+offset,0,mwa_bank_hard[offset]);
 				}
 			}
 			else
 			{
-				logerror("select bank #%d MASKED!\n", offs+1);
-				cpu_setbankhandler_r(1+offs,mra_empty);
-				cpu_setbankhandler_w(1+offs,mwa_empty);
+				logerror("select bank #%d MASKED!\n", offset+1);
+				memory_set_bankhandler_r(1+offset,0,mra_empty);
+				memory_set_bankhandler_w(1+offset,0,mwa_empty);
 			}
 		}
     }
@@ -329,7 +323,7 @@ static void mwa_bank(int bank, int offs, int data)
             logerror("bank #%d write to I/O [$%05X] $%02X\n", bank+1, offs, data);
             /* Toggle between graphics and text modes? */
             if ((data ^ laser_latch) & 0x08)
-                bitmap_dirty = 1;
+                schedule_full_refresh();
 			if ((data ^ laser_latch) & 0x01)
 				speaker_level_w(0, data & 1);
 #if 0
@@ -356,18 +350,15 @@ static void mwa_bank(int bank, int offs, int data)
     }
 }
 
-int laser_rom_id(int id)
-{
-	/* Hmmm.. if I only had a single ROM to identify it ;) */
-	return 1;
-}
-
 int laser_rom_init(int id)
 {
 	int size = 0;
     void *file;
 
-	file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+	if (device_filename(IO_CARTSLOT,id) == NULL)
+		return INIT_PASS;
+
+	file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
     if( file )
     {
 		size = osd_fread(file, &mem[0x30000], 0x10000);
@@ -383,8 +374,8 @@ int laser_rom_init(int id)
 			laser_bank_mask |= 0x8000;
     }
     if( size > 0 )
-        return 0;
-    return 1;
+        return INIT_PASS;
+    return INIT_FAIL;
 }
 
 void laser_rom_exit(int id)
@@ -392,45 +383,6 @@ void laser_rom_exit(int id)
 	laser_bank_mask &= ~0xf000;
 	/* wipe out the memory contents to be 100% sure */
 	memset(&mem[0x30000], 0xff, 0x10000);
-}
-
-int laser_cassette_id(int id)
-{
-	UINT8 buff[256];
-    void *file;
-
-	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
-    if( file )
-    {
-		int i;
-
-        osd_fread(file, buff, sizeof(buff));
-
-        for( i = 0; i < 128; i++ )
-			if( buff[i] != 0x80 )
-				return 1;
-		for( i = 128; i < 128+5; i++ )
-			if( buff[i] != 0xfe )
-				return 1;
-		for( i = 128+5+1; i < 128+5+1+17; i++ )
-		{
-			if( buff[i] == 0x00 )
-				break;
-		}
-		if( i == 128+5+1+17 )
-			return 1;
-        if( buff[128+5] == 0xf0 )
-        {
-			logerror("vtech2_cassette_id: BASIC magic $%02X '%s' found\n", buff[128+5], buff+128+5+1);
-            return 0;
-        }
-		if( buff[128+5] == 0xf1 )
-        {
-			logerror("vtech2_cassette_id: MCODE magic $%02X '%s' found\n", buff[128+5], buff+128+5+1);
-            return 0;
-        }
-    }
-    return 1;
 }
 
 #define LO	-20000
@@ -532,10 +484,45 @@ static int fill_wave(INT16 *buffer, int length, UINT8 *code)
     return BYTESAMPLES;
 }
 
+/*
+int laser_cassette_verify (UINT8 buff[])
+{
+	int i;
+
+	for( i = 0; i < 128; i++ )
+		if( buff[i] != 0x80 )
+			return INIT_FAIL;
+	for( i = 128; i < 128+5; i++ )
+		if( buff[i] != 0xfe )
+			return INIT_FAIL;
+	for( i = 128+5+1; i < 128+5+1+17; i++ )
+	{
+		if( buff[i] == 0x00 )
+			break;
+	}
+	if( i == 128+5+1+17 )
+		return 1;
+	if( buff[128+5] == 0xf0 )
+	{
+		logerror("vtech2_cassette_id: BASIC magic $%02X '%s' found\n", buff[128+5], buff+128+5+1);
+		return INIT_PASS;
+	}
+	if( buff[128+5] == 0xf1 )
+	{
+		logerror("vtech2_cassette_id: MCODE magic $%02X '%s' found\n", buff[128+5], buff+128+5+1);
+		return INIT_PASS;
+	}
+	return INIT_FAIL;
+}
+*/
+
 int laser_cassette_init(int id)
 {
 	void *file;
-	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+	if (device_filename(IO_CASSETTE,id) == NULL)
+		return INIT_PASS;
+
+	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 	if( file )
 	{
 		struct wave_args wa = {0,};
@@ -548,10 +535,10 @@ int laser_cassette_init(int id)
 		wa.chunk_size = 1;
 		wa.chunk_samples = BYTESAMPLES;
 		if( device_open(IO_CASSETTE,id,0,&wa) )
-			return INIT_FAILED;
-		return INIT_OK;
+			return INIT_FAIL;
+		return INIT_PASS;
     }
-	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW_CREATE);
+	file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW_CREATE);
 	if( file )
     {
 		struct wave_args wa = {0,};
@@ -560,10 +547,10 @@ int laser_cassette_init(int id)
 		wa.fill_wave = fill_wave;
 		wa.smpfreq = 600*BITSAMPLES;
 		if( device_open(IO_CASSETTE,id,1,&wa) )
-			return INIT_FAILED;
-        return INIT_OK;
+			return INIT_FAIL;
+        return INIT_PASS;
     }
-    return INIT_FAILED;
+    return INIT_FAIL;
 }
 
 void laser_cassette_exit(int id)
@@ -573,26 +560,33 @@ void laser_cassette_exit(int id)
 	cassette_image = NULL;
 }
 
-int laser_floppy_id(int id)
+int laser_floppy_init(int id)
 {
 	void *file;
 	UINT8 buff[32];
 
-	file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+	if (device_filename(IO_FLOPPY,id) == NULL)
+	{
+		flop_specified[id] = 0;
+		return INIT_PASS;
+	}
+	else
+		flop_specified[id] = 1;
+
+	file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
     if( file )
     {
         osd_fread(file, buff, sizeof(buff));
 		osd_fclose(file);
 		if( memcmp(buff, "\x80\x80\x80\x80\x80\x80\x00\xfe\0xe7\0x18\0xc3\x00\x00\x00\x80\x80", 16) == 0 )
-			return 1;
+			return INIT_PASS;
 	}
-	return 0;
-}
+	else
+	{
+		return INIT_FAIL;
+	}
 
-int laser_floppy_init(int id)
-{
-	flop_specified[id] = device_filename(IO_FLOPPY,id) != NULL;
-	return INIT_OK;
+	return INIT_PASS;
 }
 
 void laser_floppy_exit(int id)
@@ -639,7 +633,7 @@ static void laser_put_track(void)
 #define PHI2(n) (((n)>>2)&1)
 #define PHI3(n) (((n)>>3)&1)
 
-int laser_fdc_r(int offset)
+READ_HANDLER( laser_fdc_r )
 {
     int data = 0xff;
     switch( offset )
@@ -663,7 +657,7 @@ int laser_fdc_r(int offset)
             if( laser_fdc_status & 0x80 )
             {
                 laser_fdc_bits = 8;
-                laser_fdc_offs = ++laser_fdc_offs % TRKSIZE_FM;
+                laser_fdc_offs = (laser_fdc_offs + 1) % TRKSIZE_FM;
             }
             laser_fdc_status &= ~0x80;
         }
@@ -683,7 +677,7 @@ int laser_fdc_r(int offset)
     return data;
 }
 
-void laser_fdc_w(int offset, int data)
+WRITE_HANDLER( laser_fdc_w )
 {
     int drive;
 
@@ -743,7 +737,7 @@ void laser_fdc_w(int offset, int data)
                         if( laser_data & 0x0001 ) value |= 0x01;
                         logerror("laser_fdc_w(%d) data($%04X) $%02X <- $%02X ($%04X)\n", offset, laser_fdc_offs, laser_fdc_data[laser_fdc_offs], value, laser_data);
                         laser_fdc_data[laser_fdc_offs] = value;
-                        laser_fdc_offs = ++laser_fdc_offs % TRKSIZE_FM;
+                        laser_fdc_offs = (laser_fdc_offs + 1) % TRKSIZE_FM;
                         laser_fdc_write++;
                         laser_fdc_bits = 8;
                     }

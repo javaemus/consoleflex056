@@ -1,309 +1,389 @@
 /***************************************************************************
 
-  vidhrdw/oric.c
+	vidhrdw/oric.c
+	
+	All graphic effects are supported including mid-line changes.
+	There may be some small bugs.
 
-  do all the real wacky stuff to render an Oric Text / Hires screen
-
+	TODO:
+	- speed up this code a bit?
+	
 ***************************************************************************/
 
 #include "driver.h"
 #include "vidhrdw/generic.h"
 #include "includes/oric.h"
 
-int oric_powerup_screen;
+static void oric_vh_update_flash(void);
+static void oric_vh_update_attribute(int c);
+static void oric_refresh_charset(void);
 
-typedef struct{
-        int tcolour;
-        int pcolour;
-        int inverse;
-        int dblchar;
-        int flash;
-        int alternative;
-        int hires;
-        int hires_this_line;
-        int flashshow;
-        int attr;
-} ORIC_VIDEO_STRUCT;
+/* current state of the display */
+/* some attributes persist until they are turned off.
+This structure holds this persistant information */
+struct oric_vh_state
+{
+	/* foreground and background colour used for rendering */
+	/* if flash attribute is set, these two will both be equal
+	to background colour */
+	int active_foreground_colour;
+	int active_background_colour;
+	/* current foreground and background colour */
+	int foreground_colour;
+	int background_colour;
+	int mode;
+	/* text attributes */
+	int text_attributes;
 
-ORIC_VIDEO_STRUCT _ORIC;
+	unsigned long read_addr;
 
-ORIC_VIDEO_STRUCT _ORIC_tmp;
+	/* current addr to fetch data */
+	unsigned char *char_data;
+	/* base of char data */
+	unsigned char *char_base;
+	
+	/* if (1<<3), display graphics, if 0, hide graphics */
+	int flash_state;
+	/* current count */
+	int flash_count;
 
-ORIC_VIDEO_STRUCT _ORIC_HIRES[10];
+	void *timer;
+};
 
-unsigned char inverse_attrs[] = { 7,6,5,4,3,2,1,0 };
+
+static struct oric_vh_state vh_state;
+
+static void oric_vh_timer_callback(int reg)
+{
+	/* update flash count */
+	vh_state.flash_count++;
+	if (vh_state.flash_count == 30)
+	{	
+		vh_state.flash_count = 0;
+		vh_state.flash_state ^=(1<<3);
+		oric_vh_update_flash();
+	}
+}
 
 int oric_vh_start(void)
 {
-        oric_init_char_attrs();
-        _ORIC.hires = 0;
-        return 0;
+	/* initialise flash timer */
+	vh_state.flash_count = 0;
+	vh_state.flash_state = 0;
+	vh_state.timer = timer_pulse(TIME_IN_HZ(50), 0, oric_vh_timer_callback);
+	/* mode */
+	oric_vh_update_attribute((1<<3)|(1<<4));
+    return 0;
 }
 
 void oric_vh_stop(void)
 {
-	return;
+	if (vh_state.timer!=NULL)
+	{
+		timer_remove(vh_state.timer);
+		vh_state.timer = NULL;
+	}
 }
 
-void oric_set_powerscreen_mode(int mode)
+
+static void oric_vh_update_flash(void)
 {
-        oric_powerup_screen = mode;
+	/* flash active? */
+	if (vh_state.text_attributes & (1<<2))
+	{
+		/* yes */
+
+		/* show or hide text? */
+		if (vh_state.flash_state)
+		{
+			/* hide */
+			/* set foreground and background to be the same */
+			vh_state.active_foreground_colour = vh_state.background_colour;
+			vh_state.active_background_colour = vh_state.background_colour;
+			return;
+		}
+	}
+	
+
+	/* show */
+	vh_state.active_foreground_colour = vh_state.foreground_colour;
+	vh_state.active_background_colour = vh_state.background_colour;
 }
 
-void oric_set_flash_show(int mode)
+/* the alternate charset follows from the standard charset.
+Each charset holds 128 chars with 8 bytes for each char.
+
+The start address for the standard charset is dependant on the video mode */
+static void oric_refresh_charset(void)
 {
-        _ORIC.flashshow = mode;
+	/* alternate char set? */
+	if ((vh_state.text_attributes & (1<<0))==0)
+	{
+		/* no */
+		vh_state.char_data = vh_state.char_base;
+	}
+	else
+	{
+		/* yes */
+		vh_state.char_data = vh_state.char_base + (128*8);
+	}
 }
 
-void oric_init_char_attrs(void)
+/* update video hardware state depending on the new attribute */
+static void oric_vh_update_attribute(int c)
 {
-        int i;
+	/* attribute */
+	int attribute = c & 0x03f;
 
-        _ORIC.pcolour = 0;
-        _ORIC.tcolour = 7;
-        _ORIC.dblchar = 0;
-        _ORIC.flash = 0;
-        _ORIC.inverse = 0;
-        _ORIC.alternative = 0;
-        _ORIC.hires_this_line = 0;
-        _ORIC_tmp.pcolour = 0;
-        _ORIC_tmp.tcolour = 7;
-        _ORIC_tmp.dblchar = 0;
-        _ORIC_tmp.flash = 0;
-        _ORIC_tmp.inverse = 0;
-        _ORIC_tmp.alternative = 0;
-        _ORIC_tmp.hires_this_line = 0;
-        for (i=0;i<=8;i++) {
-                _ORIC_HIRES[i].pcolour = 0;
-                _ORIC_HIRES[i].tcolour = 7;
-                _ORIC_HIRES[i].flash = 0;
-                _ORIC_HIRES[i].inverse = 0;
-                _ORIC_HIRES[i].attr = 0;
-        }
+	switch ((attribute>>3) & 0x03)
+	{
+		case 0:
+		{
+			/* set foreground colour */
+			vh_state.foreground_colour = attribute & 0x07;
+			oric_vh_update_flash();
+		}
+		break;
+
+		case 1:
+		{
+			vh_state.text_attributes = attribute & 0x07;
+
+			oric_refresh_charset();
+
+			/* text attributes */
+			oric_vh_update_flash();
+		}
+		break;
+
+		case 2:
+		{
+			/* set background colour */
+			vh_state.background_colour = attribute & 0x07;
+			oric_vh_update_flash();
+		}
+		break;
+
+		case 3:
+		{
+			/* set video mode */
+			vh_state.mode = attribute & 0x07;
+
+			/* a different charset base is used depending on the video mode */
+			/* hires takes all the data from 0x0a000 through to about 0x0bf68,
+			so the charset is moved to 0x09800 */
+			/* text mode starts at 0x0bb80 and so the charset is in a different location */
+			if (vh_state.mode & (1<<2))
+			{
+				/* set screen memory base and standard charset location for this mode */
+				vh_state.read_addr = 0x0a000;
+				vh_state.char_base = memory_region(REGION_CPU1) + (unsigned long)0x09800; 
+				
+				/* changing the mode also changes the position of the standard charset
+				and alternative charset */
+				oric_refresh_charset();
+			}
+			else
+			{
+				/* set screen memory base and standard charset location for this mode */
+				vh_state.read_addr = 0x0bb80;
+				vh_state.char_base = memory_region(REGION_CPU1) + (unsigned long)0x0b400;
+			
+				/* changing the mode also changes the position of the standard charset
+				and alternative charset */
+				oric_refresh_charset();
+			}
+		}
+		break;
+
+		default:
+			break;
+	}
 }
+
+
+/* render 6-pixels using foreground and background colours specified */
+/* used in hires and text mode */
+static void oric_vh_render_6pixels(struct mame_bitmap *bitmap,int x,int y, int fg, int bg,int data, int invert_flag)
+{
+	int i;
+	int pens[2];
+	int px;
+	
+	/* invert? */
+	if (invert_flag)
+	{
+		fg ^=0x07;
+		bg ^=0x07;
+	}
+
+	pens[1] = Machine->pens[fg];
+	pens[0] = Machine->pens[bg];
+	
+	px = x;
+	for (i=0; i<6; i++)
+	{
+		int col;
+
+		col = pens[(data>>5) & 0x01];
+		plot_pixel(bitmap,px, y, col);
+		px++;
+		data = data<<1;
+	}
+}
+
+			
+
+
 
 /***************************************************************************
   oric_vh_screenrefresh
 ***************************************************************************/
-void oric_vh_screenrefresh(struct osd_bitmap *bitmap, int full_refresh)
+void oric_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 {
+	unsigned char *RAM;
+	int byte_offset;
+	int y;
+	unsigned long read_addr_base;
+	int hires_active;
 
-/**** TODO ... HIRES ... how do the hires attr's set HIRES mode?? ****/
-/**** TODO ... HIRES MODE LINES,  render cell from HIRES BITMAP MEM AREA ****/
+	RAM = memory_region(REGION_CPU1);
 
-        int x,y,i,xx,yy;
-	int offset;
-        int half;
-        int do_bmp;
-        int hires_offset;
-        int ink_colour;
-        int paper_colour;
-        unsigned short o1,o2,o3;
-        unsigned short *cdst[8];
-	unsigned char *text_ram;
-        unsigned char *hires_ram;
-        unsigned char *char_ram;
-        unsigned char *achar_ram;
-        unsigned char *hchar_ram;
-        unsigned char *hachar_ram;
-        unsigned char *tchar_ram;
-        unsigned char *tachar_ram;
-        unsigned char c,b;
-        unsigned char d, hires_c;
-        unsigned char *RAM = memory_region(REGION_CPU1);
-        text_ram    = &RAM[0xBB80] ;
-        hires_ram   = &RAM[0xA000] ;
-        char_ram    = &RAM[0xB400] ;
-        achar_ram   = &RAM[0xB800] ;
-        hchar_ram   = &RAM[0x9800] ;
-        hachar_ram  = &RAM[0x9c00] ;
-        tchar_ram   = &RAM[0xB400] ;
-        tachar_ram  = &RAM[0xB800] ;
+	/* set initial base */
+	read_addr_base = vh_state.read_addr;
+
+	/* is hires active? */
+	if (vh_state.mode & (1<<2))
+	{
+		hires_active = 1;
+	}
+	else
+	{
+		hires_active = 0;
+	}			
 
 
-        /*  Render the Charcters  /  Hires cells .. */
+	for (y = 0; y < 224; y++)
+	{
+		int x = 0;
 
-        /*
-                attribute char's ...
+		/* foreground colour white */
+		oric_vh_update_attribute(7);
+		/* background colour black */
+		oric_vh_update_attribute((1<<3));
 
-                0-7 text colour
-                8 normal / noflash / nodouble
-                9 alternative / noflash / nodouble
-                10 double normal noflash
-                11 double alternative noflash
-                12 normal flash single
-                13 flash alt single
-                14 flash normal double
-                15 flash alt double
-                16-23 paper colour
-                24  ???
-                25  ???
-                26  ???
-                27  ???
-                28 hires?
-                29 hires?
-                30 hires?
-                31 hires?
-        */
+		oric_vh_update_attribute((1<<4));
+		
+		for (byte_offset=0; byte_offset<40; byte_offset++)
+		{
+			int c;
+			unsigned long read_addr;
 
-        if (_ORIC.hires == 0) {
-                c = text_ram[ (28*40)-1 ];
-                if (c == 0x1c) _ORIC.hires = 1;
-                if (c == 0x1d) _ORIC.hires = 1;
-                if (c == 0x1e) _ORIC.hires = 1;
-                if (c == 0x1f) _ORIC.hires = 1;
-        }
-        if (_ORIC.hires == 1) {
-                if (RAM[0xbfdf] == 0x18) _ORIC.hires = 0;
-                if (RAM[0xbfdf] == 0x19) _ORIC.hires = 0;
-                if (RAM[0xbfdf] == 0x1a) _ORIC.hires = 0;
-                if (RAM[0xbfdf] == 0x1b) _ORIC.hires = 0;
-        }
-        oric_init_char_attrs();
-        for (offset = 0; offset < (28*40); offset++)
-        {
-                c = text_ram[offset];
-                d = c;
-                c &= 0x7f;
-                y = (offset / 40);
-                x = (offset % 40) * 3;
-                half = 0;
-                if ( ( y & 1 ) == 1 ) half = 4;
-                y *= 8;
-                if ( x == 0 ) oric_init_char_attrs();
-                // colors and text attrs ...
+			/* after line 200 all rendering is done in text mode */
+			if (y<200)
+			{
+				/* calculate fetch address based on current line and
+				current mode */
+				if (hires_active)
+				{
+					read_addr = (unsigned long)read_addr_base + (unsigned long)byte_offset + (unsigned long)(y*40);
+				}
+				else
+				{
+					int char_line;
 
-                if (c <= (unsigned char)7) _ORIC.tcolour = c;
-                if (c >= (unsigned char)16)
-                      if (c <= (unsigned char)23) _ORIC.pcolour = c-16;
-                if (c == (unsigned char)8) { _ORIC.alternative = 0;
-                      _ORIC.dblchar = 0; _ORIC.flash = 0; }
-                if (c == (unsigned char)9) { _ORIC.alternative = 1;
-                      _ORIC.dblchar = 0; _ORIC.flash = 0; }
-                if (c == (unsigned char)10) { _ORIC.alternative = 0;
-                      _ORIC.dblchar = 1; _ORIC.flash = 0; }
-                if (c == (unsigned char)11) { _ORIC.alternative = 1;
-                      _ORIC.dblchar = 1; _ORIC.flash = 0; }
-                if (c == (unsigned char)12) { _ORIC.alternative = 0;
-                      _ORIC.dblchar = 0; _ORIC.flash = 1; }
-                if (c == (unsigned char)13) { _ORIC.alternative = 1;
-                      _ORIC.dblchar = 0; _ORIC.flash = 1; }
-                if (c == (unsigned char)14) { _ORIC.alternative = 0;
-                      _ORIC.dblchar = 1; _ORIC.flash = 1; }
-                if (c == (unsigned char)15) { _ORIC.alternative = 1;
-                      _ORIC.dblchar = 1; _ORIC.flash = 1; }
+					char_line = (y>>3);
+					read_addr = (unsigned long)read_addr_base + (unsigned long)byte_offset + (unsigned long)(char_line*40);		
+				}
+			}
+			else
+			{
+				int char_line;
 
-                for (i=1;i<=8;i++) {
-                      _ORIC_HIRES[i].attr = 0;
-                      hires_offset = 0xA000 + ( (y+i-1) * 40 );
-                      hires_offset += ( offset % 40 );
-                      hires_c = RAM[hires_offset];
-                      if ( hires_c <= 0x1f )
-                      {
-                        _ORIC_HIRES[i].attr = 1;
-                        if (hires_c <= (unsigned char)7) _ORIC_HIRES[i].tcolour = hires_c;
-                        if (hires_c >= (unsigned char)16)
-                          if (hires_c <= (unsigned char)23) _ORIC_HIRES[i].pcolour = hires_c-16;
+				char_line = ((y-200)>>3);
+				read_addr = (unsigned long)read_addr_base + (unsigned long)byte_offset + (unsigned long)(char_line*40);		
+			}
 
-                        // _ORIC_HIRES[i].flash       =  < something!! >
-                      }
-                      _ORIC_HIRES[i].inverse = 0;
-                      if ( (hires_c & 0x80) == 0x80) _ORIC_HIRES[i].inverse = 1;
-                }
+			/* fetch data */
+			c = RAM[read_addr];
 
-                if (oric_powerup_screen == 1) {
-                   /* all black spaces appart from
-                   17,7 -- 40,7
-                   32,12 -- 40,12
-                   8,20 -- 40,20
-                   24,26 -- 40,26
-                   based uponthe screen that Euphoric shows */
-                   c = 0;
-                   yy = (offset / 40);
-                   xx = (offset % 40);
-                   if ( yy == 7  && xx >= 17 ) c = 1;
-                   if ( yy == 12 && xx >= 32 ) c = 1;
-                   if ( yy == 20 && xx >= 8  ) c = 1;
-                   if ( yy == 26 && xx >= 24 ) c = 1;
-                }
-                for (i=0;i<8;i++) cdst[i]=(unsigned short *)bitmap->line[(y)+i];
-                for (i=0;i<8;i++) {
-                        _ORIC.inverse = 0;
-                        if ( d > 0x7f ) _ORIC.inverse = 1;
-                        char_ram = tchar_ram;
-                        achar_ram = tachar_ram;
-                        if (_ORIC.hires == 1) {
-                                char_ram = hchar_ram;
-                                achar_ram = hachar_ram;
-                        }
-                        b = char_ram[ (c * 8) + i];
-                        if ( _ORIC.dblchar == 1 )
-                                b = char_ram[ (c * 8) + (int)(i/2) + half];
-                        if ( _ORIC.alternative == 1 )
-                        {
-                                b = achar_ram[ (c * 8) + i];
-                                if ( _ORIC.dblchar == 1 )
-                                        b = achar_ram[ (c * 8) + (int)(i/2) + half ];
-                        }
-                        do_bmp = 0;
-                        if (_ORIC.hires == 1) if ( (offset / 40) < 25) do_bmp = 1;
-                        ink_colour = _ORIC.tcolour;
-                        paper_colour = _ORIC.pcolour;
-                        if ( _ORIC.inverse == 1 ) {
-                                ink_colour = inverse_attrs[_ORIC.tcolour];
-                                paper_colour = inverse_attrs[_ORIC.pcolour];
-                        }
-                        if (do_bmp == 1) {
-                                hires_offset = 0xA000 + ( (y+i) * 40 );
-                                hires_offset += ( offset % 40 );
-                                b = RAM[hires_offset];
-                                if (_ORIC_HIRES[i+1].attr == 1) b = 0;
-                                c = 0x55;
-                        }
-                        if ( c < 0x20 ) b = 0;
-                        if (_ORIC.flash == 1) if (_ORIC.flashshow == 0) b = 0;
-                        if (oric_powerup_screen == 1) b = (c * 63);
-                        o1 = o2 = o3 = 0;
-                        if (do_bmp == 1) {
-                           ink_colour = _ORIC_HIRES[i+1].tcolour;
-                           paper_colour = _ORIC_HIRES[i+1].pcolour;
-                           if ( _ORIC_HIRES[i+1].inverse == 1) {
-                              ink_colour = inverse_attrs[_ORIC_HIRES[i+1].tcolour];
-                              paper_colour = inverse_attrs[_ORIC_HIRES[i+1].pcolour];
-                           }
-                           if (_ORIC_HIRES[i+1].attr == 1) b = 0;
-                        }
-                        #ifdef LSB_FIRST
-							if (b & 32) o1 += Machine->pens[ink_colour];
-						    else        o1 += Machine->pens[paper_colour];
-						    if (b & 16) o1 += ( Machine->pens[ink_colour] *	0x100 );
-						    else        o1 += ( Machine->pens[paper_colour] * 0x100 );
-						    if (b & 8 ) o2 += Machine->pens[ink_colour];
-						    else        o2 += Machine->pens[paper_colour];
-							if (b & 4 ) o2 += ( Machine->pens[ink_colour] * 0x100 );
-							else        o2 += ( Machine->pens[paper_colour] * 0x100 );
-							if (b & 2 ) o3 += Machine->pens[ink_colour];
-							else        o3 += Machine->pens[paper_colour];
-						    if (b & 1 ) o3 += ( Machine->pens[ink_colour] * 0x100 );
-						    else        o3 += ( Machine->pens[paper_colour] * 0x100 );
-						#else
-							if (b & 32) o1 += Machine->pens[ink_colour] * 0x100;
-							else        o1 += Machine->pens[paper_colour] * 0x100;
-							if (b & 16) o1 += Machine->pens[ink_colour];
-							else        o1 += Machine->pens[paper_colour];
-							if (b & 8 ) o2 += Machine->pens[ink_colour] * 0x100;
-							else        o2 += Machine->pens[paper_colour] * 0x100;
-							if (b & 4 ) o2 += Machine->pens[ink_colour];
-							else        o2 += Machine->pens[paper_colour];
-							if (b & 2 ) o3 += Machine->pens[ink_colour] * 0x100;
-							else        o3 += Machine->pens[paper_colour] * 0x100;
-							if (b & 1 ) o3 += Machine->pens[ink_colour];
-							else        o3 += Machine->pens[paper_colour];
-						#endif
-                        cdst[i][x+0] = o1;
-                        cdst[i][x+1] = o2;
-                        cdst[i][x+2] = o3;
-                }
-        }
+			/* if bits 6 and 5 are zero, the byte contains a serial attribute */
+			if ((c & ((1<<6) | (1<<5)))==0)
+			{
+				oric_vh_update_attribute(c);
+
+				/* display background colour when attribute has been found */
+				oric_vh_render_6pixels(bitmap,x,y,vh_state.active_foreground_colour, vh_state.active_background_colour, 0,(c & 0x080));
+
+				if (y<200)
+				{				
+					/* is hires active? */
+					if (vh_state.mode & (1<<2))
+					{
+						hires_active = 1;
+					}
+					else
+					{
+						hires_active = 0;
+					}
+					
+					read_addr_base = vh_state.read_addr;
+				}
+			}
+			else
+			{
+				/* hires? */
+				if (hires_active)
+				{
+					int pixel_data = c & 0x03f;
+					/* plot hires pixels */
+					oric_vh_render_6pixels(bitmap,x,y,vh_state.active_foreground_colour, vh_state.active_background_colour, pixel_data,(c & 0x080));
+				}
+				else
+				{
+					int char_index;
+					int char_data;
+					int ch_line;
+
+					char_index = (c & 0x07f);
+
+					ch_line = y & 7;
+
+					/* is double height set? */
+					if (vh_state.text_attributes & (1<<1))
+					{ 
+						/* if char line is even, top half of character is displayed,
+						if char line is odd, bottom half of character is displayed */
+						int double_height_flag = ((y>>3) & 0x01);
+
+						/* calculate line to fetch */
+						ch_line = (ch_line>>1) + (double_height_flag<<2);
+					}
+					
+					/* fetch pixel data for this char line */
+					char_data = vh_state.char_data[(char_index<<3) | ch_line] & 0x03f;
+
+					/* draw! */
+					oric_vh_render_6pixels(bitmap,x,y,
+						vh_state.active_foreground_colour, 
+						vh_state.active_background_colour, char_data, (c & 0x080));
+				}
+
+			}
+			
+			x=x+6;	
+		}
+		
+		/* after 200 lines have been drawn, force a change of the read address */
+		/* there are 200 lines of hires/text mode, then 24 lines of text mode */
+		/* the mode can't be changed in the last 24 lines. */
+		if (y==199)
+		{
+			/* mode */
+			read_addr_base = (unsigned long)0x0bf68;
+			hires_active = 0;
+		}
+	}
 }
+
 

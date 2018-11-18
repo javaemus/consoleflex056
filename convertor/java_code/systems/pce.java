@@ -19,7 +19,7 @@ public class pce
 	
 	public static InterruptPtr pce_interrupt = new InterruptPtr() { public int handler() 
 	{
-	    int ret = H6280_INT_NONE;
+	    int ret = 0;
 	
 	    /* bump current scanline */
 	    vdc.curline = (vdc.curline + 1) % VDC_LPF;
@@ -94,45 +94,37 @@ public class pce
 	    return 0x00;
 	} };
 	
-	static MemoryReadAddress pce_readmem[] =
-	{
-	    new MemoryReadAddress( 0x000000, 0x1EDFFF, MRA_ROM ),
-	    new MemoryReadAddress( 0x1EE000, 0x1EFFFF, MRA_RAM ),
-	    new MemoryReadAddress( 0x1F0000, 0x1F1FFF, MRA_RAM ),
-	    new MemoryReadAddress( 0x1FE000, 0x1FE003, vdc_r ),
-	    new MemoryReadAddress( 0x1FE400, 0x1FE407, vce_r ),
-	    new MemoryReadAddress( 0x1FE800, 0x1FE80F, pce_psg_r ),
-	    new MemoryReadAddress( 0x1FEC00, 0x1FEC00, pce_timer_r ),
-	    new MemoryReadAddress( 0x1FF000, 0x1FF000, pce_joystick_r ),
-	    new MemoryReadAddress( 0x1FF402, 0x1FF403, pce_irq_r ),
-	    new MemoryReadAddress( -1 )  /* end of table */
-	};
+	MEMORY_READ_START( pce_readmem )
+	    { 0x000000, 0x1EDFFF, MRA_ROM },
+	    { 0x1EE000, 0x1EFFFF, MRA_RAM },
+	    { 0x1F0000, 0x1F1FFF, MRA_RAM },
+	    { 0x1FE000, 0x1FE003, vdc_r },
+	    { 0x1FE400, 0x1FE407, vce_r },
+	    { 0x1FE800, 0x1FE80F, pce_psg_r },
+	    { 0x1FEC00, 0x1FEC00, pce_timer_r },
+	    { 0x1FF000, 0x1FF000, pce_joystick_r },
+	    { 0x1FF402, 0x1FF403, pce_irq_r },
+	MEMORY_END
 	
-	static MemoryWriteAddress pce_writemem[] =
-	{
-	    new MemoryWriteAddress( 0x000000, 0x1EDFFF, MWA_ROM ),
-	    new MemoryWriteAddress( 0x1EE000, 0x1EFFFF, MWA_RAM, pce_save_ram ),
-	    new MemoryWriteAddress( 0x1F0000, 0x1F1FFF, MWA_RAM, pce_user_ram ),
-	    new MemoryWriteAddress( 0x1FE000, 0x1FE003, vdc_w ),
-	    new MemoryWriteAddress( 0x1FE400, 0x1FE407, vce_w ),
-	    new MemoryWriteAddress( 0x1FE800, 0x1FE80F, pce_psg_w ),
-	    new MemoryWriteAddress( 0x1FEC00, 0x1FEC01, pce_timer_w ),
-	    new MemoryWriteAddress( 0x1FF000, 0x1FF000, pce_joystick_w ),
-	    new MemoryWriteAddress( 0x1FF402, 0x1FF403, pce_irq_w ),
-	    new MemoryWriteAddress( -1 )  /* end of table */
-	};
+	MEMORY_WRITE_START( pce_writemem )
+	    { 0x000000, 0x1EDFFF, MWA_ROM },
+	    { 0x1EE000, 0x1EFFFF, MWA_RAM, &pce_save_ram },
+	    { 0x1F0000, 0x1F1FFF, MWA_RAM, &pce_user_ram },
+	    { 0x1FE000, 0x1FE003, vdc_w },
+	    { 0x1FE400, 0x1FE407, vce_w },
+	    { 0x1FE800, 0x1FE80F, pce_psg_w },
+	    { 0x1FEC00, 0x1FEC01, pce_timer_w },
+	    { 0x1FF000, 0x1FF000, pce_joystick_w },
+	    { 0x1FF402, 0x1FF403, pce_irq_w },
+	MEMORY_END
 	
-	static IOReadPort pce_readport[] =
-	{
-	    new IOReadPort( 0x00, 0x03, vdc_r ),
-	    new IOReadPort( -1 ) /* end of table */
-	};
+	PORT_READ_START( pce_readport )
+	    { 0x00, 0x03, vdc_r },
+	PORT_END
 	
-	static IOWritePort pce_writeport[] =
-	{
-	    new IOWritePort( 0x00, 0x03, vdc_w ),
-	    new IOWritePort( -1 ) /* end of table */
-	};
+	PORT_WRITE_START( pce_writeport )
+	    { 0x00, 0x03, vdc_w },
+	PORT_END
 	
 	/* todo: alternate forms of input (multitap, mouse, etc.) */
 	static InputPortPtr input_ports_pce = new InputPortPtr(){ public void handler() { 
@@ -186,8 +178,7 @@ public class pce
 	{
 	   new GfxDecodeInfo( 1, 0x0000, pce_bg_layout, 0, 0x10 ),
 	   new GfxDecodeInfo( 1, 0x0000, pce_obj_layout, 0x100, 0x10 ),
-	   new GfxDecodeInfo( -1 )
-	};
+	MEMORY_END
 	#endif
 	
 	static MachineDriver machine_driver_pce = new MachineDriver
@@ -210,7 +201,7 @@ public class pce
 	    /*pce_gfxdecodeinfo,*/
 	    512, 512,
 	    null,
-	    VIDEO_TYPE_RASTER | VIDEO_MODIFIES_PALETTE,
+	    VIDEO_TYPE_RASTER,
 	    null,		/* was... (256*2) */
 	    pce_vh_start,
 	    pce_vh_stop,
@@ -224,7 +215,7 @@ public class pce
 			1,					/* count */
 			"pce\0",            /* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-	        pce_id_rom,         /* id */
+	        NULL,				/* id */
 			pce_load_rom,		/* init */
 			NULL,				/* exit */
 			NULL,				/* info */

@@ -27,6 +27,9 @@ public class saa5050
 	#define SAA5050_CONCEAL	0x0020
 	#define SAA5050_HOLDGR	0x0040
 	
+	#define SAA5050_BLACK   0
+	#define SAA5050_WHITE   7
+	
 	struct	{
 		UINT16	saa5050_flags;
 		UINT8	saa5050_forecol;
@@ -35,9 +38,6 @@ public class saa5050
 		UINT8	saa5050_prvchr;
 	} saa5050_state;
 	
-	enum { SAA5050_BLACK=0, SAA5050_RED, SAA5050_GREEN, SAA5050_YELLOW,
-			SAA5050_BLUE, SAA5050_MAGENTA, SAA5050_CYAN, SAA5050_WHITE
-	};
 	
 	public static VhStartPtr saa5050_vh_start = new VhStartPtr() { public int handler() 
 	{
@@ -61,13 +61,13 @@ public class saa5050
 	
 	/* BOX and dirtybuffer not implemented */
 	
-	public static VhUpdatePtr saa5050_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void saa5050_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	int code, colour;
 	int sx, sy;
 	
-	if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size[0]);
+	if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size);
 	
 	for (sy = 0; sy < 24; sy++) {
 	
@@ -174,5 +174,5 @@ public class saa5050
 	  }
 	}
 	
-	} };
+	}
 }

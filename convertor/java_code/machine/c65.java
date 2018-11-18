@@ -17,9 +17,6 @@ public class c65
 	#define VERBOSE_DBG 1
 	
 	
-	unsigned char c65_keyline = { 0xff };
-	int c65=0;
-	UINT8 c65_6511_port=0xff;
 	static int c65_charset_select=0;
 	
 	static int c64mode=0;
@@ -320,6 +317,7 @@ public class c65
 	
 	#define FDC_CMD_MOTOR_SPIN_UP 0x10
 	
+	#if 0
 	static void c65_fdc_state(void)
 	{
 		switch (c65_fdc.state) {
@@ -331,6 +329,7 @@ public class c65
 			break;
 		}
 	}
+	#endif
 	
 	static void c65_fdc_w(int offset, int data)
 	{
@@ -453,9 +452,9 @@ public class c65
 	
 	#if 0
 		if ( (data==0)&&(C65_MAIN_MEMORY==C65_512KB) ) {
-			cpu_setbankhandler_w (16, MWA_BANK16);
+			memory_set_bankhandler_w (16, 0, MWA_BANK16);
 		} else {
-			cpu_setbankhandler_w (16, MWA_NOP);
+			memory_set_bankhandler_w (16, 0, MWA_NOP);
 		}
 	#endif
 	}
@@ -465,7 +464,7 @@ public class c65
 		switch(offset&0xf00) {
 		case 0x000:
 			if (offset < 0x80)
-				vic2_port_w (offset & 0x7f, data);
+				vic3_port_w (offset & 0x7f, data);
 			else if (offset < 0xa0) {
 				c65_fdc_w(offset&0x1f,data);
 			} else {
@@ -477,9 +476,9 @@ public class c65
 			vic3_palette_w(offset-0x100,data);
 			break;
 		case 0x400:
-			if (offset<0x440) /* maybe 0x20 */
+			if (offset<0x420) /* maybe 0x20 */
 				sid6581_0_port_w (offset & 0x3f, data);
-			else if (offset<0x480)
+			else if (offset<0x440)
 				sid6581_1_port_w(offset&0x3f, data);
 			else
 				DBG_LOG (1, "io write", ("%.3x %.2x\n", offset, data));
@@ -517,7 +516,7 @@ public class c65
 		switch(offset&0xf00) {
 		case 0x000:
 			if (offset < 0x80)
-				return vic2_port_r (offset & 0x7f);
+				return vic3_port_r (offset & 0x7f);
 			if (offset < 0xa0) {
 				return c65_fdc_r(offset&0x1f);
 			} else {
@@ -530,9 +529,9 @@ public class c65
 			DBG_LOG (1, "io read", ("%.3x\n", offset));
 			break;
 		case 0x400:
-			if (offset<0x440)
+			if (offset<0x420)
 				return sid6581_0_port_r (offset & 0x3f);
-			if (offset<0x480)
+			if (offset<0x440)
 				return sid6581_1_port_r(offset&0x3f);
 			DBG_LOG (1, "io read", ("%.3x\n", offset));
 			break;
@@ -581,11 +580,11 @@ public class c65
 			if ((value & 1) != 0) {
 				cpu_setbank (8, c64_colorram+0x400);
 				cpu_setbank (9, c64_colorram+0x400);
-				cpu_setbankhandler_r (8, MRA_BANK8);
-				cpu_setbankhandler_w (9, MWA_BANK9);
+				memory_set_bankhandler_r (8, 0, MRA_BANK8);
+				memory_set_bankhandler_w (9, 0, MWA_BANK9);
 			} else {
-				cpu_setbankhandler_r (8, c65_read_io_dc00);
-				cpu_setbankhandler_w (9, c65_write_io_dc00);
+				memory_set_bankhandler_r (8, 0, c65_read_io_dc00);
+				memory_set_bankhandler_w (9, 0, c65_write_io_dc00);
 			}
 		}
 		c65_io_dc00_on=!(value&1);
@@ -650,17 +649,17 @@ public class c65
 			|| (charen && (loram || hiram)))
 		{
 			c65_io_on=1;
-			cpu_setbankhandler_r (4, c65_read_io);
-			cpu_setbankhandler_w (5, c65_write_io);
+			memory_set_bankhandler_r (4, 0, c65_read_io);
+			memory_set_bankhandler_w (5, 0, c65_write_io);
 			cpu_setbank (6, c64_colorram);
 			cpu_setbank (7, c64_colorram);
 	
 			if (c65_io_dc00_on != 0) {
-				cpu_setbankhandler_r (8, c65_read_io_dc00);
-				cpu_setbankhandler_w (9, c65_write_io_dc00);
+				memory_set_bankhandler_r (8, 0, c65_read_io_dc00);
+				memory_set_bankhandler_w (9, 0, c65_write_io_dc00);
 			} else {
-				cpu_setbankhandler_r (8, MRA_BANK8);
-				cpu_setbankhandler_w (9, MWA_BANK9);
+				memory_set_bankhandler_r (8, 0, MRA_BANK8);
+				memory_set_bankhandler_w (9, 0, MWA_BANK9);
 				cpu_setbank (8, c64_colorram+0x400);
 				cpu_setbank (9, c64_colorram+0x400);
 			}
@@ -668,8 +667,8 @@ public class c65
 		else
 		{
 			c65_io_on=0;
-			cpu_setbankhandler_r (4, MRA_BANK4);
-			cpu_setbankhandler_w (5, MWA_BANK5);
+			memory_set_bankhandler_r (4, 0, MRA_BANK4);
+			memory_set_bankhandler_w (5, 0, MWA_BANK5);
 			cpu_setbank(5, c64_memory+0xd000);
 			cpu_setbank(7, c64_memory+0xd800);
 			cpu_setbank(9, c64_memory+0xdc00);
@@ -754,14 +753,12 @@ public class c65
 		cbm_drive_attach_fs (0);
 		cbm_drive_attach_fs (1);
 	
-		sid6581_0_init (c64_paddle_read,c64_pal);
-		sid6581_1_init (NULL,c64_pal);
 		c64_cia0.todin50hz = c64_cia1.todin50hz = c64_pal;
 		cia6526_config (0, &c64_cia0);
 		cia6526_config (1, &c64_cia1);
 		vic4567_init (c64_pal, c65_dma_read, c65_dma_read_color,
 					  c64_vic_interrupt, c65_bankswitch_interface);
-		raster1.display_state=c65_state;
+		state_add_function(c65_state);
 	}
 	
 	void c65_driver_init (void)
@@ -793,10 +790,8 @@ public class c65
 	{
 		memset(c64_memory+0x40000, 0xff, 0xc0000);
 	
-		sid6581_0_reset();
-		sid6581_1_reset();
-		sid6581_0_configure(SID8580);
-		sid6581_1_configure(SID8580);
+		sid6581_reset(0);
+		sid6581_reset(1);
 	
 		cbm_serial_reset_write (0);
 		cbm_drive_0_config (SERIAL8ON ? SERIAL : 0, 10);
@@ -819,25 +814,21 @@ public class c65
 	{
 	}
 	
-	void c65_state (PRASTER *This)
+	void c65_state (void)
 	{
-		int y;
 		char text[70];
-	
-		y = Machine.visible_area.max_y + 1
-			- Machine.uifont.height;
 	
 	#if VERBOSE_DBG
 		cia6526_status (text, sizeof (text));
-		praster_draw_text (This, text, &y);
+		state_display_text (text);
 	
 		snprintf (text, sizeof(text), "c65 vic:%.4x m6510:%d c64:%d",
 				  c64_vicaddr - c64_memory, c64_port6510 & 7, c64mode);
 	#endif
 		cbm_drive_0_status (text, sizeof (text));
-		praster_draw_text (This, text, &y);
+		state_display_text (text);
 	
 		cbm_drive_1_status (text, sizeof (text));
-		praster_draw_text (This, text, &y);
+		state_display_text (text);
 	}
 }

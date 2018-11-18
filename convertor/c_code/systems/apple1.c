@@ -32,37 +32,33 @@ Hardware:	PIA6820 DSP for keyboard and screen interface
 
 /* memory w/r functions */
 
-static struct MemoryReadAddress apple1_readmem[] =
-{
+MEMORY_READ_START( apple1_readmem )
 	{0x0000, 0x1fff, MRA_RAM},
 	{0x2000, 0xcfff, MRA_NOP},
 	{0xd000, 0xd00f, MRA_NOP},
 	{0xd010, 0xd013, pia_0_r},
 	{0xd014, 0xfeff, MRA_NOP},
 	{0xff00, 0xffff, MRA_ROM},
-	{-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress apple1_writemem[] =
-{
+MEMORY_WRITE_START( apple1_writemem )
 	{0x0000, 0x1fff, MWA_RAM},
 	{0x2000, 0xcfff, MWA_NOP},
 	{0xd000, 0xd00f, MWA_NOP},
 	{0xd010, 0xd013, pia_0_w},
 	{0xd014, 0xfeff, MWA_NOP},
 	{0xff00, 0xffff, MWA_ROM},
-	{-1}
-};
+MEMORY_END
 
 /* graphics output */
 
 struct GfxLayout apple1_charlayout =
 {
-	6, 8,
+	7, 8,
 	128,
 	1,
 	{ 0 },
-	{ 0, 1, 2, 3, 4, 5 },
+	{ 7, 6, 5, 4, 3, 2, 1 },
 	{ 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 },
 	8 * 8
 };
@@ -70,8 +66,7 @@ struct GfxLayout apple1_charlayout =
 static struct	GfxDecodeInfo apple1_gfxdecodeinfo[] =
 {
 	{ REGION_GFX1, 0x0000, &apple1_charlayout, 0, 1},
-	{ -1 }
-};
+MEMORY_END
 
 static unsigned char apple1_palette[] =
 {
@@ -179,9 +174,9 @@ static struct MachineDriver machine_driver_apple1 =
 	1,
 	apple1_init_machine,
 	apple1_stop_machine,
-	40 * 6,
+	40 * 7,
 	24 * 8,
-	{ 0, 40 * 6 - 1, 0, 24 * 8 - 1 },
+	{ 0, 40 * 7 - 1, 0, 24 * 8 - 1 },
 	apple1_gfxdecodeinfo,
 	sizeof (apple1_palette) / 3,
 	sizeof (apple1_colortable),
@@ -195,10 +190,10 @@ static struct MachineDriver machine_driver_apple1 =
 };
 
 ROM_START(apple1)
-	ROM_REGION(0x10000, REGION_CPU1)
+	ROM_REGION(0x10000, REGION_CPU1,0)
 	ROM_LOAD("apple1.rom", 0xff00, 0x0100, 0xa30b6af5)
-	ROM_REGION(0x0400, REGION_GFX1)
-	ROM_LOAD("apple1.chr", 0x0000, 0x0400, 0xbe70bb85)
+	ROM_REGION(0x0400, REGION_GFX1,0)
+	ROM_LOAD("apple1.vid", 0x0000, 0x0400, 0xa3f2d66f)
 ROM_END
 
 static	const	struct	IODevice io_apple1[] = {

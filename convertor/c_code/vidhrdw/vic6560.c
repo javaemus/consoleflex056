@@ -1,6 +1,7 @@
 /***************************************************************************
 
   MOS video interface chip 6560
+  PeT mess@utanet.at
 
 ***************************************************************************/
 #include <math.h>
@@ -11,7 +12,7 @@
 #define VERBOSE_DBG 0
 #include "includes/cbm.h"
 #include "includes/vc20.h"
-#include "includes/c1551.h"
+#include "includes/cbmserb.h"
 #include "includes/vc1541.h"
 #include "includes/vc20tape.h"
 
@@ -88,7 +89,7 @@ UINT8 vic6560[16];
 
 bool vic6560_pal;
 
-static struct osd_bitmap *vic6560_bitmap;
+static struct mame_bitmap *vic6560_bitmap;
 static int rasterline = 0, lastline = 0;
 static void vic6560_drawlines (int start, int last);
 
@@ -108,7 +109,7 @@ static UINT16 backgroundcolor, framecolor, helpercolor, white, black;
 static UINT16 mono[2], monoinverted[2], multi[4], multiinverted[4];
 
 /* transparent, white, black */
-static unsigned short pointercolortable[3] =
+static UINT32 pointercolortable[3] =
 {0};
 static struct GfxLayout pointerlayout =
 {
@@ -307,7 +308,7 @@ static void vic6560_draw_character (int ybegin, int yend,
 {
 	int y, code;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -323,7 +324,7 @@ static void vic6560_draw_character (int ybegin, int yend,
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			code = vic_dma_read ((chargenaddr + ch * charheight + y) & 0x3fff);
@@ -344,7 +345,7 @@ static void vic6560_draw_character_multi (int ybegin, int yend,
 {
 	int y, code;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -360,7 +361,7 @@ static void vic6560_draw_character_multi (int ybegin, int yend,
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			code = vic_dma_read ((chargenaddr + ch * charheight + y) & 0x3fff);
@@ -378,7 +379,7 @@ static void vic6560_draw_character_multi (int ybegin, int yend,
 
 
 #ifndef GFX
-INLINE void vic6560_draw_pointer (struct osd_bitmap *bitmap,
+INLINE void vic6560_draw_pointer (struct mame_bitmap *bitmap,
 								  struct rectangle *visible, int xoff, int yoff)
 {
 	/* this is a a static graphical object */
@@ -389,7 +390,7 @@ INLINE void vic6560_draw_pointer (struct osd_bitmap *bitmap,
 	{0xf0, 0x80, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00};
 	int i, j, y, x;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = visible->min_y, j = yoff; y <= visible->max_y; y++, j++)
 		{
@@ -403,7 +404,7 @@ INLINE void vic6560_draw_pointer (struct osd_bitmap *bitmap,
 		}
 	}
 	else
-	{
+*/	{
 		for (y = visible->min_y, j = yoff; y <= visible->max_y; y++, j++)
 		{
 			for (x = visible->min_x, i = xoff; x <= visible->max_x; x++, i++)
@@ -428,7 +429,7 @@ static void vic6560_drawlines (int first, int last)
 	if (first >= last)
 		return;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (line = first; (line < ypos) && (line < last); line++)
 		{
@@ -436,7 +437,7 @@ static void vic6560_drawlines (int first, int last)
 		}
 	}
 	else
-	{
+*/	{
 		for (line = first; (line < ypos) && (line < last); line++)
 		{
 			memset16 (vic6560_bitmap->line[line], framecolor, vic656x_xsize);
@@ -461,13 +462,13 @@ static void vic6560_drawlines (int first, int last)
 
 		if (xpos > 0)
 		{
-			if (Machine->color_depth == 8)
+/*			if (Machine->color_depth == 8)
 			{
 				for (i = ybegin; i <= yend; i++)
 					memset (vic6560_bitmap->line[yoff + i], framecolor, xpos);
 			}
 			else
-			{
+*/			{
 				for (i = ybegin; i <= yend; i++)
 					memset16 (vic6560_bitmap->line[yoff + i], framecolor, xpos);
 			}
@@ -506,14 +507,14 @@ static void vic6560_drawlines (int first, int last)
 		}
 		if (xoff < vic656x_xsize)
 		{
-			if (Machine->color_depth == 8)
+/*			if (Machine->color_depth == 8)
 			{
 				for (i = ybegin; i <= yend; i++)
 					memset (vic6560_bitmap->line[yoff + i] + xoff, framecolor,
 							vic656x_xsize - xoff);
 			}
 			else
-			{
+*/			{
 				for (i = ybegin; i <= yend; i++)
 					memset16 ((UINT16 *) vic6560_bitmap->line[yoff + i] + xoff,
 							  framecolor, vic656x_xsize - xoff);
@@ -530,7 +531,7 @@ static void vic6560_drawlines (int first, int last)
 			line = vline + ypos;
 		}
 	}
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (; line < last; line++)
 		{
@@ -538,7 +539,7 @@ static void vic6560_drawlines (int first, int last)
 		}
 	}
 	else
-	{
+*/	{
 		for (; line < last; line++)
 		{
 			memset16 (vic6560_bitmap->line[line], framecolor, vic656x_xsize);
@@ -546,7 +547,7 @@ static void vic6560_drawlines (int first, int last)
 	}
 }
 
-static void vic6560_draw_text (struct osd_bitmap *bitmap, char *text, int *y)
+static void vic6560_draw_text (struct mame_bitmap *bitmap, char *text, int *y)
 {
 	int x, x0, y1v, width = (Machine->visible_area.max_x -
 							 Machine->visible_area.min_x) / Machine->uifont->width;
@@ -595,7 +596,7 @@ int vic656x_raster_interrupt (void)
 
 			if (DOCLIP (&r, &Machine->visible_area))
 			{
-				osd_mark_dirty (r.min_x, r.min_y, r.max_x, r.max_y, 0);
+				osd_mark_dirty (r.min_x, r.min_y, r.max_x, r.max_y);
 #ifndef GFX
 				vic6560_draw_pointer (vic6560_bitmap, &r,
 									  r.min_x - (LIGHTPEN_X_VALUE + VIC656X_MAME_XPOS - 1),
@@ -623,6 +624,6 @@ int vic656x_raster_interrupt (void)
 	return ignore_interrupt ();
 }
 
-void vic6560_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
+void vic6560_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 {
 }

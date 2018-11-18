@@ -25,6 +25,7 @@ void nec765_set_tc_state(int);
 /* set nec765 ready input*/
 void	nec765_set_ready_state(int);
 
+void nec765_set_ready_int(void);
 
 void nec765_idle(void);
 
@@ -54,6 +55,8 @@ void	nec765_reset(int);
 /* reset pin of nec765 */
 void	nec765_set_reset_state(int);
 
+/* stop emulation and clean-up */
+void	nec765_stop(void);
 
 /*********************/
 /* STATUS REGISTER 1 */

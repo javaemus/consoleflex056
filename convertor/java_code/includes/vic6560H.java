@@ -109,7 +109,8 @@ extern bool vic6560_pal;
 #define VIC656X_CLOCK	(vic6560_pal?VIC6561_CLOCK:VIC6560_CLOCK)
 
 
-extern extern extern extern unsigned char vic6560_palette[16 * 3];
+extern extern extern void vic6560_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);
+extern unsigned char vic6560_palette[16 * 3];
 
 /* to be inserted in GameDriver-Structure */
 extern struct CustomSound_interface vic6560_sound_interface;

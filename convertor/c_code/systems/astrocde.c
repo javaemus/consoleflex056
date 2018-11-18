@@ -43,23 +43,18 @@
  * Bally Astrocade
  ****************************************************************************/
 
-static struct MemoryReadAddress astrocade_readmem[] =
-{
+MEMORY_READ_START( astrocade_readmem )
 	{ 0x0000, 0x3fff, MRA_ROM },
 	{ 0x4000, 0x4fff, MRA_RAM },
-	{ -1 }	/* end of table */
-};
+MEMORY_END
 
-static struct MemoryWriteAddress astrocade_writemem[] =
-{
+MEMORY_WRITE_START( astrocade_writemem )
 	{ 0x0000, 0x0fff, astrocade_magicram_w },
 	{ 0x1000, 0x3fff, MWA_ROM },  /* Star Fortress writes in here?? */
 	{ 0x4000, 0x4fff, astrocade_videoram_w, &astrocade_videoram, &videoram_size },	/* ASG */
-	{ -1 }	/* end of table */
-};
+MEMORY_END
 
-static struct IOReadPort astrocade_readport[] =
-{
+PORT_READ_START( astrocade_readport )
 	{ 0x08, 0x08, astrocade_intercept_r },
 	{ 0x0e, 0x0e, astrocade_video_retrace_r },
 	/*{ 0x0f, 0x0f, astrocade_horiz_r }, */
@@ -77,11 +72,9 @@ static struct IOReadPort astrocade_readport[] =
 	{ 0x1e, 0x1e, input_port_10_r },
 	{ 0x1f, 0x1f, input_port_11_r },
 
-	{ -1 }	/* end of table */
-};
+PORT_END
 
-static struct IOWritePort astrocade_writeport[] =
-{
+PORT_WRITE_START( astrocade_writeport )
 	{ 0x00, 0x07, astrocade_colour_register_w },
 	{ 0x08, 0x08, astrocade_mode_w },
 	{ 0x09, 0x09, astrocade_colour_split_w },
@@ -94,8 +87,7 @@ static struct IOWritePort astrocade_writeport[] =
 	{ 0x10, 0x18, astrocade_sound1_w }, /* Sound Stuff */
 	{ 0x19, 0x19, astrocade_magic_expand_color_w },
 
-	{ -1 }	/* end of table */
-};
+PORT_END
 
 INPUT_PORTS_START( astrocde )
 	PORT_START /* IN0 */	/* Player 1 Handle */
@@ -124,26 +116,26 @@ INPUT_PORTS_START( astrocde )
 
 	PORT_START /* IN4 */	/* Keypad Column 0 (right) */
 	PORT_BITX(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD, "%", KEYCODE_O, IP_JOY_NONE )
-	PORT_BITX(0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD, "/", KEYCODE_SLASH, IP_JOY_NONE )
-	PORT_BITX(0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD, "x", KEYCODE_U, IP_JOY_NONE )
-	PORT_BITX(0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD, "-", KEYCODE_PGDN, IP_JOY_NONE )
-	PORT_BITX(0x10, IP_ACTIVE_HIGH, IPT_KEYBOARD, "+", KEYCODE_PGUP, IP_JOY_NONE )
-	PORT_BITX(0x20, IP_ACTIVE_HIGH, IPT_KEYBOARD, "=", KEYCODE_Q, IP_JOY_NONE )
+	PORT_BITX(0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD, "/", KEYCODE_SLASH_PAD, IP_JOY_NONE )
+	PORT_BITX(0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD, "x", KEYCODE_ASTERISK, IP_JOY_NONE )
+	PORT_BITX(0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD, "-", KEYCODE_MINUS_PAD, IP_JOY_NONE )
+	PORT_BITX(0x10, IP_ACTIVE_HIGH, IPT_KEYBOARD, "+", KEYCODE_PLUS_PAD, IP_JOY_NONE )
+	PORT_BITX(0x20, IP_ACTIVE_HIGH, IPT_KEYBOARD, "=", KEYCODE_ENTER_PAD, IP_JOY_NONE )
     PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_UNUSED )
     PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START /* IN5 */	/* Keypad Column 1 */
-	PORT_BITX(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Down", KEYCODE_S, IP_JOY_NONE )
+	PORT_BITX(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Down", KEYCODE_PGDN, IP_JOY_NONE )
 	PORT_BITX(0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD, "CH", KEYCODE_H, IP_JOY_NONE )
 	PORT_BITX(0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD, "9", KEYCODE_9, IP_JOY_NONE )
 	PORT_BITX(0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD, "6", KEYCODE_6, IP_JOY_NONE )
 	PORT_BITX(0x10, IP_ACTIVE_HIGH, IPT_KEYBOARD, "3", KEYCODE_3, IP_JOY_NONE )
-	PORT_BITX(0x20, IP_ACTIVE_HIGH, IPT_KEYBOARD, ".", KEYCODE_COMMA, IP_JOY_NONE )
+	PORT_BITX(0x20, IP_ACTIVE_HIGH, IPT_KEYBOARD, ".", KEYCODE_STOP, IP_JOY_NONE )
     PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_UNUSED )
     PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START /* IN6 */	/* Keypad Column 2 */
-	PORT_BITX(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Up", KEYCODE_W, IP_JOY_NONE )
+	PORT_BITX(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Up", KEYCODE_PGUP, IP_JOY_NONE )
 	PORT_BITX(0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD, "MS", KEYCODE_S, IP_JOY_NONE )
 	PORT_BITX(0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD, "8", KEYCODE_8, IP_JOY_NONE )
 	PORT_BITX(0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD, "5", KEYCODE_5, IP_JOY_NONE )
@@ -154,7 +146,7 @@ INPUT_PORTS_START( astrocde )
 
 	PORT_START /* IN7 */	/* Keypad Column 3 (left) */
 	PORT_BITX(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD, "C", KEYCODE_C, IP_JOY_NONE )
-	PORT_BITX(0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD, "MR", KEYCODE_V, IP_JOY_NONE )
+	PORT_BITX(0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD, "MR", KEYCODE_R, IP_JOY_NONE )
 	PORT_BITX(0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD, "7", KEYCODE_7, IP_JOY_NONE )
 	PORT_BITX(0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD, "4", KEYCODE_4, IP_JOY_NONE )
 	PORT_BITX(0x10, IP_ACTIVE_HIGH, IPT_KEYBOARD, "1", KEYCODE_1, IP_JOY_NONE )
@@ -205,12 +197,12 @@ static struct MachineDriver machine_driver_astrocde =
 	0,
 
 	/* video hardware */
-	160, 204, { 0, 160-1, 0, 204-1 },
+	320, 204, { 0, 320-1, 0, 204-1 },
 	0,	/* no gfxdecodeinfo - bitmapped display */
 	8*32,8,
 	astrocade_init_palette,
 
-	VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
+	VIDEO_TYPE_RASTER,
 	0,
 	generic_vh_start,
 	generic_vh_stop,
@@ -230,7 +222,7 @@ static struct MachineDriver machine_driver_astrocde =
 };
 
 ROM_START( astrocde )
-    ROM_REGION( 0x10000, REGION_CPU1 )
+    ROM_REGION( 0x10000, REGION_CPU1, 0 )
     ROM_LOAD( "astro.bin",  0x0000, 0x2000, 0xebc77f3a )
 ROM_END
 
@@ -240,7 +232,7 @@ static const struct IODevice io_astrocde[] = {
 		1,					/* count */
 		"bin\0",            /* file extensions */
 		IO_RESET_CPU,		/* reset if file changed */
-        astrocade_id_rom,   /* id */
+        NULL,   			/* id */
 		astrocade_load_rom, /* init */
 		NULL,				/* exit */
 		NULL,				/* info */

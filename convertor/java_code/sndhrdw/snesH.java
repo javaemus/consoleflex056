@@ -45,8 +45,8 @@ public class snesH
 	READ_HANDLER ( spc_io_r );
 	WRITE_HANDLER ( spc_io_w );
 	
-	extern struct MemoryReadAddress spc_readmem[];
-	extern struct MemoryWriteAddress spc_writemem[];
+	extern const struct Memory_ReadAddress spc_readmem[];
+	extern const struct Memory_WriteAddress spc_writemem[];
 	#endif
 	
 	

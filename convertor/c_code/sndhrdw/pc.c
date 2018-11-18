@@ -11,9 +11,24 @@
 ****************************************************************************/
 #include "osd_cpu.h"
 #include "sound/streams.h"
-#include "includes/pc.h"
+#include "includes/pcshare.h"
 
 #include "includes/pit8253.h"
+
+#define VERBOSE_SND 0		/* SND (sound / speaker) */
+#if VERBOSE_SND
+#define SND_LOG(n,m,a) \
+	if(VERBOSE_SND>=N){ if( M )logerror("%11.6f: %-24s",timer_get_time(),(char*)M ); logerror A; }
+#else
+#define SND_LOG(n,m,a)
+#endif
+
+
+struct CustomSound_interface pc_sound_interface = {
+	pc_sh_custom_start,
+	pc_sh_stop,
+	pc_sh_custom_update
+};
 
 #define BASECLOCK	1193180
 
@@ -43,8 +58,16 @@ void pc_sh_stop(void)
 	logerror("pc_sh_stop\n");
 }
 
-void pc_sh_speaker(int mode)
+void pc_sh_speaker(int data)
 {
+	int mode = 0;
+	switch( data )
+	{
+		case 0: mode=0; break;
+		case 1: case 2: mode=1; break;
+		case 3: mode=2; break;
+	}
+
 	if( mode == speaker_gate )
 		return;
 
@@ -65,6 +88,11 @@ void pc_sh_speaker(int mode)
 			speaker_gate = 2;
             break;
     }
+}
+
+void pc_sh_speaker_change_clock(double pc_clock)
+{
+    stream_update(channel,0);
 }
 
 void pc_sh_custom_update(void) {}

@@ -10,6 +10,7 @@
 #include "driver.h"
 #include "machine/gb.h"
 #include "cpu/z80gb/z80gb.h"
+#include "includes/gb.h"
 
 static UINT8 MBCType;				   /* MBC type: 1 for MBC2, 0 for MBC1            */
 static UINT8 *ROMMap[256];			   /* Addresses of ROM banks                      */
@@ -23,7 +24,7 @@ static int RAMBanks;				   /* Total number of RAM banks                   */
 static UINT32 TCount, TStep;		   /* Timer counter and increment            */
 static UINT32 SIOCount;				   /* Serial I/O counter                     */
 
-#define Verbose 0x01
+#define Verbose 0x00
 #define SGB 0
 #define CheckCRC 1
 #define LineDelay 0
@@ -66,6 +67,27 @@ void gb_init_machine (void)
 
 	/* Initialise the timer */
 	gb_w_io (0x07, gb_ram [0xFF07]);
+
+	/* Initialise the Sound Registers */
+	   gameboy_sound_w(0xFF10,0x80);
+	   gameboy_sound_w(0xFF11,0xBF);
+   	   gameboy_sound_w(0xFF12,0xBF);
+   	   gameboy_sound_w(0xFF14,0xBF);
+   	   gameboy_sound_w(0xFF16,0x3F);
+   	   gameboy_sound_w(0xFF17,0x00);
+   	   gameboy_sound_w(0xFF19,0xBF);
+   	   gameboy_sound_w(0xFF1A,0x7F);
+   	   gameboy_sound_w(0xFF1B,0xFF);
+   	   gameboy_sound_w(0xFF1C,0x9F);
+   	   gameboy_sound_w(0xFF1E,0xBF);
+   	   gameboy_sound_w(0xFF20,0xFF);
+   	   gameboy_sound_w(0xFF21,0x00);
+   	   gameboy_sound_w(0xFF22,0x00);
+   	   gameboy_sound_w(0xFF23,0xBF);
+   	   gameboy_sound_w(0xFF24,0x77);
+   	   gameboy_sound_w(0xFF25,0xF3);
+   	   gameboy_sound_w(0xFF26,0xF1); /*Gameboy, F0 for SGB*/
+
 }
 
 WRITE_HANDLER ( gb_rom_bank_select )
@@ -107,6 +129,7 @@ WRITE_HANDLER ( gb_w_io )
 
 	offset += 0xFF00;
 
+	/*logerror("Hardware hit %04x, %02x\n", offset, data);*/
 	switch (offset)
 	{
 	case 0xFF00:
@@ -250,6 +273,8 @@ WRITE_HANDLER ( gb_w_io )
 		gb_bpal[2] = Machine->pens[(data & 0x30) >> 4];
 		gb_bpal[3] = Machine->pens[(data & 0xC0) >> 6];
 		break;
+#if 0
+		// only 4 colors in Machine->pens allocated!
 	case 0xFF48:
 		gb_spal0[0] = Machine->pens[(data & 0x03) + 4];
 		gb_spal0[1] = Machine->pens[((data & 0x0C) >> 2) + 4];
@@ -262,14 +287,38 @@ WRITE_HANDLER ( gb_w_io )
 		gb_spal1[2] = Machine->pens[((data & 0x30) >> 4) + 8];
 		gb_spal1[3] = Machine->pens[((data & 0xC0) >> 6) + 8];
 		break;
+#else
+	case 0xFF48:
+		gb_spal0[0] = Machine->pens[(data & 0x03) ];
+		gb_spal0[1] = Machine->pens[((data & 0x0C) >> 2) ];
+		gb_spal0[2] = Machine->pens[((data & 0x30) >> 4) ];
+		gb_spal0[3] = Machine->pens[((data & 0xC0) >> 6) ];
+		break;
+	case 0xFF49:
+		gb_spal1[0] = Machine->pens[(data & 0x03) ];
+		gb_spal1[1] = Machine->pens[((data & 0x0C) >> 2) ];
+		gb_spal1[2] = Machine->pens[((data & 0x30) >> 4) ];
+		gb_spal1[3] = Machine->pens[((data & 0xC0) >> 6) ];
+		break;
+#endif
 	default:
-#ifdef SOUND
+
+		/* Sound Registers */
 		if ((offset >= 0xFF10) && (offset <= 0xFF26))
 		{
-			Adlib_WriteSoundReg (offset, data);
+            /*logerror("SOUND WRITE offset: %x  data: %x\n",offset,data);*/
+            gameboy_sound_w(offset,data);
+			gb_ram [offset] = data;
 			return;
 		}
-#else
+
+		/*Pre defined Waveform Area */
+		if ((offset >= 0xFF30) && (offset <= 0xFF3F))
+		{
+			gb_ram [offset] = data;
+			return;
+		}
+
 		if (offset == 0xFF26)
 		{
 			if (data & 0x80)
@@ -278,9 +327,33 @@ WRITE_HANDLER ( gb_w_io )
 				gb_ram [0xFF26] = 0;
 			return;
 		}
-#endif
+
 	}
 	gb_ram [offset] = data;
+}
+
+READ_HANDLER ( gb_ser_regs )
+{
+	offset += 0xFF00;
+
+	switch(offset)
+	{
+		case 0xFF00:
+						/*logerror("Location read 0xff00\n");*/
+						break;
+		case 0xFF01:
+						/*logerror("Location read 0xff01\n");*/
+						break;
+		case 0xFF02:
+						/*logerror("Location read 0xff02\n");*/
+						break;
+		case 0xFF03:
+						/*logerror("Location read 0xff03\n");*/
+						break;
+	}
+
+	return gb_ram[offset];
+
 }
 
 READ_HANDLER ( gb_r_divreg )
@@ -405,9 +478,9 @@ int gb_load_rom (int id)
 	if(device_filename(IO_CARTSLOT,id)==NULL)
 	{
 		printf("Cartridge name not specified!\n");
-		return INIT_FAILED;
+		return INIT_FAIL;
 	}
-	if( new_memory_region(REGION_CPU1, 0x10000) )
+	if( new_memory_region(REGION_CPU1, 0x10000,0) )
 	{
 		logerror("Memory allocation failed reading roms!\n");
         return 1;
@@ -417,7 +490,7 @@ int gb_load_rom (int id)
 	memset (ROM, 0, 0x10000);
 
 	/* FIXME should check first if a file is given, should give a more clear error */
-	if (!(F = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, OSD_FOPEN_READ)))
+	if (!(F = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ)))
 	{
 		logerror("image_fopen failed in gb_load_rom.\n");
 		return 1;
@@ -434,7 +507,7 @@ int gb_load_rom (int id)
 	osd_fclose (F);
 
 	/* FIXME should check first if a file is given, should give a more clear error */
-	if (!(F = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, OSD_FOPEN_READ)))
+	if (!(F = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ)))
 	{
 		logerror("image_fopen failed in gb_load_rom.\n");
         return 1;
@@ -601,11 +674,6 @@ int gb_load_rom (int id)
 	return 0;
 }
 
-int gb_id_rom (int id)
-{
-	return 1;
-}
-
 int gb_scanline_interrupt (void)
 {
 	/* test ! */
@@ -619,10 +687,10 @@ int gb_scanline_interrupt (void)
 		break;
 	case 1:
 		gb_scanline_interrupt_set_mode2 (0);
-		return Z80GB_IGNORE_INT;
+		return ignore_interrupt();
 	case 2:
 		gb_scanline_interrupt_set_mode3 (0);
-		return Z80GB_IGNORE_INT;
+		return ignore_interrupt();
 	}
 
 	/* first lett's draw the current scanline */
@@ -644,6 +712,8 @@ int gb_scanline_interrupt (void)
 
 		CURLINE = (CURLINE + 1) % 154;
 
+		//gb_ram[0xFF44] = CURLINE;
+
 		if (CURLINE < 144)
 		{
 			/* first  lcdstate change after aprox 49 uS */
@@ -657,7 +727,10 @@ int gb_scanline_interrupt (void)
 
 			/* generate lcd interrupt if requested */
 			if( LCDSTAT & 0x08 )
-				cpu_set_irq_line(0, LCD_INT, HOLD_LINE);
+				{
+					/*logerror("generating lcd interrupt\n");*/
+					cpu_set_irq_line(0, LCD_INT, HOLD_LINE);
+				}
 		}
 		else
 		{

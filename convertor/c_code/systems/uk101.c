@@ -32,8 +32,7 @@ Hardware:	MC6850
 
 /* memory w/r functions */
 
-static struct MemoryReadAddress uk101_readmem[] =
-{
+MEMORY_READ_START( uk101_readmem )
 	{0x0000, 0x0fff, MRA_RAM},
 	{0x1000, 0x1fff, MRA_RAM},
 	{0x2000, 0x9fff, MRA_RAM},
@@ -46,11 +45,9 @@ static struct MemoryReadAddress uk101_readmem[] =
 	{0xf000, 0xf001, acia6850_0_r},
 	{0xf002, 0xf7ff, MRA_NOP},
 	{0xf800, 0xffff, MRA_ROM},
-	{-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress uk101_writemem[] =
-{
+MEMORY_WRITE_START( uk101_writemem )
 	{0x0000, 0x0fff, MWA_RAM},
 	{0x1000, 0x1fff, MWA_RAM},
 	{0x2000, 0x9fff, MWA_RAM},
@@ -63,11 +60,9 @@ static struct MemoryWriteAddress uk101_writemem[] =
 	{0xf000, 0xf001, acia6850_0_w},
 	{0xf002, 0xf7ff, MWA_NOP},
 	{0xf800, 0xffff, MWA_ROM},
-	{-1}
-};
+MEMORY_END
 
-static struct MemoryReadAddress superbrd_readmem[] =
-{
+MEMORY_READ_START( superbrd_readmem )
 	{0x0000, 0x0fff, MRA_RAM},
 	{0x1000, 0x1fff, MRA_RAM},
 	{0x2000, 0x9fff, MRA_RAM},
@@ -80,11 +75,9 @@ static struct MemoryReadAddress superbrd_readmem[] =
 	{0xf000, 0xf001, acia6850_0_r},
 	{0xf002, 0xf7ff, MRA_NOP},
 	{0xf800, 0xffff, MRA_ROM},
-	{-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress superbrd_writemem[] =
-{
+MEMORY_WRITE_START( superbrd_writemem )
 	{0x0000, 0x0fff, MWA_RAM},
 	{0x1000, 0x1fff, MWA_RAM},
 	{0x2000, 0x9fff, MWA_RAM},
@@ -97,8 +90,7 @@ static struct MemoryWriteAddress superbrd_writemem[] =
 	{0xf000, 0xf001, acia6850_0_w},
 	{0xf002, 0xf7ff, MWA_NOP},
 	{0xf800, 0xffff, MWA_ROM},
-	{-1}
-};
+MEMORY_END
 
 /* graphics output */
 
@@ -117,8 +109,7 @@ struct GfxLayout uk101_charlayout =
 static struct	GfxDecodeInfo uk101_gfxdecodeinfo[] =
 {
 	{ REGION_GFX1, 0x0000, &uk101_charlayout, 0, 1},
-	{ -1 }
-};
+MEMORY_END
 
 static unsigned char uk101_palette[2 * 3] =
 {
@@ -283,24 +274,24 @@ static struct MachineDriver machine_driver_superbrd =
 };
 
 ROM_START(uk101)
-	ROM_REGION(0x10000, REGION_CPU1)
+	ROM_REGION(0x10000, REGION_CPU1,0)
 	ROM_LOAD("basuk01.rom", 0xa000, 0x0800, 0x9d3caa92)
 	ROM_LOAD("basuk02.rom", 0xa800, 0x0800, 0x0039ef6a)
 	ROM_LOAD("basuk03.rom", 0xb000, 0x0800, 0x0d011242)
 	ROM_LOAD("basuk04.rom", 0xb800, 0x0800, 0x667223e8)
 	ROM_LOAD("monuk02.rom", 0xf800, 0x0800, 0x04ac5822)
-	ROM_REGION(0x800, REGION_GFX1)
+	ROM_REGION(0x800, REGION_GFX1,0)
 	ROM_LOAD("chguk101.rom", 0x0000, 0x0800, 0xfce2c84a)
 ROM_END
 
 ROM_START(superbrd)
-	ROM_REGION(0x10000, REGION_CPU1)
+	ROM_REGION(0x10000, REGION_CPU1,0)
 	ROM_LOAD("basus01.rom", 0xa000, 0x0800, 0xf4f5dec0)
-	ROM_LOAD("basus02.rom", 0xa800, 0x0800, 0x0039ef6a)
+	ROM_LOAD("basuk02.rom", 0xa800, 0x0800, 0x0039ef6a)
 	ROM_LOAD("basus03.rom", 0xb000, 0x0800, 0xca25f8c1)
 	ROM_LOAD("basus04.rom", 0xb800, 0x0800, 0x8ee6030e)
 	ROM_LOAD("monus02.rom", 0xf800, 0x0800, 0xe5b7028d)
-	ROM_REGION(0x800, REGION_GFX1)
+	ROM_REGION(0x800, REGION_GFX1,0)
 	ROM_LOAD("chgsuper.rom", 0x0000, 0x0800, BADCRC(0x136b5018))
 ROM_END
 

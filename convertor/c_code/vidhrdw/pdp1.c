@@ -14,6 +14,8 @@
 #include "vidhrdw/generic.h"
 #include "vidhrdw/pdp1.h"
 #include "cpu/pdp1/pdp1.h"
+#include "includes/pdp1.h"
+
 
 int fio_dec=0;
 int concise=0;
@@ -103,7 +105,7 @@ void clear_point_list (void)
 	new_index = 0;
 }
 
-static void clear_points(struct osd_bitmap *bitmap)
+static void clear_points(struct mame_bitmap *bitmap)
 {
 	unsigned char bg=Machine->pens[0];
 	int i;
@@ -113,13 +115,14 @@ static void clear_points(struct osd_bitmap *bitmap)
 		int x=(&old_list[i])->x;
 		int y=(&old_list[i])->y;
 
-		bitmap->line[y][x]=bg;
-		osd_mark_dirty(x,y,x,y,1);
+		/*bitmap->line[y][x]=bg;*/
+		plot_pixel(bitmap, x, y, bg);
+		osd_mark_dirty(x,y,x,y);
 	}
 	old_index=0;
 }
 
-static void set_points(struct osd_bitmap *bitmap)
+static void set_points(struct mame_bitmap *bitmap)
 {
 	unsigned char fg=Machine->pens[1];
 	int i;
@@ -129,8 +132,9 @@ static void set_points(struct osd_bitmap *bitmap)
 		int x=(&new_list[i])->x;
 		int y=(&new_list[i])->y;
 
-		bitmap->line[y][x]=fg;
-		osd_mark_dirty(x,y,x,y,1);
+		/*bitmap->line[y][x]=fg;*/
+		plot_pixel(bitmap, x, y, fg);
+		osd_mark_dirty(x,y,x,y);
 	}
 }
 
@@ -252,7 +256,7 @@ int pdp1_keyboard(void)
 	return 0;
 }
 
-void pdp1_vh_update (struct osd_bitmap *bitmap, int full_refresh)
+void pdp1_vh_update (struct mame_bitmap *bitmap, int full_refresh)
 {
 	int sense=readinputport(1);
 
@@ -261,7 +265,10 @@ void pdp1_vh_update (struct osd_bitmap *bitmap, int full_refresh)
 		bitmap_width=bitmap->width;
 		bitmap_height=bitmap->height;
 	}
-	clear_points(bitmap);
+	if (full_refresh)
+		fillbitmap(bitmap, Machine->pens[0], /*&Machine->visible_area*/NULL);
+	else
+		clear_points(bitmap);
 	set_points(bitmap);
 	clear_point_list();
 	cpu_set_reg(PDP1_S1,sense&0x80);

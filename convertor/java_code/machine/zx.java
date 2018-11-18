@@ -93,7 +93,7 @@ public class zx
 	
 	static public static InitMachinePtr common_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		cpu_setOPbaseoverride(0, zx_setopbase);
+		memory_set_opbase_handler(0, zx_setopbase);
 	} };
 	
 	public static InitMachinePtr zx80_init_machine = new InitMachinePtr() { public void handler() 
@@ -128,12 +128,12 @@ public class zx
 	
 	public static InitMachinePtr pc8300_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		cpu_setOPbaseoverride(0, pc8300_setopbase);
+		memory_set_opbase_handler(0, pc8300_setopbase);
 	} };
 	
 	public static InitMachinePtr pow3000_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		cpu_setOPbaseoverride(0, pow3000_setopbase);
+		memory_set_opbase_handler(0, pow3000_setopbase);
 	} };
 	
 	void zx_shutdown_machine(void)
@@ -144,7 +144,7 @@ public class zx
 	{
 		void *file;
 	
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		if (file != 0)
 		{
 			tape_size = osd_fsize(file);

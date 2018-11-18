@@ -37,66 +37,54 @@ public class p2000t
 	
 	/* port i/o functions */
 	
-	static IOReadPort p2000t_readport[] =
-	{
-		new IOReadPort(0x00, 0x0f, p2000t_port_000f_r),
-		new IOReadPort(0x20, 0x2f, p2000t_port_202f_r),
-		new IOReadPort(-1)
-	};
+	static PORT_READ_START( p2000t_readport )
+		{0x00, 0x0f, p2000t_port_000f_r},
+		{0x20, 0x2f, p2000t_port_202f_r},
+	PORT_END
 	
-	static IOWritePort p2000t_writeport[] =
-	{
-		new IOWritePort(0x10, 0x1f, p2000t_port_101f_w),
-		new IOWritePort(0x30, 0x3f, p2000t_port_303f_w),
-		new IOWritePort(0x50, 0x5f, p2000t_port_505f_w),
-		new IOWritePort(0x70, 0x7f, p2000t_port_707f_w),
-		new IOWritePort(0x88, 0x8b, p2000t_port_888b_w),
-		new IOWritePort(0x8c, 0x90, p2000t_port_8c90_w),
-		new IOWritePort(0x94, 0x94, p2000t_port_9494_w),
-		new IOWritePort(-1)
-	};
+	static PORT_WRITE_START( p2000t_writeport )
+		{0x10, 0x1f, p2000t_port_101f_w},
+		{0x30, 0x3f, p2000t_port_303f_w},
+		{0x50, 0x5f, p2000t_port_505f_w},
+		{0x70, 0x7f, p2000t_port_707f_w},
+		{0x88, 0x8b, p2000t_port_888b_w},
+		{0x8c, 0x90, p2000t_port_8c90_w},
+		{0x94, 0x94, p2000t_port_9494_w},
+	PORT_END
 	
 	/* Memory w/r functions */
 	
-	static MemoryReadAddress p2000t_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x0fff, MRA_ROM),
-		new MemoryReadAddress(0x1000, 0x4fff, MRA_RAM),
-		new MemoryReadAddress(0x5000, 0x57ff, videoram_r),
-		new MemoryReadAddress(0x5800, 0x9fff, MRA_RAM),
-		new MemoryReadAddress(0xa000, 0xffff, MRA_NOP),
-		new MemoryReadAddress(-1)
-	};
+	static MEMORY_READ_START( p2000t_readmem )
+		{0x0000, 0x0fff, MRA_ROM},
+		{0x1000, 0x4fff, MRA_RAM},
+		{0x5000, 0x57ff, videoram_r},
+		{0x5800, 0x9fff, MRA_RAM},
+		{0xa000, 0xffff, MRA_NOP},
+	MEMORY_END
 	
-	static MemoryWriteAddress p2000t_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x0fff, MWA_ROM),
-		new MemoryWriteAddress(0x1000, 0x4fff, MWA_RAM),
-		new MemoryWriteAddress(0x5000, 0x57ff, videoram_w, videoram, videoram_size),
-		new MemoryWriteAddress(0x5800, 0x9fff, MWA_RAM),
-		new MemoryWriteAddress(0xa000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)
-	};
+	static MEMORY_WRITE_START( p2000t_writemem )
+		{0x0000, 0x0fff, MWA_ROM},
+		{0x1000, 0x4fff, MWA_RAM},
+		{0x5000, 0x57ff, videoram_w, &videoram, &videoram_size},
+		{0x5800, 0x9fff, MWA_RAM},
+		{0xa000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
-	static MemoryReadAddress p2000m_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x0fff, MRA_ROM),
-		new MemoryReadAddress(0x1000, 0x4fff, MRA_RAM),
-		new MemoryReadAddress(0x5000, 0x5fff, videoram_r),
-		new MemoryReadAddress(0x6000, 0x9fff, MRA_RAM),
-		new MemoryReadAddress(0xa000, 0xffff, MRA_NOP),
-		new MemoryReadAddress(-1)
-	};
+	static MEMORY_READ_START( p2000m_readmem )
+		{0x0000, 0x0fff, MRA_ROM},
+		{0x1000, 0x4fff, MRA_RAM},
+		{0x5000, 0x5fff, videoram_r},
+		{0x6000, 0x9fff, MRA_RAM},
+		{0xa000, 0xffff, MRA_NOP},
+	MEMORY_END
 	
-	static MemoryWriteAddress p2000m_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x0fff, MWA_ROM),
-		new MemoryWriteAddress(0x1000, 0x4fff, MWA_RAM),
-		new MemoryWriteAddress(0x5000, 0x5fff, videoram_w, videoram, videoram_size),
-		new MemoryWriteAddress(0x6000, 0x9fff, MWA_RAM),
-		new MemoryWriteAddress(0xa000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)
-	};
+	static MEMORY_WRITE_START( p2000m_writemem )
+		{0x0000, 0x0fff, MWA_ROM},
+		{0x1000, 0x4fff, MWA_RAM},
+		{0x5000, 0x5fff, videoram_w, &videoram, &videoram_size},
+		{0x6000, 0x9fff, MWA_RAM},
+		{0xa000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
 	/* graphics output */
 	
@@ -306,18 +294,18 @@ public class p2000t
 	);
 	
 	static RomLoadPtr rom_p2000t = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("p2000.rom", 0x0000, 0x1000, 0x650784a3);
 		ROM_LOAD("basic.rom", 0x1000, 0x4000, 0x9d9d38f9);
-		ROM_REGION(0x01000, REGION_GFX1);
+		ROM_REGION(0x01000, REGION_GFX1,0);
 		ROM_LOAD("p2000.chr", 0x0140, 0x08c0, BADCRC(0x78c17e3e);
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_p2000m = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("p2000.rom", 0x0000, 0x1000, 0x650784a3);
 		ROM_LOAD("basic.rom", 0x1000, 0x4000, 0x9d9d38f9);
-		ROM_REGION(0x01000, REGION_GFX1);
+		ROM_REGION(0x01000, REGION_GFX1,0);
 		ROM_LOAD("p2000.chr", 0x0140, 0x08c0, BADCRC(0x78c17e3e);
 	ROM_END(); }}; 
 	

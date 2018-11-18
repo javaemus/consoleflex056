@@ -12,40 +12,63 @@ package systems;
 
 public class lisa
 {
-	//
+	/*
 	
-	static MemoryReadAddress lisa_readmem[] =
-	{
-		new MemoryReadAddress( 0x000000, 0xffffff, lisa_r ),
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	static MEMORY_READ16_START (lisa_readmem )
 	
-	static MemoryWriteAddress lisa_writemem[] =
-	{
-		new MemoryWriteAddress( 0x000000, 0xffffff, lisa_w ),
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+		{ 0x000000, 0xffffff, lisa_r },		/* no fixed map, we use an MMU */
 	
-	static MemoryReadAddress lisa_fdc_readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x03ff, MRA_RAM ),		/* RAM (shared with 68000) */
-		new MemoryReadAddress( 0x0400, 0x07ff, lisa_fdc_io_r ),	/* disk controller (IWM and TTL logic) */
-		new MemoryReadAddress( 0x0800, 0x0fff, MRA_NOP ),
-		new MemoryReadAddress( 0x1000, 0x1fff, MRA_ROM ),		/* ROM */
-		new MemoryReadAddress( 0x2000, 0xffff, lisa_fdc_r ),		/* handler for wrap-around */
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	MEMORY_END
 	
-	static MemoryWriteAddress lisa_fdc_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x03ff, MWA_RAM ),		/* RAM (shared with 68000) */
-		new MemoryWriteAddress( 0x0400, 0x07ff, lisa_fdc_io_w ),	/* disk controller (IWM and TTL logic) */
-		new MemoryWriteAddress( 0x0800, 0x0fff, MWA_NOP ),
-		new MemoryWriteAddress( 0x1000, 0x1fff, MWA_ROM ),		/* ROM */
-		new MemoryWriteAddress( 0x2000, 0xffff, lisa_fdc_w ),		/* handler for wrap-around */
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+	static MEMORY_WRITE16_START (lisa_writemem)
 	
+		{ 0x000000, 0xffffff, lisa_w },		/* no fixed map, we use an MMU */
+	
+	MEMORY_END
+	
+	static MEMORY_READ_START (lisa_fdc_readmem)
+	
+		{ 0x0000, 0x03ff, MRA_RAM },		/* RAM (shared with 68000) */
+		{ 0x0400, 0x07ff, lisa_fdc_io_r },	/* disk controller (IWM and TTL logic) */
+		{ 0x0800, 0x0fff, MRA_NOP },
+		{ 0x1000, 0x1fff, MRA_ROM },		/* ROM */
+		{ 0x2000, 0xffff, lisa_fdc_r },		/* handler for wrap-around */
+	
+	MEMORY_END
+	
+	static MEMORY_WRITE_START (lisa_fdc_writemem)
+	
+		{ 0x0000, 0x03ff, MWA_RAM },		/* RAM (shared with 68000) */
+		{ 0x0400, 0x07ff, lisa_fdc_io_w },	/* disk controller (IWM and TTL logic) */
+		{ 0x0800, 0x0fff, MWA_NOP },
+		{ 0x1000, 0x1fff, MWA_ROM },		/* ROM */
+		{ 0x2000, 0xffff, lisa_fdc_w },		/* handler for wrap-around */
+	
+	MEMORY_END
+	
+	static MEMORY_READ_START (lisa210_fdc_readmem)
+	
+		{ 0x0000, 0x03ff, MRA_RAM },		/* RAM (shared with 68000) */
+		{ 0x0400, 0x07ff, MRA_NOP },		/* nothing, or RAM wrap-around ??? */
+		{ 0x0800, 0x0bff, lisa_fdc_io_r },	/* disk controller (IWM and TTL logic) */
+		{ 0x0c00, 0x0fff, MRA_NOP },		/* nothing, or IO port wrap-around ??? */
+		{ 0x1000, 0x1fff, MRA_ROM },		/* ROM */
+		{ 0x2000, 0xffff, lisa_fdc_r },		/* handler for wrap-around */
+	
+	MEMORY_END
+	
+	static MEMORY_WRITE_START (lisa210_fdc_writemem)
+	
+		{ 0x0000, 0x03ff, MWA_RAM },		/* RAM (shared with 68000) */
+		{ 0x0400, 0x07ff, MWA_NOP },		/* nothing, or RAM wrap-around ??? */
+		{ 0x0800, 0x0bff, lisa_fdc_io_w },	/* disk controller (IWM and TTL logic) */
+		{ 0x0c00, 0x0fff, MWA_NOP },		/* nothing, or IO port wrap-around ??? */
+		{ 0x1000, 0x1fff, MWA_ROM },		/* ROM */
+		{ 0x2000, 0xffff, lisa_fdc_w },		/* handler for wrap-around */
+	
+	MEMORY_END
+	
+	/* init with simple, fixed, B/W palette */
 	static public static VhConvertColorPromPtr lisa_init_palette = new VhConvertColorPromPtr() { public void handler(char []palette, char []colortable, UBytePtr color_prom) 
 	{
 		palette[0*3 + 0] = 0xff;
@@ -66,31 +89,32 @@ public class lisa
 		{ NULL }
 	};
 	
+	/* Lisa1 and Lisa 2 machine */
 	static MachineDriver machine_driver_lisa = new MachineDriver
 	(
 		/* basic machine hardware */
 		new MachineCPU[] {
 			new MachineCPU(
 				CPU_M68000,
-				5000000,			/* +/- 5 Mhz */
+				5093760,			/* 20.37504 Mhz / 4 */
 				lisa_readmem,lisa_writemem,null,null,
 				lisa_interrupt,1,
 			),
 			new MachineCPU(
 				/*CPU_M6504*/CPU_M6502,
-				1000000,			// ????
-				lisa_fdc_readmem,lisa_fdc_writemem,null,null,
+				2000000,			/* 16.000 Mhz / 8 in when DIS asserted, 16.000 Mhz / 9 otherwise (?) */
+				lisa_fdc_readmem,lisa_fdc_writemem,0,null,
 				null,null,
 			)
 		},
 		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,		/* frames per second, vblank duration */
 		1,
 		lisa_init_machine,
-		null,
+		lisa_exit_machine,
 	
 		/* video hardware */
-		720, 360, /* screen width, screen height */
-		{ 0, 720-1, 0, 360-1 },			/* visible_area */
+		880, 380/* ??? */,	/* screen width, screen height (including Hblank and Vblank) */
+		{ 0, 720-1, 0, 364-1 },			/* visible_area */
 	
 		null,					/* graphics decode info */
 		2, 2,						/* number of colors, colortable size */
@@ -111,7 +135,105 @@ public class lisa
 			)
 		},
 	
-		/*lisa_nvram_handler*/
+		lisa_nvram_handler
+	);
+	
+	/* Lisa 210 machine (different fdc map) */
+	static MachineDriver machine_driver_lisa210 = new MachineDriver
+	(
+		/* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M68000,
+				5093760,			/* 20.37504 Mhz / 4 */
+				lisa_readmem,lisa_writemem,null,null,
+				lisa_interrupt,1,
+			),
+			new MachineCPU(
+				/*CPU_M6504*/CPU_M6502,
+				2000000,			/* 16.000 Mhz / 8 in when DIS asserted, 16.000 Mhz / 9 otherwise (?) */
+				lisa210_fdc_readmem,lisa210_fdc_writemem,0,null,
+				null,null,
+			)
+		},
+		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,		/* frames per second, vblank duration */
+		1,
+		lisa_init_machine,
+		lisa_exit_machine,
+	
+		/* video hardware */
+		880, 380/* ??? */,	/* screen width, screen height (including Hblank and Vblank) */
+		{ 0, 720-1, 0, 364-1 },			/* visible_area */
+	
+		null,					/* graphics decode info */
+		2, 2,						/* number of colors, colortable size */
+		lisa_init_palette,				/* convert color prom */
+	
+		VIDEO_TYPE_RASTER | VIDEO_UPDATE_BEFORE_VBLANK,
+		0,
+		lisa_vh_start,
+		lisa_vh_stop,
+		lisa_vh_screenrefresh,
+	
+		/* sound hardware */
+		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound(
+				SOUND_SPEAKER,
+				 lisa_sh_interface
+			)
+		},
+	
+		lisa_nvram_handler
+	);
+	
+	/* Mac XL machine (different video resolution) */
+	static MachineDriver machine_driver_macxl = new MachineDriver
+	(
+		/* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M68000,
+				5093760,			/* 20.37504 Mhz / 4 */
+				lisa_readmem,lisa_writemem,null,null,
+				lisa_interrupt,1,
+			),
+			new MachineCPU(
+				/*CPU_M6504*/CPU_M6502,
+				2000000,			/* 16.000 Mhz / 8 in when DIS asserted, 16.000 Mhz / 9 otherwise (?) */
+				lisa210_fdc_readmem,lisa210_fdc_writemem,0,null,
+				null,null,
+			)
+		},
+		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,		/* frames per second, vblank duration */
+		1,
+		lisa_init_machine,
+		lisa_exit_machine,
+	
+		/* video hardware */
+		768/* ???? */, 447/* ???? */,	/* screen width, screen height (including Hblank and Vblank) */
+		{ 0, 608-1, 0, 431-1 },			/* visible_area */
+	
+		null,					/* graphics decode info */
+		2, 2,						/* number of colors, colortable size */
+		lisa_init_palette,				/* convert color prom */
+	
+		VIDEO_TYPE_RASTER | VIDEO_UPDATE_BEFORE_VBLANK,
+		0,
+		lisa_vh_start,
+		lisa_vh_stop,
+		lisa_vh_screenrefresh,
+	
+		/* sound hardware */
+		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound(
+				SOUND_SPEAKER,
+				 lisa_sh_interface
+			)
+		},
+	
+		lisa_nvram_handler
 	);
 	
 	
@@ -134,17 +256,17 @@ public class lisa
 	
 		PORT_START(); 	/* 4 */
 		PORT_BITX(0x0001, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Clear", KEYCODE_DEL, IP_JOY_NONE);
-		PORT_BITX(0x0002, IP_ACTIVE_HIGH, IPT_KEYBOARD, "/ (KP);, KEYCODE_SLASH_PAD, IP_JOY_NONE)
-		PORT_BITX(0x0004, IP_ACTIVE_HIGH, IPT_KEYBOARD, "* (KP);, KEYCODE_ASTERISK, IP_JOY_NONE)
-		PORT_BITX(0x0008, IP_ACTIVE_HIGH, IPT_KEYBOARD, "= (KP);, KEYCODE_NUMLOCK, IP_JOY_NONE)
+		PORT_BITX(0x0002, IP_ACTIVE_HIGH, IPT_KEYBOARD, "- (KP);, KEYCODE_NUMLOCK, IP_JOY_NONE)
+		PORT_BITX(0x0004, IP_ACTIVE_HIGH, IPT_KEYBOARD, "+ (KP);, KEYCODE_SLASH_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0008, IP_ACTIVE_HIGH, IPT_KEYBOARD, "* (KP);, KEYCODE_ASTERISK, IP_JOY_NONE)
 		PORT_BITX(0x0010, IP_ACTIVE_HIGH, IPT_KEYBOARD, "7 (KP);, KEYCODE_7_PAD, IP_JOY_NONE)
-		PORT_BITX(0x0020, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
-		PORT_BITX(0x0040, IP_ACTIVE_HIGH, IPT_KEYBOARD, "8 (KP);, KEYCODE_8_PAD, IP_JOY_NONE)
-		PORT_BITX(0x0080, IP_ACTIVE_HIGH, IPT_KEYBOARD, "9 (KP);, KEYCODE_9_PAD, IP_JOY_NONE)
-		PORT_BITX(0x0100, IP_ACTIVE_HIGH, IPT_KEYBOARD, "- (KP);, KEYCODE_MINUS_PAD, IP_JOY_NONE)
-		PORT_BITX(0x0200, IP_ACTIVE_HIGH, IPT_KEYBOARD, "4 (KP);, KEYCODE_4_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0020, IP_ACTIVE_HIGH, IPT_KEYBOARD, "8 (KP);, KEYCODE_8_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0040, IP_ACTIVE_HIGH, IPT_KEYBOARD, "9 (KP);, KEYCODE_9_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0080, IP_ACTIVE_HIGH, IPT_KEYBOARD, "/ (KP);, KEYCODE_MINUS_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0100, IP_ACTIVE_HIGH, IPT_KEYBOARD, "4 (KP);, KEYCODE_4_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0200, IP_ACTIVE_HIGH, IPT_KEYBOARD, "5 (KP);, KEYCODE_5_PAD, IP_JOY_NONE)
 		PORT_BITX(0x0400, IP_ACTIVE_HIGH, IPT_KEYBOARD, "6 (KP);, KEYCODE_6_PAD, IP_JOY_NONE)
-		PORT_BITX(0x0800, IP_ACTIVE_HIGH, IPT_KEYBOARD, "+ (KP);, KEYCODE_PLUS_PAD, IP_JOY_NONE)
+		PORT_BITX(0x0800, IP_ACTIVE_HIGH, IPT_KEYBOARD, ", (KP);, KEYCODE_PLUS_PAD, IP_JOY_NONE)
 		PORT_BITX(0x1000, IP_ACTIVE_HIGH, IPT_KEYBOARD, ". (KP);, KEYCODE_DEL_PAD, IP_JOY_NONE)
 		PORT_BITX(0x2000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "2 (KP);, KEYCODE_2_PAD, IP_JOY_NONE)
 		PORT_BITX(0x4000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "3 (KP);, KEYCODE_3_PAD, IP_JOY_NONE)
@@ -156,16 +278,25 @@ public class lisa
 		PORT_START(); 	/* 6 */
 		PORT_BITX(0x0001, IP_ACTIVE_HIGH, IPT_KEYBOARD, "-", KEYCODE_MINUS, IP_JOY_NONE);
 		PORT_BITX(0x0002, IP_ACTIVE_HIGH, IPT_KEYBOARD, "=", KEYCODE_EQUALS, IP_JOY_NONE);
-		PORT_BITX(0x000C, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
+		PORT_BITX(0x0004, IP_ACTIVE_HIGH, IPT_KEYBOARD, "\\", KEYCODE_BACKSLASH, IP_JOY_NONE);
+	#if 1
+		/* US layout */
+		PORT_BITX(0x0008, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
+	#else
+		/* European layout */
+		PORT_BITX(0x0008, IP_ACTIVE_HIGH, IPT_UNUSED, "<", KEYCODE_BACKSLASH2, IP_JOY_NONE);
+	#endif
 		PORT_BITX(0x0010, IP_ACTIVE_HIGH, IPT_KEYBOARD, "P", KEYCODE_P, IP_JOY_NONE);
 		PORT_BITX(0x0020, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Backspace", KEYCODE_BACKSPACE, IP_JOY_NONE);
-		PORT_BITX(0x00C0, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
+		PORT_BITX(0x0040, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Enter", KEYCODE_MENU, IP_JOY_NONE);
+		PORT_BITX(0x0080, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
 		PORT_BITX(0x0100, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Return", KEYCODE_ENTER, IP_JOY_NONE);
 		PORT_BITX(0x0200, IP_ACTIVE_HIGH, IPT_KEYBOARD, "0 (KP);, KEYCODE_0_PAD, IP_JOY_NONE)
 		PORT_BITX(0x0C00, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
 		PORT_BITX(0x1000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "/", KEYCODE_SLASH, IP_JOY_NONE);
 		PORT_BITX(0x2000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "1 (KP);, KEYCODE_1_PAD, IP_JOY_NONE)
-		PORT_BITX(0xC000, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
+		PORT_BITX(0x4000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Right Option", KEYCODE_RALT, IP_JOY_NONE);
+		PORT_BITX(0x8000, IP_ACTIVE_HIGH, IPT_UNUSED, DEF_STR( "Unused") ); KEYCODE_NONE, IP_JOY_NONE)
 	
 		PORT_START(); 	/* 7 */
 		PORT_BITX(0x0001, IP_ACTIVE_HIGH, IPT_KEYBOARD, "9", KEYCODE_9, IP_JOY_NONE);
@@ -194,7 +325,7 @@ public class lisa
 		PORT_BITX(0x0020, IP_ACTIVE_HIGH, IPT_KEYBOARD, "R", KEYCODE_R, IP_JOY_NONE);
 		PORT_BITX(0x0040, IP_ACTIVE_HIGH, IPT_KEYBOARD, "T", KEYCODE_T, IP_JOY_NONE);
 		PORT_BITX(0x0080, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Y", KEYCODE_Y, IP_JOY_NONE);
-		PORT_BITX(0x0100, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Right Command", KEYCODE_RCONTROL, IP_JOY_NONE);
+		PORT_BITX(0x0100, IP_ACTIVE_HIGH, IPT_KEYBOARD, "`", KEYCODE_TILDE, IP_JOY_NONE);
 		PORT_BITX(0x0200, IP_ACTIVE_HIGH, IPT_KEYBOARD, "F", KEYCODE_F, IP_JOY_NONE);
 		PORT_BITX(0x0400, IP_ACTIVE_HIGH, IPT_KEYBOARD, "G", KEYCODE_G, IP_JOY_NONE);
 		PORT_BITX(0x0800, IP_ACTIVE_HIGH, IPT_KEYBOARD, "H", KEYCODE_H, IP_JOY_NONE);
@@ -216,36 +347,75 @@ public class lisa
 		PORT_BITX(0x0200, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Z", KEYCODE_Z, IP_JOY_NONE);
 		PORT_BITX(0x0400, IP_ACTIVE_HIGH, IPT_KEYBOARD, "X", KEYCODE_X, IP_JOY_NONE);
 		PORT_BITX(0x0800, IP_ACTIVE_HIGH, IPT_KEYBOARD, "D", KEYCODE_D, IP_JOY_NONE);
-		PORT_BITX(0x1000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Option", KEYCODE_LALT, IP_JOY_NONE);
+		PORT_BITX(0x1000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Left Option", KEYCODE_LALT, IP_JOY_NONE);
 		PORT_BITX(0x2000, IP_ACTIVE_HIGH, IPT_KEYBOARD | IPF_TOGGLE, "Alpha Lock", KEYCODE_CAPSLOCK, IP_JOY_NONE);
 		PORT_BITX(0x4000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Shift", KEYCODE_LSHIFT, IP_JOY_NONE);
-		PORT_BITX(0x8000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Left Command", KEYCODE_LCONTROL, IP_JOY_NONE);
+		PORT_BITX(0x8000, IP_ACTIVE_HIGH, IPT_KEYBOARD, "Command", KEYCODE_LCONTROL, IP_JOY_NONE);
 	
 	INPUT_PORTS_END(); }}; 
 	
 	
 	static RomLoadPtr rom_lisa2 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x204000,REGION_CPU1);/* 68k rom and ram */
-		ROM_LOAD_EVEN( "booth.hi", 0x000000, 0x2000, 0xadfd4516);
-		ROM_LOAD_ODD( "booth.lo", 0x000000, 0x2000, 0x546d6603);
+		ROM_REGION16_BE(0x204000,REGION_CPU1,0)	/* 68k rom and ram */
+		ROM_LOAD16_BYTE( "booth.hi", 0x000000, 0x2000, 0xadfd4516)
+		ROM_LOAD16_BYTE( "booth.lo", 0x000001, 0x2000, 0x546d6603)
 	
-		ROM_REGION(0x2000,REGION_CPU2);	/* 6504 RAM and ROM */
+		ROM_REGION(0x2000,REGION_CPU2,0);	/* 6504 RAM and ROM */
 		ROM_LOAD( "ioa8.rom", 0x1000, 0x1000, 0xbc6364f1);
 	
-		ROM_REGION(0x100,REGION_GFX1);	/* video ROM (includes S/N) */
+		ROM_REGION(0x100,REGION_GFX1,0);	/* video ROM (includes S/N) */
 		ROM_LOAD( "vidstate.rom", 0x00, 0x100, 0x75904783);
 	
-		ROM_REGION(0x040000, REGION_USER1);/* 1 bit per byte of CPU RAM - used for parity check emulation */
+		ROM_REGION(0x040000, REGION_USER1, 0);/* 1 bit per byte of CPU RAM - used for parity check emulation */
 	
 	ROM_END(); }}; 
 	
+	static RomLoadPtr rom_lisa210 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION16_BE(0x204000,REGION_CPU1, 0)	/* 68k rom and ram */
+		ROM_LOAD16_BYTE( "booth.hi", 0x000000, 0x2000, 0xadfd4516)
+		ROM_LOAD16_BYTE( "booth.lo", 0x000001, 0x2000, 0x546d6603)
+	
+	#if 1
+		ROM_REGION(0x2000,REGION_CPU2, 0);	/* 6504 RAM and ROM */
+		ROM_LOAD( "io88.rom", 0x1000, 0x1000, 0xe343fe74);
+	#else
+		ROM_REGION(0x2000,REGION_CPU2, 0);	/* 6504 RAM and ROM */
+		ROM_LOAD( "io88800k.rom", 0x1000, 0x1000, 0x8c67959a);
+	#endif
+	
+		ROM_REGION(0x100,REGION_GFX1, 0);	/* video ROM (includes S/N) */
+		ROM_LOAD( "vidstate.rom", 0x00, 0x100, 0x75904783);
+	
+		ROM_REGION(0x040000, REGION_USER1, 0);/* 1 bit per byte of CPU RAM - used for parity check emulation */
+	
+	ROM_END(); }}; 
+	
+	static RomLoadPtr rom_macxl = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION16_BE(0x204000,REGION_CPU1, 0)	/* 68k rom and ram */
+		ROM_LOAD16_BYTE( "boot3a.hi", 0x000000, 0x2000, 0x80add605)
+		ROM_LOAD16_BYTE( "boot3a.lo", 0x000001, 0x2000, 0xedf5222f)
+	
+	#if 1
+		ROM_REGION(0x2000,REGION_CPU2, 0);	/* 6504 RAM and ROM */
+		ROM_LOAD( "io88.rom", 0x1000, 0x1000, 0xe343fe74);
+	#else
+		ROM_REGION(0x2000,REGION_CPU2, 0);	/* 6504 RAM and ROM */
+		ROM_LOAD( "io88800k.rom", 0x1000, 0x1000, 0x8c67959a);
+	#endif
+	
+		ROM_REGION(0x100,REGION_GFX1, 0);	/* video ROM (includes S/N) ; no dump known, although Lisa ROM works fine at our level of emulation */
+		ROM_LOAD( "vidstate.rom", 0x00, 0x100, 0x00000000);
+	
+		ROM_REGION(0x040000, REGION_USER1, 0);/* 1 bit per byte of CPU RAM - used for parity check emulation */
+	
+	ROM_END(); }}; 
 	
 	/* Lisa should eventually support floppies, hard disks, etc. */
 	static const struct IODevice io_lisa2[] = {
 		{
 			IO_FLOPPY,			/* type */
-			2,					/* count */
-			"img\0",			/* file extensions */
+			1,					/* count */
+			"img\0image\0",		/* file extensions */
 			IO_RESET_NONE,		/* reset if file changed */
 	        NULL,               /* id */
 			lisa_floppy_init,	/* init */
@@ -263,7 +433,16 @@ public class lisa
 		{ IO_END }
 	};
 	
+	#define io_lisa210 io_lisa2 /* actually, there is an additionnal 10 meg HD, but it is not implemented... */
+	#define io_macxl io_lisa210
+	
+	/*
+		Lisa drivers boot MacWorks, but do not boot the Lisa OS, which is why we set
+		the GAME_NOT_WORKING flag...
+	*/
 	/*	   YEAR  NAME	   PARENT	 MACHINE   INPUT	 INIT	   COMPANY	 FULLNAME */
-	COMPX( 1983, lisa2,    0,        lisa,     lisa,	 0,        "Apple Computer",  "Lisa2", GAME_NOT_WORKING )
+	COMPX( 1984, lisa2,    0,        lisa,     lisa,	 lisa2,    "Apple Computer",  "Lisa2", GAME_NOT_WORKING )
+	COMPX( 1984, lisa210,  lisa2,    lisa210,  lisa,	 lisa210,  "Apple Computer",  "Lisa2/10", GAME_NOT_WORKING )
+	COMPX( 1985, macxl,    lisa2,    macxl,    lisa,	 mac_xl,   "Apple Computer",  "Macintosh XL", /*GAME_NOT_WORKING*/0 )
 	
 }

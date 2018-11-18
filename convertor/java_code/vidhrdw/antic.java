@@ -1,7 +1,7 @@
 /******************************************************************************
 	Atari 400/800
 
-    ANTIC video controller
+	ANTIC video controller
 
 	Juergen Buchmueller, June 1998
 ******************************************************************************/
@@ -15,10 +15,10 @@ package vidhrdw;
 public class antic
 {
 	
-	#define VERBOSE 0
+	#define VERBOSE 1
 	
 	#if VERBOSE
-	#define LOG(x)	if (errorlog != 0) fprintf x
+	#define LOG(x)	logerror x
 	#else
 	#define LOG(x)	/* x */
 	#endif
@@ -34,8 +34,8 @@ public class antic
 	void antic_reset(void)
 	{
 		/* reset the ANTIC read / write registers */
-	    memset(&antic.r, 0, sizeof(antic.r));
-	    memset(&antic.w, 0, sizeof(antic.w));
+		memset(&antic.r, 0, sizeof(antic.r));
+		memset(&antic.w, 0, sizeof(antic.w));
 		antic.r.antic00 = 0xff;
 		antic.r.antic01 = 0xff;
 		antic.r.antic02 = 0xff;
@@ -60,10 +60,10 @@ public class antic
 	 **************************************************************/
 	READ_HANDLER ( MRA_ANTIC )
 	{
-		int data = 0xff;
+		data8_t data = 0xff;
 	
 		switch (offset & 15)
-	    {
+		{
 		case  0: /* nothing */
 			data = antic.r.antic00;
 			break;
@@ -126,12 +126,14 @@ public class antic
 	
 	WRITE_HANDLER ( MWA_ANTIC )
 	{
+		int temp;
+	
 		switch (offset & 15)
 		{
 		case  0:
 			if( data == antic.w.dmactl )
 				break;
-			LOG((errorlog,"ANTIC 00 write DMACTL $%02X\n", data));
+			LOG(("ANTIC 00 write DMACTL $%02X\n", data));
 			antic.w.dmactl = data;
 			switch (data & 3)
 			{
@@ -144,105 +146,105 @@ public class antic
 		case  1:
 			if( data == antic.w.chactl )
 				break;
-			LOG((errorlog,"ANTIC 01 write CHACTL $%02X\n", data));
-	        antic.w.chactl = data;
+			LOG(("ANTIC 01 write CHACTL $%02X\n", data));
+			antic.w.chactl = data;
 			antic.chand = (data & 1) ? 0x00 : 0xff;
 			antic.chxor = (data & 2) ? 0xff : 0x00;
 			break;
 		case  2:
 			if( data == antic.w.dlistl )
 				break;
-			LOG((errorlog,"ANTIC 02 write DLISTL $%02X\n", data));
-	        antic.w.dlistl = data;
-			data = (antic.w.dlisth << 8) + antic.w.dlistl;
-			antic.dpage = data & DPAGE;
-			antic.doffs = data & DOFFS;
+			LOG(("ANTIC 02 write DLISTL $%02X\n", data));
+			antic.w.dlistl = data;
+			temp = (antic.w.dlisth << 8) + antic.w.dlistl;
+			antic.dpage = temp & DPAGE;
+			antic.doffs = temp & DOFFS;
 			break;
 		case  3:
 			if( data == antic.w.dlisth )
 				break;
-			LOG((errorlog,"ANTIC 03 write DLISTH $%02X\n", data));
-	        antic.w.dlisth = data;
-			data = (antic.w.dlisth << 8) + antic.w.dlistl;
-			antic.dpage = data & DPAGE;
-			antic.doffs = data & DOFFS;
+			LOG(("ANTIC 03 write DLISTH $%02X\n", data));
+			antic.w.dlisth = data;
+			temp = (antic.w.dlisth << 8) + antic.w.dlistl;
+			antic.dpage = temp & DPAGE;
+			antic.doffs = temp & DOFFS;
 			break;
 		case  4:
 			if( data == antic.w.hscrol )
 				break;
-			LOG((errorlog,"ANTIC 04 write HSCROL $%02X\n", data));
-	        antic.w.hscrol = data & 15;
+			LOG(("ANTIC 04 write HSCROL $%02X\n", data));
+			antic.w.hscrol = data & 15;
 			break;
 		case  5:
 			if( data == antic.w.vscrol )
 				break;
-			LOG((errorlog,"ANTIC 05 write VSCROL $%02X\n", data));
-	        antic.w.vscrol = data & 15;
+			LOG(("ANTIC 05 write VSCROL $%02X\n", data));
+			antic.w.vscrol = data & 15;
 			break;
 		case  6:
 			if( data == antic.w.pmbasl )
 				break;
-			LOG((errorlog,"ANTIC 06 write PMBASL $%02X\n", data));
-	        /* antic.w.pmbasl = data; */
+			LOG(("ANTIC 06 write PMBASL $%02X\n", data));
+			/* antic.w.pmbasl = data; */
 			break;
 		case  7:
 			if( data == antic.w.pmbash )
 				break;
-			LOG((errorlog,"ANTIC 07 write PMBASH $%02X\n", data));
-	        antic.w.pmbash = data;
+			LOG(("ANTIC 07 write PMBASH $%02X\n", data));
+			antic.w.pmbash = data;
 			antic.pmbase_s = (data & 0xfc) << 8;
 			antic.pmbase_d = (data & 0xf8) << 8;
 			break;
 		case  8:
 			if( data == antic.w.chbasl )
 				break;
-			LOG((errorlog,"ANTIC 08 write CHBASL $%02X\n", data));
-	        /* antic.w.chbasl = data; */
+			LOG(("ANTIC 08 write CHBASL $%02X\n", data));
+			/* antic.w.chbasl = data; */
 			break;
 		case  9:
 			if( data == antic.w.chbash )
 				break;
-			LOG((errorlog,"ANTIC 09 write CHBASH $%02X\n", data));
-	        antic.w.chbash = data;
+			LOG(("ANTIC 09 write CHBASH $%02X\n", data));
+			antic.w.chbash = data;
 			break;
 		case 10: /* WSYNC write */
-			LOG((errorlog,"ANTIC 0A write WSYNC  $%02X\n", data));
+			LOG(("ANTIC 0A write WSYNC  $%02X\n", data));
 			timer_holdcpu_trigger(0,TRIGGER_HSYNC);
 			antic.w.wsync = 1;
 			break;
 		case 11:
 			if( data == antic.w.antic0b )
-	            break;
-			LOG((errorlog,"ANTIC 0B write ?????? $%02X\n", data));
-	        antic.w.antic0b = data;
+				break;
+			LOG(("ANTIC 0B write ?????? $%02X\n", data));
+			antic.w.antic0b = data;
 			break;
 		case 12:
 			if( data == antic.w.antic0c )
-	            break;
-			LOG((errorlog,"ANTIC 0C write ?????? $%02X\n", data));
-	        antic.w.antic0c = data;
+				break;
+			LOG(("ANTIC 0C write ?????? $%02X\n", data));
+			antic.w.antic0c = data;
 			break;
 		case 13:
 			if( data == antic.w.antic0d )
-	            break;
-			LOG((errorlog,"ANTIC 0D write ?????? $%02X\n", data));
-	        antic.w.antic0d = data;
+				break;
+			LOG(("ANTIC 0D write ?????? $%02X\n", data));
+			antic.w.antic0d = data;
 			break;
 		case 14:
 			if( data == antic.w.nmien )
-	            break;
-			LOG((errorlog,"ANTIC 0E write NMIEN  $%02X\n", data));
-	        antic.w.nmien  = data;
+				break;
+			LOG(("ANTIC 0E write NMIEN  $%02X\n", data));
+			antic.w.nmien  = data;
 			break;
 		case 15:
-			LOG((errorlog,"ANTIC 0F write NMIRES $%02X\n", data));
-	        antic.r.nmist = 0x1f;
+			LOG(("ANTIC 0F write NMIRES $%02X\n", data));
+			antic.r.nmist = 0x1f;
 			antic.w.nmires = data;
 			break;
 		}
 	}
 	
-	/*************  ANTIC mode 00: *********************************
+	/*************	ANTIC mode 00: *********************************
 	 * generate 1-8 empty scanlines
 	 ***************************************************************/
 	void antic_mode_0_xx(VIDEO *video)
@@ -305,7 +307,7 @@ public class antic
 		POST_TXT(48);
 	}
 	
-	/*************  ANTIC mode 04: *********************************
+	/*************	ANTIC mode 04: *********************************
 	 * character mode 8x8:4 multi color (32/40/48 byte per line)
 	 ***************************************************************/
 	#define MODE4(s) COPY4(dst, antic.pf_x10b[video.data[s]])
@@ -329,7 +331,7 @@ public class antic
 		POST_TXT(48);
 	}
 	
-	/*************  ANTIC mode 05: *********************************
+	/*************	ANTIC mode 05: *********************************
 	 * character mode 8x16:4 multi color (32/40/48 byte per line)
 	 ***************************************************************/
 	#define MODE5(s) COPY4(dst, antic.pf_x10b[video.data[s]])
@@ -353,7 +355,7 @@ public class antic
 		POST_TXT(48);
 	}
 	
-	/*************  ANTIC mode 06: *********************************
+	/*************	ANTIC mode 06: *********************************
 	 * character mode 16x8:5 single color (16/20/24 byte per line)
 	 ***************************************************************/
 	#define MODE6(s) COPY8(dst, antic.pf_3210b2[video.data[s]], antic.pf_3210b2[video.data[s]+1])
@@ -377,7 +379,7 @@ public class antic
 		POST_TXT(24);
 	}
 	
-	/*************  ANTIC mode 07: *********************************
+	/*************	ANTIC mode 07: *********************************
 	 * character mode 16x16:5 single color (16/20/24 byte per line)
 	 ***************************************************************/
 	#define MODE7(s) COPY8(dst, antic.pf_3210b2[video.data[s]], antic.pf_3210b2[video.data[s]+1])
@@ -401,7 +403,7 @@ public class antic
 		POST_TXT(24);
 	}
 	
-	/*************  ANTIC mode 08: *********************************
+	/*************	ANTIC mode 08: *********************************
 	 * graphics mode 8x8:4 (8/10/12 byte per line)
 	 ***************************************************************/
 	#define MODE8(s) COPY16(dst, antic.pf_210b4[video.data[s]],antic.pf_210b4[video.data[s]+1],antic.pf_210b4[video.data[s]+2],antic.pf_210b4[video.data[s]+3])
@@ -425,7 +427,7 @@ public class antic
 		POST_GFX(12);
 	}
 	
-	/*************  ANTIC mode 09: *********************************
+	/*************	ANTIC mode 09: *********************************
 	 * graphics mode 4x4:2 (8/10/12 byte per line)
 	 ***************************************************************/
 	#define MODE9(s) COPY8(dst, antic.pf_3210b2[video.data[s]], antic.pf_3210b2[video.data[s]+1])
@@ -449,7 +451,7 @@ public class antic
 		POST_GFX(24);
 	}
 	
-	/*************  ANTIC mode 0A: *********************************
+	/*************	ANTIC mode 0A: *********************************
 	 * graphics mode 4x4:4 (16/20/24 byte per line)
 	 ***************************************************************/
 	#define MODEA(s) COPY8(dst, antic.pf_210b2[video.data[s]], antic.pf_210b2[video.data[s]+1])
@@ -473,7 +475,7 @@ public class antic
 		POST_GFX(24);
 	}
 	
-	/*************  ANTIC mode 0B: *********************************
+	/*************	ANTIC mode 0B: *********************************
 	 * graphics mode 2x2:2 (16/20/24 byte per line)
 	 ***************************************************************/
 	#define MODEB(s) COPY8(dst, antic.pf_3210b2[video.data[s]], antic.pf_3210b2[video.data[s]+1])
@@ -497,7 +499,7 @@ public class antic
 		POST_GFX(24);
 	}
 	
-	/*************  ANTIC mode 0C: *********************************
+	/*************	ANTIC mode 0C: *********************************
 	 * graphics mode 2x1:2 (16/20/24 byte per line)
 	 ***************************************************************/
 	#define MODEC(s) COPY8(dst, antic.pf_3210b2[video.data[s]], antic.pf_3210b2[video.data[s]+1])
@@ -521,7 +523,7 @@ public class antic
 		POST_GFX(24);
 	}
 	
-	/*************  ANTIC mode 0D: *********************************
+	/*************	ANTIC mode 0D: *********************************
 	 * graphics mode 2x2:4 (32/40/48 byte per line)
 	 ***************************************************************/
 	#define MODED(s) COPY4(dst, antic.pf_x10b[video.data[s]])
@@ -545,7 +547,7 @@ public class antic
 		POST_GFX(48);
 	}
 	
-	/*************  ANTIC mode 0E: *********************************
+	/*************	ANTIC mode 0E: *********************************
 	 * graphics mode 2x1:4 (32/40/48 byte per line)
 	 ***************************************************************/
 	#define MODEE(s) COPY4(dst, antic.pf_x10b[video.data[s]])
@@ -569,7 +571,7 @@ public class antic
 		POST_GFX(48);
 	}
 	
-	/*************  ANTIC mode 0F: *********************************
+	/*************	ANTIC mode 0F: *********************************
 	 * graphics mode 1x1:2 (32/40/48 byte per line)
 	 ***************************************************************/
 	#define MODEF(s) COPY4(dst, antic.pf_1b[video.data[s]])

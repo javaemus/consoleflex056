@@ -201,7 +201,7 @@ public class kaypro
 		generic_vh_stop();
 	} };
 	
-	void kaypro_vh_screenrefresh(struct osd_bitmap * bitmap, int full_refresh)
+	void kaypro_vh_screenrefresh(struct mame_bitmap * bitmap, int full_refresh)
 	{
 		static int blink_count = 0;
 		static int cursor_count = 0;
@@ -212,23 +212,20 @@ public class kaypro
 		{
 			if ((blink_count & 16) != 0)
 			{
-				palette_change_color(3, 0,240,	0);
-				palette_change_color(4, 0,120,	0);
+				palette_set_color(3, 0,240,	0);
+				palette_set_color(4, 0,120,	0);
 			}
 			else
 			{
-				palette_change_color(3, 0,	0,	0);
-				palette_change_color(4, 0,	0,	0);
+				palette_set_color(3, 0,	0,	0);
+				palette_set_color(4, 0,	0,	0);
 			}
 		}
 	
-		palette_init_used_colors();
+	/*	palette_init_used_colors();
 		if (palette_used_colors != 0)
 			memset(palette_used_colors, PALETTE_COLOR_USED, 4);
-	
-		if( palette_recalc() )
-			full_refresh = 1;
-	
+	*/
 		cursor_count++;
 		if (cursor != 0)
 			j = cur_y * KAYPRO_SCREEN_W + cur_x;
@@ -338,7 +335,7 @@ public class kaypro
 		if (kbd_tail != kbd_head)
 		{
 			data = kbd_buff[kbd_tail];
-			kbd_tail = ++kbd_tail % sizeof(kbd_buff);
+			kbd_tail = (kbd_tail + 1) % sizeof(kbd_buff);
 		}
 		return data;
 	}
@@ -357,7 +354,7 @@ public class kaypro
 	
 		kbd_head_old = kbd_head;
 		kbd_buff[kbd_head] = data;
-		kbd_head = ++kbd_head % sizeof(kbd_buff);
+		kbd_head = (kbd_head + 1) % sizeof(kbd_buff);
 		/* will the buffer overflow ? */
 		if (kbd_head == kbd_tail)
 		{

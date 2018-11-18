@@ -1,7 +1,8 @@
 /***************************************************************************
 	commodore b series computer
 
-    peter.trauner@jk.uni-linz.ac.at
+	PeT mess@utanet.at
+
 	documentation
 	 vice emulator
      www.funet.fi
@@ -168,289 +169,279 @@ public class cbmb
 	#define VERBOSE_DBG 0
 	
 	
-	static MemoryReadAddress cbmb_readmem[] =
-	{
-		new MemoryReadAddress(0x00000, 0x00000, m6509_read_00000 ),
-		new MemoryReadAddress(0x00001, 0x00001, m6509_read_00001 ),
-		new MemoryReadAddress(0x00002, 0x0ffff, MRA_RAM),
-		new MemoryReadAddress(0x10000, 0x10000, m6509_read_00000 ),
-		new MemoryReadAddress(0x10001, 0x10001, m6509_read_00001 ),
-		new MemoryReadAddress(0x10002, 0x1ffff, MRA_RAM),
-		new MemoryReadAddress(0x20000, 0x20000, m6509_read_00000 ),
-		new MemoryReadAddress(0x20001, 0x20001, m6509_read_00001 ),
-		new MemoryReadAddress(0x20002, 0x2ffff, MRA_RAM),
-		new MemoryReadAddress(0x30000, 0x30000, m6509_read_00000 ),
-		new MemoryReadAddress(0x30001, 0x30001, m6509_read_00001 ),
-		new MemoryReadAddress(0x30002, 0x3ffff, MRA_RAM),
-		new MemoryReadAddress(0x40000, 0x40000, m6509_read_00000 ),
-		new MemoryReadAddress(0x40001, 0x40001, m6509_read_00001 ),
-		new MemoryReadAddress(0x40002, 0x4ffff, MRA_RAM),
-		new MemoryReadAddress(0x50000, 0x50000, m6509_read_00000 ),
-		new MemoryReadAddress(0x50001, 0x50001, m6509_read_00001 ),
-		new MemoryReadAddress(0x50002, 0x5ffff, MRA_RAM),
-		new MemoryReadAddress(0x60000, 0x60000, m6509_read_00000 ),
-		new MemoryReadAddress(0x60001, 0x60001, m6509_read_00001 ),
-		new MemoryReadAddress(0x60002, 0x6ffff, MRA_RAM),
-		new MemoryReadAddress(0x70000, 0x70000, m6509_read_00000 ),
-		new MemoryReadAddress(0x70001, 0x70001, m6509_read_00001 ),
-		new MemoryReadAddress(0x70002, 0x7ffff, MRA_RAM),
-		new MemoryReadAddress(0x80000, 0x80000, m6509_read_00000 ),
-		new MemoryReadAddress(0x80001, 0x80001, m6509_read_00001 ),
-		new MemoryReadAddress(0x80002, 0x8ffff, MRA_RAM),
-		new MemoryReadAddress(0x90000, 0x90000, m6509_read_00000 ),
-		new MemoryReadAddress(0x90001, 0x90001, m6509_read_00001 ),
-		new MemoryReadAddress(0x90002, 0x9ffff, MRA_RAM),
-		new MemoryReadAddress(0xa0000, 0xa0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xa0001, 0xa0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xa0002, 0xaffff, MRA_RAM),
-		new MemoryReadAddress(0xb0000, 0xb0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xb0001, 0xb0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xb0002, 0xbffff, MRA_RAM),
-		new MemoryReadAddress(0xc0000, 0xc0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xc0001, 0xc0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xc0002, 0xcffff, MRA_RAM),
-		new MemoryReadAddress(0xd0000, 0xd0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xd0001, 0xd0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xd0002, 0xdffff, MRA_RAM),
-		new MemoryReadAddress(0xe0000, 0xe0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xe0001, 0xe0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xe0002, 0xeffff, MRA_RAM),
-		new MemoryReadAddress(0xf0000, 0xf0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xf0001, 0xf0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xf0002, 0xf07ff, MRA_RAM ),
+	static MEMORY_READ_START( cbmb_readmem )
+		{0x00000, 0x00000, m6509_read_00000 },
+		{0x00001, 0x00001, m6509_read_00001 },
+		{0x00002, 0x0ffff, MRA_RAM},
+		{0x10000, 0x10000, m6509_read_00000 },
+		{0x10001, 0x10001, m6509_read_00001 },
+		{0x10002, 0x1ffff, MRA_RAM},
+		{0x20000, 0x20000, m6509_read_00000 },
+		{0x20001, 0x20001, m6509_read_00001 },
+		{0x20002, 0x2ffff, MRA_RAM},
+		{0x30000, 0x30000, m6509_read_00000 },
+		{0x30001, 0x30001, m6509_read_00001 },
+		{0x30002, 0x3ffff, MRA_RAM},
+		{0x40000, 0x40000, m6509_read_00000 },
+		{0x40001, 0x40001, m6509_read_00001 },
+		{0x40002, 0x4ffff, MRA_RAM},
+		{0x50000, 0x50000, m6509_read_00000 },
+		{0x50001, 0x50001, m6509_read_00001 },
+		{0x50002, 0x5ffff, MRA_RAM},
+		{0x60000, 0x60000, m6509_read_00000 },
+		{0x60001, 0x60001, m6509_read_00001 },
+		{0x60002, 0x6ffff, MRA_RAM},
+		{0x70000, 0x70000, m6509_read_00000 },
+		{0x70001, 0x70001, m6509_read_00001 },
+		{0x70002, 0x7ffff, MRA_RAM},
+		{0x80000, 0x80000, m6509_read_00000 },
+		{0x80001, 0x80001, m6509_read_00001 },
+		{0x80002, 0x8ffff, MRA_RAM},
+		{0x90000, 0x90000, m6509_read_00000 },
+		{0x90001, 0x90001, m6509_read_00001 },
+		{0x90002, 0x9ffff, MRA_RAM},
+		{0xa0000, 0xa0000, m6509_read_00000 },
+		{0xa0001, 0xa0001, m6509_read_00001 },
+		{0xa0002, 0xaffff, MRA_RAM},
+		{0xb0000, 0xb0000, m6509_read_00000 },
+		{0xb0001, 0xb0001, m6509_read_00001 },
+		{0xb0002, 0xbffff, MRA_RAM},
+		{0xc0000, 0xc0000, m6509_read_00000 },
+		{0xc0001, 0xc0001, m6509_read_00001 },
+		{0xc0002, 0xcffff, MRA_RAM},
+		{0xd0000, 0xd0000, m6509_read_00000 },
+		{0xd0001, 0xd0001, m6509_read_00001 },
+		{0xd0002, 0xdffff, MRA_RAM},
+		{0xe0000, 0xe0000, m6509_read_00000 },
+		{0xe0001, 0xe0001, m6509_read_00001 },
+		{0xe0002, 0xeffff, MRA_RAM},
+		{0xf0000, 0xf0000, m6509_read_00000 },
+		{0xf0001, 0xf0001, m6509_read_00001 },
+		{0xf0002, 0xf07ff, MRA_RAM },
 	#if 0
-		new MemoryReadAddress(0xf0800, 0xf0fff, MRA_ROM ),
+		{0xf0800, 0xf0fff, MRA_ROM },
 	#endif
-		new MemoryReadAddress(0xf1000, 0xf1fff, MRA_ROM ), /* cartridges or ram */
-		new MemoryReadAddress(0xf2000, 0xf3fff, MRA_ROM ), /* cartridges or ram */
-		new MemoryReadAddress(0xf4000, 0xf5fff, MRA_ROM ),
-		new MemoryReadAddress(0xf6000, 0xf7fff, MRA_ROM ),
-		new MemoryReadAddress(0xf8000, 0xfbfff, MRA_ROM ),
-		/*	new MemoryReadAddress(0xfc000, 0xfcfff, MRA_ROM ), */
-		new MemoryReadAddress(0xfd000, 0xfd7ff, MRA_ROM ),
-		new MemoryReadAddress(0xfd800, 0xfd8ff, crtc6845_port_r ),
+		{0xf1000, 0xf1fff, MRA_ROM }, /* cartridges or ram */
+		{0xf2000, 0xf3fff, MRA_ROM }, /* cartridges or ram */
+		{0xf4000, 0xf5fff, MRA_ROM },
+		{0xf6000, 0xf7fff, MRA_ROM },
+		{0xf8000, 0xfbfff, MRA_ROM },
+		/*	{0xfc000, 0xfcfff, MRA_ROM }, */
+		{0xfd000, 0xfd7ff, MRA_ROM },
+		{0xfd800, 0xfd8ff, crtc6845_0_port_r },
 		/* disk units */
-		new MemoryReadAddress(0xfda00, 0xfdaff, sid6581_0_port_r ),
+		{0xfda00, 0xfdaff, sid6581_0_port_r },
 		/* db00 coprocessor */
-		new MemoryReadAddress(0xfdc00, 0xfdcff, cia6526_0_port_r ),
+		{0xfdc00, 0xfdcff, cia6526_0_port_r },
 		/* dd00 acia */
-		new MemoryReadAddress(0xfde00, 0xfdeff, tpi6525_0_port_r),
-		new MemoryReadAddress(0xfdf00, 0xfdfff, tpi6525_1_port_r),
-		new MemoryReadAddress(0xfe000, 0xfffff, MRA_ROM ),
-		MEMORY_TABLE_END
-	};
+		{0xfde00, 0xfdeff, tpi6525_0_port_r},
+		{0xfdf00, 0xfdfff, tpi6525_1_port_r},
+		{0xfe000, 0xfffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress cbmb_writemem[] =
-	{
-		new MemoryWriteAddress(0x00000, 0x00000, m6509_write_00000, cbmb_memory ),
-		new MemoryWriteAddress(0x00001, 0x00001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x00002, 0x0ffff, MWA_NOP ),
-		new MemoryWriteAddress(0x10000, 0x10000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x10001, 0x10001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x10002, 0x1ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x20000, 0x20000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x20001, 0x20001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x20002, 0x2ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x30000, 0x30000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x30001, 0x30001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x30002, 0x3ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x40000, 0x40000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x40001, 0x40001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x40002, 0x4ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x50000, 0x50000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x50001, 0x50001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x50002, 0x5ffff, MWA_NOP ),
-		new MemoryWriteAddress(0x60000, 0x60000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x60001, 0x60001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x60002, 0x6ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x70000, 0x70000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x70001, 0x70001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x70002, 0x7ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x80000, 0x80000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x80001, 0x80001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x80002, 0x8ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x90000, 0x90000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x90001, 0x90001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x90002, 0x9ffff, MWA_RAM ),
-		new MemoryWriteAddress(0xa0000, 0xa0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xa0001, 0xa0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xa0002, 0xaffff, MWA_RAM ),
-		new MemoryWriteAddress(0xb0000, 0xb0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xb0001, 0xb0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xb0002, 0xbffff, MWA_RAM ),
-		new MemoryWriteAddress(0xc0000, 0xc0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xc0001, 0xc0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xc0002, 0xcffff, MWA_RAM ),
-		new MemoryWriteAddress(0xd0000, 0xd0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xd0001, 0xd0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xd0002, 0xdffff, MWA_RAM ),
-		new MemoryWriteAddress(0xe0000, 0xe0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xe0001, 0xe0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xe0002, 0xeffff, MWA_RAM ),
-		new MemoryWriteAddress(0xf0000, 0xf0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xf0001, 0xf0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xf0002, 0xf07ff, MWA_RAM ),
-		new MemoryWriteAddress(0xf1000, 0xf1fff, MWA_ROM ), /* cartridges */
-		new MemoryWriteAddress(0xf2000, 0xf3fff, MWA_ROM ), /* cartridges */
-		new MemoryWriteAddress(0xf4000, 0xf5fff, MWA_ROM ),
-		new MemoryWriteAddress(0xf6000, 0xf7fff, MWA_ROM ),
-		new MemoryWriteAddress(0xf8000, 0xfbfff, MWA_ROM, cbmb_basic ),
-		new MemoryWriteAddress(0xfd000, 0xfd7ff, crtc6845_videoram_w, cbmb_videoram ), /* VIDEORAM */
-		new MemoryWriteAddress(0xfd800, 0xfd8ff, crtc6845_port_w ),
+	static MEMORY_WRITE_START( cbmb_writemem )
+		{0x00000, 0x00000, m6509_write_00000, &cbmb_memory },
+		{0x00001, 0x00001, m6509_write_00001 },
+		{0x00002, 0x0ffff, MWA_NOP },
+		{0x10000, 0x10000, m6509_write_00000 },
+		{0x10001, 0x10001, m6509_write_00001 },
+		{0x10002, 0x1ffff, MWA_RAM },
+		{0x20000, 0x20000, m6509_write_00000 },
+		{0x20001, 0x20001, m6509_write_00001 },
+		{0x20002, 0x2ffff, MWA_RAM },
+		{0x30000, 0x30000, m6509_write_00000 },
+		{0x30001, 0x30001, m6509_write_00001 },
+		{0x30002, 0x3ffff, MWA_RAM },
+		{0x40000, 0x40000, m6509_write_00000 },
+		{0x40001, 0x40001, m6509_write_00001 },
+		{0x40002, 0x4ffff, MWA_RAM },
+		{0x50000, 0x50000, m6509_write_00000 },
+		{0x50001, 0x50001, m6509_write_00001 },
+		{0x50002, 0x5ffff, MWA_NOP },
+		{0x60000, 0x60000, m6509_write_00000 },
+		{0x60001, 0x60001, m6509_write_00001 },
+		{0x60002, 0x6ffff, MWA_RAM },
+		{0x70000, 0x70000, m6509_write_00000 },
+		{0x70001, 0x70001, m6509_write_00001 },
+		{0x70002, 0x7ffff, MWA_RAM },
+		{0x80000, 0x80000, m6509_write_00000 },
+		{0x80001, 0x80001, m6509_write_00001 },
+		{0x80002, 0x8ffff, MWA_RAM },
+		{0x90000, 0x90000, m6509_write_00000 },
+		{0x90001, 0x90001, m6509_write_00001 },
+		{0x90002, 0x9ffff, MWA_RAM },
+		{0xa0000, 0xa0000, m6509_write_00000 },
+		{0xa0001, 0xa0001, m6509_write_00001 },
+		{0xa0002, 0xaffff, MWA_RAM },
+		{0xb0000, 0xb0000, m6509_write_00000 },
+		{0xb0001, 0xb0001, m6509_write_00001 },
+		{0xb0002, 0xbffff, MWA_RAM },
+		{0xc0000, 0xc0000, m6509_write_00000 },
+		{0xc0001, 0xc0001, m6509_write_00001 },
+		{0xc0002, 0xcffff, MWA_RAM },
+		{0xd0000, 0xd0000, m6509_write_00000 },
+		{0xd0001, 0xd0001, m6509_write_00001 },
+		{0xd0002, 0xdffff, MWA_RAM },
+		{0xe0000, 0xe0000, m6509_write_00000 },
+		{0xe0001, 0xe0001, m6509_write_00001 },
+		{0xe0002, 0xeffff, MWA_RAM },
+		{0xf0000, 0xf0000, m6509_write_00000 },
+		{0xf0001, 0xf0001, m6509_write_00001 },
+		{0xf0002, 0xf07ff, MWA_RAM },
+		{0xf1000, 0xf1fff, MWA_ROM }, /* cartridges */
+		{0xf2000, 0xf3fff, MWA_ROM }, /* cartridges */
+		{0xf4000, 0xf5fff, MWA_ROM },
+		{0xf6000, 0xf7fff, MWA_ROM },
+		{0xf8000, 0xfbfff, MWA_ROM, &cbmb_basic },
+		{0xfd000, 0xfd7ff, videoram_w, &videoram,&videoram_size }, /* VIDEORAM */
+		{0xfd800, 0xfd8ff, crtc6845_0_port_w },
 		/* disk units */
-		new MemoryWriteAddress(0xfda00, 0xfdaff, sid6581_0_port_w),
+		{0xfda00, 0xfdaff, sid6581_0_port_w},
 		/* db00 coprocessor */
-		new MemoryWriteAddress(0xfdc00, 0xfdcff, cia6526_0_port_w),
+		{0xfdc00, 0xfdcff, cia6526_0_port_w},
 		/* dd00 acia */
-		new MemoryWriteAddress(0xfde00, 0xfdeff, tpi6525_0_port_w),
-		new MemoryWriteAddress(0xfdf00, 0xfdfff, tpi6525_1_port_w),
-		new MemoryWriteAddress(0xfe000, 0xfffff, MWA_ROM, cbmb_kernal ),
-		new MemoryWriteAddress(0x100000, 0x101fff, MWA_ROM, cbmb_chargen ),
-		MEMORY_TABLE_END
-	};
+		{0xfde00, 0xfdeff, tpi6525_0_port_w},
+		{0xfdf00, 0xfdfff, tpi6525_1_port_w},
+		{0xfe000, 0xfffff, MWA_ROM, &cbmb_kernal },
+	MEMORY_END
 	
-	static MemoryReadAddress cbm500_readmem[] =
-	{
-		new MemoryReadAddress(0x00000, 0x00000, m6509_read_00000 ),
-		new MemoryReadAddress(0x00001, 0x00001, m6509_read_00001 ),
-		new MemoryReadAddress(0x00002, 0x0ffff, MRA_RAM),
-		new MemoryReadAddress(0x10000, 0x10000, m6509_read_00000 ),
-		new MemoryReadAddress(0x10001, 0x10001, m6509_read_00001 ),
-		new MemoryReadAddress(0x10002, 0x1ffff, MRA_RAM),
-		new MemoryReadAddress(0x20000, 0x20000, m6509_read_00000 ),
-		new MemoryReadAddress(0x20001, 0x20001, m6509_read_00001 ),
-		new MemoryReadAddress(0x20002, 0x2ffff, MRA_RAM),
-		new MemoryReadAddress(0x30000, 0x30000, m6509_read_00000 ),
-		new MemoryReadAddress(0x30001, 0x30001, m6509_read_00001 ),
-		new MemoryReadAddress(0x30002, 0x3ffff, MRA_RAM),
-		new MemoryReadAddress(0x40000, 0x40000, m6509_read_00000 ),
-		new MemoryReadAddress(0x40001, 0x40001, m6509_read_00001 ),
-		new MemoryReadAddress(0x40002, 0x4ffff, MRA_RAM),
-		new MemoryReadAddress(0x50000, 0x50000, m6509_read_00000 ),
-		new MemoryReadAddress(0x50001, 0x50001, m6509_read_00001 ),
-		new MemoryReadAddress(0x50002, 0x5ffff, MRA_RAM),
-		new MemoryReadAddress(0x60000, 0x60000, m6509_read_00000 ),
-		new MemoryReadAddress(0x60001, 0x60001, m6509_read_00001 ),
-		new MemoryReadAddress(0x60002, 0x6ffff, MRA_RAM),
-		new MemoryReadAddress(0x70000, 0x70000, m6509_read_00000 ),
-		new MemoryReadAddress(0x70001, 0x70001, m6509_read_00001 ),
-		new MemoryReadAddress(0x70002, 0x7ffff, MRA_RAM),
-		new MemoryReadAddress(0x80000, 0x80000, m6509_read_00000 ),
-		new MemoryReadAddress(0x80001, 0x80001, m6509_read_00001 ),
-		new MemoryReadAddress(0x80002, 0x8ffff, MRA_RAM),
-		new MemoryReadAddress(0x90000, 0x90000, m6509_read_00000 ),
-		new MemoryReadAddress(0x90001, 0x90001, m6509_read_00001 ),
-		new MemoryReadAddress(0x90002, 0x9ffff, MRA_RAM),
-		new MemoryReadAddress(0xa0000, 0xa0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xa0001, 0xa0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xa0002, 0xaffff, MRA_RAM),
-		new MemoryReadAddress(0xb0000, 0xb0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xb0001, 0xb0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xb0002, 0xbffff, MRA_RAM),
-		new MemoryReadAddress(0xc0000, 0xc0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xc0001, 0xc0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xc0002, 0xcffff, MRA_RAM),
-		new MemoryReadAddress(0xd0000, 0xd0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xd0001, 0xd0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xd0002, 0xdffff, MRA_RAM),
-		new MemoryReadAddress(0xe0000, 0xe0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xe0001, 0xe0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xe0002, 0xeffff, MRA_RAM),
-		new MemoryReadAddress(0xf0000, 0xf0000, m6509_read_00000 ),
-		new MemoryReadAddress(0xf0001, 0xf0001, m6509_read_00001 ),
-		new MemoryReadAddress(0xf0002, 0xf07ff, MRA_RAM ),
+	static MEMORY_READ_START( cbm500_readmem )
+		{0x00000, 0x00000, m6509_read_00000 },
+		{0x00001, 0x00001, m6509_read_00001 },
+		{0x00002, 0x0ffff, MRA_RAM},
+		{0x10000, 0x10000, m6509_read_00000 },
+		{0x10001, 0x10001, m6509_read_00001 },
+		{0x10002, 0x1ffff, MRA_RAM},
+		{0x20000, 0x20000, m6509_read_00000 },
+		{0x20001, 0x20001, m6509_read_00001 },
+		{0x20002, 0x2ffff, MRA_RAM},
+		{0x30000, 0x30000, m6509_read_00000 },
+		{0x30001, 0x30001, m6509_read_00001 },
+		{0x30002, 0x3ffff, MRA_RAM},
+		{0x40000, 0x40000, m6509_read_00000 },
+		{0x40001, 0x40001, m6509_read_00001 },
+		{0x40002, 0x4ffff, MRA_RAM},
+		{0x50000, 0x50000, m6509_read_00000 },
+		{0x50001, 0x50001, m6509_read_00001 },
+		{0x50002, 0x5ffff, MRA_RAM},
+		{0x60000, 0x60000, m6509_read_00000 },
+		{0x60001, 0x60001, m6509_read_00001 },
+		{0x60002, 0x6ffff, MRA_RAM},
+		{0x70000, 0x70000, m6509_read_00000 },
+		{0x70001, 0x70001, m6509_read_00001 },
+		{0x70002, 0x7ffff, MRA_RAM},
+		{0x80000, 0x80000, m6509_read_00000 },
+		{0x80001, 0x80001, m6509_read_00001 },
+		{0x80002, 0x8ffff, MRA_RAM},
+		{0x90000, 0x90000, m6509_read_00000 },
+		{0x90001, 0x90001, m6509_read_00001 },
+		{0x90002, 0x9ffff, MRA_RAM},
+		{0xa0000, 0xa0000, m6509_read_00000 },
+		{0xa0001, 0xa0001, m6509_read_00001 },
+		{0xa0002, 0xaffff, MRA_RAM},
+		{0xb0000, 0xb0000, m6509_read_00000 },
+		{0xb0001, 0xb0001, m6509_read_00001 },
+		{0xb0002, 0xbffff, MRA_RAM},
+		{0xc0000, 0xc0000, m6509_read_00000 },
+		{0xc0001, 0xc0001, m6509_read_00001 },
+		{0xc0002, 0xcffff, MRA_RAM},
+		{0xd0000, 0xd0000, m6509_read_00000 },
+		{0xd0001, 0xd0001, m6509_read_00001 },
+		{0xd0002, 0xdffff, MRA_RAM},
+		{0xe0000, 0xe0000, m6509_read_00000 },
+		{0xe0001, 0xe0001, m6509_read_00001 },
+		{0xe0002, 0xeffff, MRA_RAM},
+		{0xf0000, 0xf0000, m6509_read_00000 },
+		{0xf0001, 0xf0001, m6509_read_00001 },
+		{0xf0002, 0xf07ff, MRA_RAM },
 	#if 0
-		new MemoryReadAddress(0xf0800, 0xf0fff, MRA_ROM ),
+		{0xf0800, 0xf0fff, MRA_ROM },
 	#endif
-		new MemoryReadAddress(0xf1000, 0xf1fff, MRA_ROM ), /* cartridges or ram */
-		new MemoryReadAddress(0xf2000, 0xf3fff, MRA_ROM ), /* cartridges or ram */
-		new MemoryReadAddress(0xf4000, 0xf5fff, MRA_ROM ),
-		new MemoryReadAddress(0xf6000, 0xf7fff, MRA_ROM ),
-		new MemoryReadAddress(0xf8000, 0xfbfff, MRA_ROM ),
-		/*	new MemoryReadAddress(0xfc000, 0xfcfff, MRA_ROM ), */
-		new MemoryReadAddress(0xfd000, 0xfd3ff, MRA_RAM ), /* videoram */
-		new MemoryReadAddress(0xfd400, 0xfd7ff, MRA_RAM ), /* colorram */
-		new MemoryReadAddress(0xfd800, 0xfd8ff, vic2_port_r ),
+		{0xf1000, 0xf1fff, MRA_ROM }, /* cartridges or ram */
+		{0xf2000, 0xf3fff, MRA_ROM }, /* cartridges or ram */
+		{0xf4000, 0xf5fff, MRA_ROM },
+		{0xf6000, 0xf7fff, MRA_ROM },
+		{0xf8000, 0xfbfff, MRA_ROM },
+		/*	{0xfc000, 0xfcfff, MRA_ROM }, */
+		{0xfd000, 0xfd3ff, MRA_RAM }, /* videoram */
+		{0xfd400, 0xfd7ff, MRA_RAM }, /* colorram */
+		{0xfd800, 0xfd8ff, vic2_port_r },
 		/* disk units */
-		new MemoryReadAddress(0xfda00, 0xfdaff, sid6581_0_port_r ),
+		{0xfda00, 0xfdaff, sid6581_0_port_r },
 		/* db00 coprocessor */
-		new MemoryReadAddress(0xfdc00, 0xfdcff, cia6526_0_port_r ),
+		{0xfdc00, 0xfdcff, cia6526_0_port_r },
 		/* dd00 acia */
-		new MemoryReadAddress(0xfde00, 0xfdeff, tpi6525_0_port_r),
-		new MemoryReadAddress(0xfdf00, 0xfdfff, tpi6525_1_port_r),
-		new MemoryReadAddress(0xfe000, 0xfffff, MRA_ROM ),
-		MEMORY_TABLE_END
-	};
+		{0xfde00, 0xfdeff, tpi6525_0_port_r},
+		{0xfdf00, 0xfdfff, tpi6525_1_port_r},
+		{0xfe000, 0xfffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress cbm500_writemem[] =
-	{
-		new MemoryWriteAddress(0x00000, 0x00000, m6509_write_00000, cbmb_memory ),
-		new MemoryWriteAddress(0x00001, 0x00001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x00002, 0x0ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x10000, 0x10000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x10001, 0x10001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x10002, 0x1ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x20000, 0x20000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x20001, 0x20001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x20002, 0x2ffff, MWA_NOP ),
-		new MemoryWriteAddress(0x30000, 0x30000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x30001, 0x30001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x30002, 0x3ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x40000, 0x40000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x40001, 0x40001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x40002, 0x4ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x50000, 0x50000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x50001, 0x50001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x50002, 0x5ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x60000, 0x60000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x60001, 0x60001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x60002, 0x6ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x70000, 0x70000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x70001, 0x70001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x70002, 0x7ffff, MWA_RAM ),
-		new MemoryWriteAddress(0x80000, 0x80000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x80001, 0x80001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x80002, 0x8ffff, MWA_NOP ),
-		new MemoryWriteAddress(0x90000, 0x90000, m6509_write_00000 ),
-		new MemoryWriteAddress(0x90001, 0x90001, m6509_write_00001 ),
-		new MemoryWriteAddress(0x90002, 0x9ffff, MWA_RAM ),
-		new MemoryWriteAddress(0xa0000, 0xa0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xa0001, 0xa0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xa0002, 0xaffff, MWA_RAM ),
-		new MemoryWriteAddress(0xb0000, 0xb0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xb0001, 0xb0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xb0002, 0xbffff, MWA_RAM ),
-		new MemoryWriteAddress(0xc0000, 0xc0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xc0001, 0xc0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xc0002, 0xcffff, MWA_RAM ),
-		new MemoryWriteAddress(0xd0000, 0xd0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xd0001, 0xd0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xd0002, 0xdffff, MWA_RAM ),
-		new MemoryWriteAddress(0xe0000, 0xe0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xe0001, 0xe0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xe0002, 0xeffff, MWA_RAM ),
-		new MemoryWriteAddress(0xf0000, 0xf0000, m6509_write_00000 ),
-		new MemoryWriteAddress(0xf0001, 0xf0001, m6509_write_00001 ),
-		new MemoryWriteAddress(0xf0002, 0xf07ff, MWA_RAM ),
-		new MemoryWriteAddress(0xf1000, 0xf1fff, MWA_ROM ), /* cartridges */
-		new MemoryWriteAddress(0xf2000, 0xf3fff, MWA_ROM ), /* cartridges */
-		new MemoryWriteAddress(0xf4000, 0xf5fff, MWA_ROM ),
-		new MemoryWriteAddress(0xf6000, 0xf7fff, MWA_ROM ),
-		new MemoryWriteAddress(0xf8000, 0xfbfff, MWA_ROM, cbmb_basic ),
-		new MemoryWriteAddress(0xfd000, 0xfd3ff, MWA_RAM, cbmb_videoram ),
-		new MemoryWriteAddress(0xfd400, 0xfd7ff, cbmb_colorram_w, cbmb_colorram ),
-		new MemoryWriteAddress(0xfd800, 0xfd8ff, vic2_port_w ),
+	static MEMORY_WRITE_START( cbm500_writemem )
+		{0x00000, 0x00000, m6509_write_00000, &cbmb_memory },
+		{0x00001, 0x00001, m6509_write_00001 },
+		{0x00002, 0x0ffff, MWA_RAM },
+		{0x10000, 0x10000, m6509_write_00000 },
+		{0x10001, 0x10001, m6509_write_00001 },
+		{0x10002, 0x1ffff, MWA_RAM },
+		{0x20000, 0x20000, m6509_write_00000 },
+		{0x20001, 0x20001, m6509_write_00001 },
+		{0x20002, 0x2ffff, MWA_NOP },
+		{0x30000, 0x30000, m6509_write_00000 },
+		{0x30001, 0x30001, m6509_write_00001 },
+		{0x30002, 0x3ffff, MWA_RAM },
+		{0x40000, 0x40000, m6509_write_00000 },
+		{0x40001, 0x40001, m6509_write_00001 },
+		{0x40002, 0x4ffff, MWA_RAM },
+		{0x50000, 0x50000, m6509_write_00000 },
+		{0x50001, 0x50001, m6509_write_00001 },
+		{0x50002, 0x5ffff, MWA_RAM },
+		{0x60000, 0x60000, m6509_write_00000 },
+		{0x60001, 0x60001, m6509_write_00001 },
+		{0x60002, 0x6ffff, MWA_RAM },
+		{0x70000, 0x70000, m6509_write_00000 },
+		{0x70001, 0x70001, m6509_write_00001 },
+		{0x70002, 0x7ffff, MWA_RAM },
+		{0x80000, 0x80000, m6509_write_00000 },
+		{0x80001, 0x80001, m6509_write_00001 },
+		{0x80002, 0x8ffff, MWA_NOP },
+		{0x90000, 0x90000, m6509_write_00000 },
+		{0x90001, 0x90001, m6509_write_00001 },
+		{0x90002, 0x9ffff, MWA_RAM },
+		{0xa0000, 0xa0000, m6509_write_00000 },
+		{0xa0001, 0xa0001, m6509_write_00001 },
+		{0xa0002, 0xaffff, MWA_RAM },
+		{0xb0000, 0xb0000, m6509_write_00000 },
+		{0xb0001, 0xb0001, m6509_write_00001 },
+		{0xb0002, 0xbffff, MWA_RAM },
+		{0xc0000, 0xc0000, m6509_write_00000 },
+		{0xc0001, 0xc0001, m6509_write_00001 },
+		{0xc0002, 0xcffff, MWA_RAM },
+		{0xd0000, 0xd0000, m6509_write_00000 },
+		{0xd0001, 0xd0001, m6509_write_00001 },
+		{0xd0002, 0xdffff, MWA_RAM },
+		{0xe0000, 0xe0000, m6509_write_00000 },
+		{0xe0001, 0xe0001, m6509_write_00001 },
+		{0xe0002, 0xeffff, MWA_RAM },
+		{0xf0000, 0xf0000, m6509_write_00000 },
+		{0xf0001, 0xf0001, m6509_write_00001 },
+		{0xf0002, 0xf07ff, MWA_RAM },
+		{0xf1000, 0xf1fff, MWA_ROM }, /* cartridges */
+		{0xf2000, 0xf3fff, MWA_ROM }, /* cartridges */
+		{0xf4000, 0xf5fff, MWA_ROM },
+		{0xf6000, 0xf7fff, MWA_ROM },
+		{0xf8000, 0xfbfff, MWA_ROM, &cbmb_basic },
+		{0xfd000, 0xfd3ff, MWA_RAM, &cbmb_videoram },
+		{0xfd400, 0xfd7ff, cbmb_colorram_w, &cbmb_colorram },
+		{0xfd800, 0xfd8ff, vic2_port_w },
 		/* disk units */
-		new MemoryWriteAddress(0xfda00, 0xfdaff, sid6581_0_port_w),
+		{0xfda00, 0xfdaff, sid6581_0_port_w},
 		/* db00 coprocessor */
-		new MemoryWriteAddress(0xfdc00, 0xfdcff, cia6526_0_port_w),
+		{0xfdc00, 0xfdcff, cia6526_0_port_w},
 		/* dd00 acia */
-		new MemoryWriteAddress(0xfde00, 0xfdeff, tpi6525_0_port_w),
-		new MemoryWriteAddress(0xfdf00, 0xfdfff, tpi6525_1_port_w),
-		new MemoryWriteAddress(0xfe000, 0xfffff, MWA_ROM, cbmb_kernal ),
-		new MemoryWriteAddress(0x100000, 0x100fff, MWA_ROM, cbmb_chargen ),
-		MEMORY_TABLE_END
-	};
+		{0xfde00, 0xfdeff, tpi6525_0_port_w},
+		{0xfdf00, 0xfdfff, tpi6525_1_port_w},
+		{0xfe000, 0xfffff, MWA_ROM, &cbmb_kernal },
+	MEMORY_END
 	
 	#define DIPS_HELPER(bit, name, keycode) \
 	   PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, IP_JOY_NONE);
@@ -693,22 +684,8 @@ public class cbmb
 	
 	static GfxLayout cbm600_charlayout = new GfxLayout
 	(
-		8,8,
-		512,                                    /* 256 characters */
-		1,                      /* 1 bits per pixel */
-		new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
-		/* x offsets */
-		new int[] { 0,1,2,3,4,5,6,7 },
-		/* y offsets */
-		new int[] { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
-		},
-		8*16
-	);
-	
-	static GfxLayout cbm700_charlayout = new GfxLayout
-	(
-		8,14,
-		512,                                    /* 256 characters */
+		8,16,
+		256,                                    /* 256 characters */
 		1,                      /* 1 bits per pixel */
 		new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
 		/* x offsets */
@@ -720,13 +697,30 @@ public class cbmb
 		8*16
 	);
 	
+	static GfxLayout cbm700_charlayout = new GfxLayout
+	(
+		9,16,
+		256,                                    /* 256 characters */
+		1,                      /* 1 bits per pixel */
+		new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
+		/* x offsets */
+		new int[] { 0,1,2,3,4,5,6,7,7 }, // 8.column will be cleared in cbm700_vh_start
+		/* y offsets */
+		new int[] { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+		  8*8, 9*8, 10*8, 11*8, 12*8, 13*8, 14*8, 15*8
+		},
+		8*16
+	);
+	
 	static GfxDecodeInfo cbm600_gfxdecodeinfo[] ={
-		new GfxDecodeInfo( 1, 0x0000, cbm600_charlayout, 0, 2 ),
+		new GfxDecodeInfo( 1, 0x0000, cbm600_charlayout, 0, 1 ),
+		new GfxDecodeInfo( 1, 0x1000, cbm600_charlayout, 0, 1 ),
 	    new GfxDecodeInfo( -1 ) /* end of array */
 	};
 	
 	static GfxDecodeInfo cbm700_gfxdecodeinfo[] ={
-		new GfxDecodeInfo( 1, 0x0000, cbm700_charlayout, 0, 2 ),
+		new GfxDecodeInfo( 1, 0x0000, cbm700_charlayout, 0, 1 ),
+		new GfxDecodeInfo( 1, 0x1000, cbm700_charlayout, 0, 1 ),
 	    new GfxDecodeInfo( -1 ) /* end of array */
 	};
 	
@@ -742,54 +736,61 @@ public class cbmb
 	}
 	
 	ROM_START (cbm610)
-		ROM_REGION (0x100000, REGION_CPU1);
+		ROM_REGION (0x100000, REGION_CPU1, 0);
 		ROM_LOAD ("901243.04a", 0xf8000, 0x2000, 0xb0dcb56d);
 		ROM_LOAD ("901242.04a", 0xfa000, 0x2000, 0xde04ea4f);
 		ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901237.01", 0x0000, 0x1000, 0x1acf5098);
 	ROM_END(); }}; 
 	
-	#if 0
 	ROM_START (cbm620)
-		ROM_REGION (0x100000, REGION_CPU1);
+		ROM_REGION (0x100000, REGION_CPU1, 0);
 	    ROM_LOAD ("901241.03", 0xf8000, 0x2000, 0x5c1f3347);
 	    ROM_LOAD ("901240.03", 0xfa000, 0x2000, 0x72aa44e1);
 	    ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901237.01", 0x0000, 0x1000, 0x1acf5098);
 	ROM_END(); }}; 
-	#else
-	/* hungarian version */
-	ROM_START (cbm620)
-		ROM_REGION (0x100000, REGION_CPU1);
+	
+	ROM_START (cbm620hu)
+		ROM_REGION (0x100000, REGION_CPU1, 0);
 		ROM_LOAD ("610u60.bin", 0xf8000, 0x4000, 0x8eed0d7e);
 		ROM_LOAD ("kernhun.bin", 0xfe000, 0x2000, 0x0ea8ca4d);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 		ROM_LOAD ("charhun.bin", 0x0000, 0x2000, 0x1fb5e596);
 	ROM_END(); }}; 
-	#endif
 	
 	ROM_START (cbm710)
-		ROM_REGION (0x100000, REGION_CPU1);
+		ROM_REGION (0x100000, REGION_CPU1, 0);
 		ROM_LOAD ("901243.04a", 0xf8000, 0x2000, 0xb0dcb56d);
 		ROM_LOAD ("901242.04a", 0xfa000, 0x2000, 0xde04ea4f);
 		ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901232.01", 0x0000, 0x1000, 0x3a350bc3);
 	ROM_END(); }}; 
 	
 	ROM_START (cbm720)
-		ROM_REGION (0x100000, REGION_CPU1);
+		ROM_REGION (0x100000, REGION_CPU1, 0);
 	    ROM_LOAD ("901241.03", 0xf8000, 0x2000, 0x5c1f3347);
 	    ROM_LOAD ("901240.03", 0xfa000, 0x2000, 0x72aa44e1);
 	    ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901232.01", 0x0000, 0x1000, 0x3a350bc3);
 	ROM_END(); }}; 
 	
+	ROM_START (cbm720se)
+		ROM_REGION (0x100000, REGION_CPU1, 0);
+	    ROM_LOAD ("901241.03", 0xf8000, 0x2000, 0x5c1f3347);
+	    ROM_LOAD ("901240.03", 0xfa000, 0x2000, 0x72aa44e1);
+	    ROM_LOAD ("901244.03", 0xfe000, 0x2000, 0x87bc142b);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
+	    ROM_LOAD ("901233.03", 0x0000, 0x1000, 0x09518b19);
+	ROM_END(); }}; 
+	
+	
 	ROM_START (cbm500)
-		ROM_REGION (0x101000, REGION_CPU1);
+		ROM_REGION (0x101000, REGION_CPU1, 0);
 		ROM_LOAD ("901236.02", 0xf8000, 0x2000, 0xc62ab16f);
 		ROM_LOAD ("901235.02", 0xfa000, 0x2000, 0x20b7df33);
 		ROM_LOAD ("901234.02", 0xfe000, 0x2000, 0xf46bbd2b);
@@ -863,6 +864,25 @@ public class cbmb
 	
 	#endif
 	
+	static SID6581_interface sid_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		1,
+		{
+			{
+				MIXER(50, MIXER_PAN_CENTER),
+				MOS6581,
+				1000000,
+				NULL
+			}
+		}
+	};
+	
+	
 	static MachineDriver machine_driver_cbm600 = new MachineDriver
 	(
 	  /* basic machine hardware */
@@ -873,7 +893,6 @@ public class cbmb
 				cbmb_readmem, cbmb_writemem,
 				null, null,
 				null, null,
-				crtc6845_raster_irq, 15625,
 			),
 		},
 		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -890,19 +909,19 @@ public class cbmb
 		sizeof (cbmb_colortable) / sizeof(cbmb_colortable[null]),
 		cbm700_init_palette,				   /* convert color prom */
 	#ifdef PET_TEST_CODE
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#else
-		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#endif
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		cbmb_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, sid_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -917,7 +936,6 @@ public class cbmb
 				cbmb_readmem, cbmb_writemem,
 				null, null,
 				null, null,
-				crtc6845_raster_irq, 15625,
 			),
 		},
 		50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -934,19 +952,19 @@ public class cbmb
 		sizeof (cbmb_colortable) / sizeof(cbmb_colortable[null]),
 		cbm700_init_palette,				   /* convert color prom */
 	#ifdef PET_TEST_CODE
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#else
-		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#endif
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		cbmb_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, sid_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -961,7 +979,6 @@ public class cbmb
 				cbmb_readmem, cbmb_writemem,
 				null, null,
 				null, null,
-				crtc6845_raster_irq, 353*50,
 			),
 		},
 		50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -977,16 +994,16 @@ public class cbmb
 		sizeof (cbm700_palette) / sizeof (cbm700_palette[null]) / 3,
 		sizeof (cbmb_colortable) / sizeof(cbmb_colortable[null]),
 		cbm700_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		cbm700_vh_start,
+		generic_vh_stop,
+		cbmb_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, sid_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -1026,7 +1043,8 @@ public class cbmb
 		/* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			// ad_converter wired to joystick ports
+			new MachineSound( SOUND_CUSTOM, sid_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -1034,7 +1052,7 @@ public class cbmb
 	static const struct IODevice io_cbmb[] =
 	{
 		IODEVICE_CBMB_QUICK,
-		IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0", NULL),
+		IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0"),
 		/* monitor OR tape routine in kernal */
 	#ifdef PET_TEST_CODE
 		IODEVICE_CBM_DRIVE,
@@ -1045,7 +1063,7 @@ public class cbmb
 	static const struct IODevice io_cbm500[] =
 	{
 		IODEVICE_CBM500_QUICK,
-		IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0", NULL),
+		IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0"),
 	#ifdef PET_TEST_CODE
 		IODEVICE_CBM_DRIVE,
 	#endif
@@ -1055,25 +1073,46 @@ public class cbmb
 	
 	#define init_cbm500 cbm500_driver_init
 	#define init_cbm600 cbm600_driver_init
+	#define init_cbm600hu cbm600hu_driver_init
 	#define init_cbm600pal cbm600pal_driver_init
 	#define init_cbm700 cbm700_driver_init
 	
 	#define io_cbm710 io_cbmb
 	#define io_cbm720 io_cbmb
+	#define io_cbm720se io_cbmb
 	#define io_cbm610 io_cbmb
 	#define io_cbm620 io_cbmb
+	#define io_cbm620hu io_cbmb
 	
 	#if 0
 	#define rom_cbm730 rom_cbmb256hp
 	#endif
 	
 	/*     YEAR		NAME	PARENT	MACHINE		INPUT		INIT		COMPANY								FULLNAME */
-	COMPX (1983,	cbm500,	0,		cbm500,		cbm500,		cbm500,		"Commodore Business Machines Co.",	"Commodore B128-40/Pet-II/P500 60Hz",		GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-	COMPX (1983,	cbm610, 0,		cbm600, 	cbm600, 	cbm600, 	"Commodore Business Machines Co.",  "Commodore B128-80LP/610 60Hz",             GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-	COMPX (1983,	cbm620,	cbm610,	cbm600pal,	cbm600pal,	cbm600pal,	"Commodore Business Machines Co.",	"Commodore B256-80LP/620 Hungarian 50Hz",	GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-	COMPX (1983,	cbm710, cbm610, cbm700, 	cbm700, 	cbm700, 	"Commodore Business Machines Co.",  "Commodore B128-80HP/710",                  GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-	COMPX (1983,	cbm720,	cbm610,	cbm700,		cbm700,		cbm700,		"Commodore Business Machines Co.",	"Commodore B256-80HP/720",					GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
+	COMPX (1983,	cbm500,	0,		cbm500,		cbm500,		cbm500,		"Commodore Business Machines Co.",	"Commodore B128-40/Pet-II/P500 60Hz",		GAME_NOT_WORKING)
+	COMPX (1983,	cbm610, 0,		cbm600, 	cbm600, 	cbm600, 	"Commodore Business Machines Co.",  "Commodore B128-80LP/610 60Hz",             GAME_NOT_WORKING)
+	COMPX (1983,	cbm620,	cbm610,	cbm600pal,	cbm600pal,	cbm600pal,	"Commodore Business Machines Co.",	"Commodore B256-80LP/620 50Hz",	GAME_NOT_WORKING)
+	COMPX (1983,	cbm620hu,	cbm610,	cbm600pal,	cbm600pal,	cbm600hu,	"Commodore Business Machines Co.",	"Commodore B256-80LP/620 Hungarian 50Hz",	GAME_NOT_WORKING)
+	COMPX (1983,	cbm710, cbm610, cbm700, 	cbm700, 	cbm700, 	"Commodore Business Machines Co.",  "Commodore B128-80HP/710",                  GAME_NOT_WORKING)
+	COMPX (1983,	cbm720,	cbm610,	cbm700,		cbm700,		cbm700,		"Commodore Business Machines Co.",	"Commodore B256-80HP/720",					GAME_NOT_WORKING)
+	COMPX (1983,	cbm720se,	cbm610,	cbm700,	cbm700,		cbm700,		"Commodore Business Machines Co.",	"Commodore B256-80HP/720 Swedish/Finnish",	GAME_NOT_WORKING)
 	#if 0
-	COMPX (1983,	cbm730, cbm610, cbmbx, 		cbmb, 		cbmb, 		"Commodore Business Machines Co.",	"Commodore BX128-80HP/BX256-80HP/730", GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
+	COMPX (1983,	cbm730, cbm610, cbmbx, 		cbmb, 		cbmb, 		"Commodore Business Machines Co.",	"Commodore BX128-80HP/BX256-80HP/730", GAME_NOT_WORKING)
+	#endif
+	
+	#ifdef RUNTIME_LOADER
+	extern void cbmb_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"cbm500")==0) drivers[i]=&driver_cbm500;
+			if ( strcmp(drivers[i].name,"cbm610")==0) drivers[i]=&driver_cbm610;
+			if ( strcmp(drivers[i].name,"cbm620")==0) drivers[i]=&driver_cbm620;
+			if ( strcmp(drivers[i].name,"cbm620hu")==0) drivers[i]=&driver_cbm620hu;
+			if ( strcmp(drivers[i].name,"cbm710")==0) drivers[i]=&driver_cbm710;
+			if ( strcmp(drivers[i].name,"cbm720")==0) drivers[i]=&driver_cbm720;
+			if ( strcmp(drivers[i].name,"cbm720se")==0) drivers[i]=&driver_cbm720se;
+		}
+	}
 	#endif
 }

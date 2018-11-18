@@ -83,101 +83,93 @@ public class mz700
 	#define LOG(N,M,A)
 	#endif
 	
-	static MemoryReadAddress readmem_mz700[] =
-	{
-		new MemoryReadAddress( 0x00000, 0x00fff, MRA_BANK1 ),
-		new MemoryReadAddress( 0x01000, 0x0cfff, MRA_RAM ),
-		new MemoryReadAddress( 0x0d000, 0x0d7ff, MRA_BANK6 ),
-		new MemoryReadAddress( 0x0d800, 0x0dfff, MRA_BANK7 ),
-		new MemoryReadAddress( 0x0e000, 0x0ffff, MRA_BANK8 ),
-		new MemoryReadAddress( 0x10000, 0x10fff, MRA_ROM ),
-		new MemoryReadAddress( 0x12000, 0x127ff, MRA_RAM ),
-		new MemoryReadAddress( 0x12800, 0x12fff, MRA_RAM ),
-		new MemoryReadAddress( 0x16000, 0x16fff, MRA_RAM ),
-	    new MemoryReadAddress(-1)
-	};
+	MEMORY_READ_START( readmem_mz700 )
+		{ 0x00000, 0x00fff, MRA_BANK1 },
+		{ 0x01000, 0x0cfff, MRA_RAM },
+		{ 0x0d000, 0x0d7ff, MRA_BANK6 },
+		{ 0x0d800, 0x0dfff, MRA_BANK7 },
+		{ 0x0e000, 0x0ffff, MRA_BANK8 },
+	#if 0 //mame37b9 traps
+		{ 0x10000, 0x10fff, MRA_ROM },
+		{ 0x12000, 0x127ff, MRA_RAM },
+		{ 0x12800, 0x12fff, MRA_RAM },
+		{ 0x16000, 0x16fff, MRA_RAM },
+	#endif
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_mz700[] =
-	{
-		new MemoryWriteAddress( 0x00000, 0x00fff, MWA_BANK1 ),
-		new MemoryWriteAddress( 0x01000, 0x0cfff, MWA_RAM ),
-		new MemoryWriteAddress( 0x0d000, 0x0d7ff, MWA_BANK6 ),
-		new MemoryWriteAddress( 0x0d800, 0x0dfff, MWA_BANK7 ),
-		new MemoryWriteAddress( 0x0e000, 0x0ffff, MWA_BANK8 ),
-		new MemoryWriteAddress( 0x12000, 0x127ff, videoram_w, videoram, videoram_size ),
-		new MemoryWriteAddress( 0x12800, 0x12fff, colorram_w, colorram ),
-		new MemoryWriteAddress( 0x16000, 0x16fff, pcgram_w ),
-	    new MemoryWriteAddress(-1)
-	};
+	MEMORY_WRITE_START( writemem_mz700 )
+		{ 0x00000, 0x00fff, MWA_BANK1 },
+		{ 0x01000, 0x0cfff, MWA_RAM },
+		{ 0x0d000, 0x0d7ff, MWA_BANK6 },
+		{ 0x0d800, 0x0dfff, MWA_BANK7 },
+		{ 0x0e000, 0x0ffff, MWA_BANK8 },
+	#if 0
+		{ 0x12000, 0x127ff, videoram_w, &videoram, &videoram_size },
+		{ 0x12800, 0x12fff, colorram_w, &colorram },
+		{ 0x16000, 0x16fff, pcgram_w },
+	#endif
+	MEMORY_END
 	
-	static IOReadPort readport_mz700[] =
-	{
-		new IOReadPort(-1)
-	};
+	PORT_READ_START( readport_mz700 )
+	PORT_END
 	
-	static IOWritePort writeport_mz700[] =
-	{
-		new IOWritePort( 0xe0, 0xe6, mz700_bank_w ),
-		new IOWritePort(-1)
-	};
+	PORT_WRITE_START( writeport_mz700 )
+		{ 0xe0, 0xe6, mz700_bank_w },
+	PORT_END
 	
-	static MemoryReadAddress readmem_mz800[] =
-	{
-		new MemoryReadAddress( 0x00000, 0x00fff, MRA_BANK1 ),
-		new MemoryReadAddress( 0x01000, 0x01fff, MRA_BANK2 ),
-		new MemoryReadAddress( 0x02000, 0x07fff, MRA_RAM ),
-		new MemoryReadAddress( 0x08000, 0x09fff, MRA_BANK3 ),
-		new MemoryReadAddress( 0x0a000, 0x0bfff, MRA_BANK4 ),
-		new MemoryReadAddress( 0x0c000, 0x0cfff, MRA_BANK5 ),
-		new MemoryReadAddress( 0x0d000, 0x0d7ff, MRA_BANK6 ),
-		new MemoryReadAddress( 0x0d800, 0x0dfff, MRA_BANK7 ),
-		new MemoryReadAddress( 0x0e000, 0x0ffff, MRA_BANK8 ),
-		new MemoryReadAddress( 0x10000, 0x10fff, MRA_ROM ),
-		new MemoryReadAddress( 0x11000, 0x11fff, MRA_ROM ),
-		new MemoryReadAddress( 0x12000, 0x15fff, MRA_RAM ),
-	    new MemoryReadAddress(-1)
-	};
+	MEMORY_READ_START( readmem_mz800 )
+		{ 0x00000, 0x00fff, MRA_BANK1 },
+		{ 0x01000, 0x01fff, MRA_BANK2 },
+		{ 0x02000, 0x07fff, MRA_RAM },
+		{ 0x08000, 0x09fff, MRA_BANK3 },
+		{ 0x0a000, 0x0bfff, MRA_BANK4 },
+		{ 0x0c000, 0x0cfff, MRA_BANK5 },
+		{ 0x0d000, 0x0d7ff, MRA_BANK6 },
+		{ 0x0d800, 0x0dfff, MRA_BANK7 },
+		{ 0x0e000, 0x0ffff, MRA_BANK8 },
+	#if 0
+		{ 0x10000, 0x10fff, MRA_ROM },
+		{ 0x11000, 0x11fff, MRA_ROM },
+		{ 0x12000, 0x15fff, MRA_RAM },
+	#endif
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_mz800[] =
-	{
-		new MemoryWriteAddress( 0x00000, 0x00fff, MWA_BANK1 ),
-		new MemoryWriteAddress( 0x01000, 0x01fff, MWA_BANK2 ),
-		new MemoryWriteAddress( 0x02000, 0x07fff, MWA_RAM ),
-		new MemoryWriteAddress( 0x08000, 0x09fff, MWA_BANK3 ),
-		new MemoryWriteAddress( 0x0a000, 0x0bfff, MWA_BANK4 ),
-		new MemoryWriteAddress( 0x0c000, 0x0cfff, MWA_BANK5 ),
-		new MemoryWriteAddress( 0x0d000, 0x0d7ff, MWA_BANK6 ),
-		new MemoryWriteAddress( 0x0d800, 0x0dfff, MWA_BANK7 ),
-		new MemoryWriteAddress( 0x0e000, 0x0ffff, MWA_BANK8 ),
-		new MemoryWriteAddress( 0x10000, 0x10fff, MWA_ROM ),
-		new MemoryWriteAddress( 0x11000, 0x11fff, MWA_ROM ),
-	    new MemoryWriteAddress( 0x12000, 0x16fff, videoram_w, videoram, videoram_size ),
-		new MemoryWriteAddress( 0x12800, 0x12fff, colorram_w, colorram ),
-	    new MemoryWriteAddress(-1)
-	};
+	MEMORY_WRITE_START( writemem_mz800 )
+		{ 0x00000, 0x00fff, MWA_BANK1 },
+		{ 0x01000, 0x01fff, MWA_BANK2 },
+		{ 0x02000, 0x07fff, MWA_RAM },
+		{ 0x08000, 0x09fff, MWA_BANK3 },
+		{ 0x0a000, 0x0bfff, MWA_BANK4 },
+		{ 0x0c000, 0x0cfff, MWA_BANK5 },
+		{ 0x0d000, 0x0d7ff, MWA_BANK6 },
+		{ 0x0d800, 0x0dfff, MWA_BANK7 },
+		{ 0x0e000, 0x0ffff, MWA_BANK8 },
+	#if 0
+		{ 0x10000, 0x10fff, MWA_ROM },
+		{ 0x11000, 0x11fff, MWA_ROM },
+	    { 0x12000, 0x16fff, videoram_w, &videoram, &videoram_size },
+		{ 0x12800, 0x12fff, colorram_w, &colorram },
+	#endif
+	MEMORY_END
 	
-	static IOReadPort readport_mz800[] =
-	{
-		new IOReadPort( 0xce, 0xce, mz800_crtc_r ),
-		new IOReadPort( 0xd0, 0xd7, mz800_mmio_r ),
-		new IOReadPort( 0xe0, 0xe9, mz800_bank_r ),
-		new IOReadPort( 0xea, 0xea, mz800_ramdisk_r ),
-	    new IOReadPort(-1)
-	};
+	PORT_READ_START( readport_mz800 )
+		{ 0xce, 0xce, mz800_crtc_r },
+		{ 0xd0, 0xd7, mz800_mmio_r },
+		{ 0xe0, 0xe9, mz800_bank_r },
+		{ 0xea, 0xea, mz800_ramdisk_r },
+	PORT_END
 	
-	static IOWritePort writeport_mz800[] =
-	{
-		new IOWritePort( 0xcc, 0xcc, mz800_write_format_w ),
-		new IOWritePort( 0xcd, 0xcd, mz800_read_format_w ),
-		new IOWritePort( 0xce, 0xce, mz800_display_mode_w ),
-		new IOWritePort( 0xcf, 0xcf, mz800_scroll_border_w ),
-		new IOWritePort( 0xd0, 0xd7, mz800_mmio_w ),
-		new IOWritePort( 0xe0, 0xe9, mz800_bank_w ),
-		new IOWritePort( 0xea, 0xea, mz800_ramdisk_w ),
-		new IOWritePort( 0xeb, 0xeb, mz800_ramaddr_w ),
-		new IOWritePort( 0xf0, 0xf0, mz800_palette_w ),
-	    new IOWritePort(-1)
-	};
+	PORT_WRITE_START( writeport_mz800 )
+		{ 0xcc, 0xcc, mz800_write_format_w },
+		{ 0xcd, 0xcd, mz800_read_format_w },
+		{ 0xce, 0xce, mz800_display_mode_w },
+		{ 0xcf, 0xcf, mz800_scroll_border_w },
+		{ 0xd0, 0xd7, mz800_mmio_w },
+		{ 0xe0, 0xe9, mz800_bank_w },
+		{ 0xea, 0xea, mz800_ramdisk_w },
+		{ 0xeb, 0xeb, mz800_ramaddr_w },
+		{ 0xf0, 0xf0, mz800_palette_w },
+	PORT_END
 	
 	static InputPortPtr input_ports_mz700 = new InputPortPtr(){ public void handler() { 
 		PORT_START();  /* status */
@@ -307,19 +299,20 @@ public class mz700
 	static GfxDecodeInfo gfxdecodeinfo[] =
 	{
 		new GfxDecodeInfo( REGION_GFX1, 0, char_layout, 0, 256 ),
-		new GfxDecodeInfo( -1 ) /* end of array */
-	};
+	MEMORY_END	 /* end of array */
 	
-	static CustomSound_interface spkr_interface = new CustomSound_interface(
-		mz700_sh_start,
-		mz700_sh_stop,
-		mz700_sh_update
-	);
-	
-	static struct Wave_interface wave_interface = {
+	static struct beep_interface mz700_beep_interface =
+	new GfxDecodeInfo(
 		1,
 		{ 50 }
-	};
+	);
+	
+	
+	static struct Wave_interface wave_interface =
+	new GfxDecodeInfo(
+		1,
+		{ 50 }
+	);
 	
 	static MachineDriver machine_driver_mz700 = new MachineDriver
 	(
@@ -355,8 +348,8 @@ public class mz700
 		0,0,0,0,
 		new MachineSound[] {
 			new MachineSound(
-				SOUND_CUSTOM,
-				spkr_interface
+				SOUND_BEEP,
+				mz700_beep_interface
 	        ),
 	        new MachineSound(
 	            SOUND_WAVE,
@@ -399,8 +392,8 @@ public class mz700
 		0,0,0,0,
 		new MachineSound[] {
 			new MachineSound(
-				SOUND_CUSTOM,
-				spkr_interface
+				SOUND_BEEP,
+				mz700_beep_interface
 	        ),
 	        new MachineSound(
 	            SOUND_WAVE,
@@ -410,32 +403,32 @@ public class mz700
 	);
 	
 	static RomLoadPtr rom_mz700 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x18000,REGION_CPU1);
+		ROM_REGION(0x18000,REGION_CPU1,0);
 			ROM_LOAD("1z-013a.rom", 0x10000, 0x1000, 0x4c6c6b7b);
-		ROM_REGION(0x01000,REGION_GFX1);
+		ROM_REGION(0x01000,REGION_GFX1,0);
 			ROM_LOAD("mz700fon.int",0x00000, 0x1000, 0x42b9e8fb);
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_mz700j = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x18000,REGION_CPU1);
+		ROM_REGION(0x18000,REGION_CPU1,0);
 			ROM_LOAD("1z-013a.rom", 0x10000, 0x1000, 0x4c6c6b7b);
-		ROM_REGION(0x01000,REGION_GFX1);
+		ROM_REGION(0x01000,REGION_GFX1,0);
 			ROM_LOAD("mz700fon.jap",0x00000, 0x1000, 0x425eedf5);
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_mz800 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x18000,REGION_CPU1);
-			ROM_LOAD("mz800h.rom",  0x10000, 0x2000, 0x0c281675);
-		ROM_REGION(0x10000,REGION_USER1);
+		ROM_REGION(0x18000,REGION_CPU1,0);
+			ROM_LOAD("mz800h.rom",  0x10000, 0x2000, BADCRC(0x0c281675);
+		ROM_REGION(0x10000,REGION_USER1,0);
 			/* RAMDISK */
-	    ROM_REGION(0x01000,REGION_GFX1);
+	    ROM_REGION(0x01000,REGION_GFX1,0);
 			ROM_LOAD("mz700fon.int",0x00000, 0x1000, 0x42b9e8fb);
 	ROM_END(); }}; 
 	
 	
 	
 	static const struct IODevice io_mz700[] = {
-		IO_CASSETTE_WAVE(1,"m12\0wav\0",mz700_cassette_id,mz700_cassette_init,mz700_cassette_exit),
+		IO_CASSETTE_WAVE(1,"m12\0wav\0",0,mz700_cassette_init,mz700_cassette_exit),
 	    { IO_END }
 	};
 	

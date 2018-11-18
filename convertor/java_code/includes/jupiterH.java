@@ -18,7 +18,7 @@ extern public static WriteHandlerPtr jupiter_port_fe_w = new WriteHandlerPtr() {
 /* vidhrdw/jupiter.c */
 
 extern extern void jupiter_vh_stop (void);
-extern void jupiter_vh_screenrefresh (struct osd_bitmap *bitmap,
+extern void jupiter_vh_screenrefresh (struct mame_bitmap *bitmap,
 												int full_refresh);
 extern extern UBytePtr jupiter_charram;
 extern size_t jupiter_charram_size;

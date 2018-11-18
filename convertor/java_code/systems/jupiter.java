@@ -39,58 +39,50 @@ public class jupiter
 	
 	/* port i/o functions */
 	
-	static IOReadPort jupiter_readport[] =
-	{
-		new IOReadPort(0xfefe, 0xfefe, jupiter_port_fefe_r),
-		new IOReadPort(0xfdfe, 0xfdfe, jupiter_port_fdfe_r),
-		new IOReadPort(0xfbfe, 0xfbfe, jupiter_port_fbfe_r),
-		new IOReadPort(0xf7fe, 0xf7fe, jupiter_port_f7fe_r),
-		new IOReadPort(0xeffe, 0xeffe, jupiter_port_effe_r),
-		new IOReadPort(0xdffe, 0xdffe, jupiter_port_dffe_r),
-		new IOReadPort(0xbffe, 0xbffe, jupiter_port_bffe_r),
-		new IOReadPort(0x7ffe, 0x7ffe, jupiter_port_7ffe_r),
-		new IOReadPort(-1)
-	};
+	PORT_READ_START( jupiter_readport )
+		{0xfefe, 0xfefe, jupiter_port_fefe_r},
+		{0xfdfe, 0xfdfe, jupiter_port_fdfe_r},
+		{0xfbfe, 0xfbfe, jupiter_port_fbfe_r},
+		{0xf7fe, 0xf7fe, jupiter_port_f7fe_r},
+		{0xeffe, 0xeffe, jupiter_port_effe_r},
+		{0xdffe, 0xdffe, jupiter_port_dffe_r},
+		{0xbffe, 0xbffe, jupiter_port_bffe_r},
+		{0x7ffe, 0x7ffe, jupiter_port_7ffe_r},
+	PORT_END
 	
-	static IOWritePort jupiter_writeport[] =
-	{
-		new IOWritePort(0x00fe, 0xfffe, jupiter_port_fe_w),
-		new IOWritePort(-1)
-	};
+	PORT_WRITE_START( jupiter_writeport )
+		{0x00fe, 0xfffe, jupiter_port_fe_w},
+	PORT_END
 	
 	/* memory w/r functions */
 	
-	static MemoryReadAddress jupiter_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x1fff, MRA_ROM),
-		new MemoryReadAddress(0x2000, 0x22ff, MRA_NOP),
-		new MemoryReadAddress(0x2300, 0x23ff, MRA_RAM),
-		new MemoryReadAddress(0x2400, 0x26ff, videoram_r),
-		new MemoryReadAddress(0x2700, 0x27ff, MRA_RAM),
-		new MemoryReadAddress(0x2800, 0x2bff, MRA_NOP),
-		new MemoryReadAddress(0x2c00, 0x2fff, MRA_RAM),	/* char RAM */
-		new MemoryReadAddress(0x3000, 0x3bff, MRA_NOP),
-		new MemoryReadAddress(0x3c00, 0x47ff, MRA_RAM),
-		new MemoryReadAddress(0x4800, 0x87ff, MRA_RAM),
-		new MemoryReadAddress(0x8800, 0xffff, MRA_RAM),
-		new MemoryReadAddress(-1)
-	};
+	MEMORY_READ_START( jupiter_readmem )
+		{0x0000, 0x1fff, MRA_ROM},
+		{0x2000, 0x22ff, MRA_NOP},
+		{0x2300, 0x23ff, MRA_RAM},
+		{0x2400, 0x26ff, videoram_r},
+		{0x2700, 0x27ff, MRA_RAM},
+		{0x2800, 0x2bff, MRA_NOP},
+		{0x2c00, 0x2fff, MRA_RAM},	/* char RAM */
+		{0x3000, 0x3bff, MRA_NOP},
+		{0x3c00, 0x47ff, MRA_RAM},
+		{0x4800, 0x87ff, MRA_RAM},
+		{0x8800, 0xffff, MRA_RAM},
+	MEMORY_END
 	
-	static MemoryWriteAddress jupiter_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x1fff, MWA_ROM),
-		new MemoryWriteAddress(0x2000, 0x22ff, MWA_NOP),
-		new MemoryWriteAddress(0x2300, 0x23ff, MWA_RAM),
-		new MemoryWriteAddress(0x2400, 0x26ff, videoram_w, videoram, videoram_size),
-		new MemoryWriteAddress(0x2700, 0x27ff, MWA_RAM),
-		new MemoryWriteAddress(0x2800, 0x2bff, MWA_NOP),
-		new MemoryWriteAddress(0x2c00, 0x2fff, jupiter_vh_charram_w, jupiter_charram, jupiter_charram_size),
-		new MemoryWriteAddress(0x3000, 0x3bff, MWA_NOP),
-		new MemoryWriteAddress(0x3c00, 0x47ff, MWA_RAM),
-		new MemoryWriteAddress(0x4800, 0x87ff, MWA_RAM),
-		new MemoryWriteAddress(0x8800, 0xffff, MWA_RAM),
-		new MemoryWriteAddress(-1)
-	};
+	MEMORY_WRITE_START( jupiter_writemem )
+		{0x0000, 0x1fff, MWA_ROM},
+		{0x2000, 0x22ff, MWA_NOP},
+		{0x2300, 0x23ff, MWA_RAM},
+		{0x2400, 0x26ff, videoram_w, &videoram, &videoram_size},
+		{0x2700, 0x27ff, MWA_RAM},
+		{0x2800, 0x2bff, MWA_NOP},
+		{0x2c00, 0x2fff, jupiter_vh_charram_w, &jupiter_charram, &jupiter_charram_size},
+		{0x3000, 0x3bff, MWA_NOP},
+		{0x3c00, 0x47ff, MWA_RAM},
+		{0x4800, 0x87ff, MWA_RAM},
+		{0x8800, 0xffff, MWA_RAM},
+	MEMORY_END
 	
 	/* graphics output */
 	
@@ -108,26 +100,25 @@ public class jupiter
 	static GfxDecodeInfo jupiter_gfxdecodeinfo[] =
 	{
 		new GfxDecodeInfo(REGION_CPU1, 0x2c00, jupiter_charlayout, 0, 2),
-		new GfxDecodeInfo(-1)							   /* end of array */
-	};
+	MEMORY_END								   /* end of array */
 	
 	static unsigned char jupiter_palette[] =
-	{
+	new GfxDecodeInfo(
 		0x00, 0x00, 0x00,	/* Black */
 		0xff, 0xff, 0xff	/* White */
-	};
+	);
 	
 	static unsigned short jupiter_colortable[] =
-	{
+	new GfxDecodeInfo(
 		0, 1,
 		1, 0
-	};
+	);
 	
 	static void jupiter_init_palette (UBytePtr sys_palette, unsigned short *sys_colortable, const UBytePtr color_prom)
-	{
+	new GfxDecodeInfo(
 		memcpy (sys_palette, jupiter_palette, sizeof (jupiter_palette));
 		memcpy (sys_colortable, jupiter_colortable, sizeof (jupiter_colortable));
-	}
+	)
 	
 	/* keyboard input */
 	
@@ -197,12 +188,12 @@ public class jupiter
 	/* Sound output */
 	
 	static struct Speaker_interface speaker_interface =
-	{
+	new GfxDecodeInfo(
 		1,			/* one speaker */
 		{ 100 },	/* mixing levels */
 		{ 0 },		/* optional: number of different levels */
 		{ NULL }	/* optional: level lookup table */
-	};
+	);
 	
 	/* machine definition */
 	
@@ -249,7 +240,7 @@ public class jupiter
 	);
 	
 	ROM_START (jupiter)
-	ROM_REGION (0x10000, REGION_CPU1);
+	ROM_REGION (0x10000, REGION_CPU1,0);
 	ROM_LOAD ("jupiter.lo", 0x0000, 0x1000, 0xdc8438a5);
 	ROM_LOAD ("jupiter.hi", 0x1000, 0x1000, 0x4009f636);
 	ROM_END(); }}; 

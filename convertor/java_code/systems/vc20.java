@@ -1,12 +1,11 @@
 /***************************************************************************
 
 	commodore vic20 home computer
-	Peter Trauner
-	(peter.trauner@jk.uni-linz.ac.at)
+	PeT mess@utanet.at
 
-    documentation
-     Marko.Makela@HUT.FI (vic6560)
-     www.funet.fi
+	documentation
+	 Marko.Makela@HUT.FI (vic6560)
+	 www.funet.fi
 
 ***************************************************************************/
 
@@ -163,202 +162,182 @@ public class vc20
 	
 	#define VERBOSE_DBG 0
 	
-	static MemoryReadAddress vc20_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x03ff, MRA_RAM),
+	static MEMORY_READ_START( vc20_readmem )
+		{0x0000, 0x03ff, MRA_RAM},
 	#if 0
-		new MemoryReadAddress(0x0400, 0x0fff, MRA_RAM),		   /* ram, rom or nothing; I think read 0xff! */
+		{0x0400, 0x0fff, MRA_RAM},		   /* ram, rom or nothing; I think read 0xff! */
 	#endif
-		new MemoryReadAddress(0x1000, 0x1fff, MRA_RAM),
+		{0x1000, 0x1fff, MRA_RAM},
 	#if 0
-		new MemoryReadAddress(0x2000, 0x3fff, MRA_RAM),		   /* ram, rom or nothing */
-		new MemoryReadAddress(0x4000, 0x5fff, MRA_RAM),		   /* ram, rom or nothing */
-		new MemoryReadAddress(0x6000, 0x7fff, MRA_RAM),		   /* ram, rom or nothing */
+		{0x2000, 0x3fff, MRA_RAM},		   /* ram, rom or nothing */
+		{0x4000, 0x5fff, MRA_RAM},		   /* ram, rom or nothing */
+		{0x6000, 0x7fff, MRA_RAM},		   /* ram, rom or nothing */
 	#endif
-		new MemoryReadAddress(0x8000, 0x8fff, MRA_ROM),
-		new MemoryReadAddress(0x9000, 0x900f, vic6560_port_r),
-		new MemoryReadAddress(0x9010, 0x910f, MRA_NOP),
-		new MemoryReadAddress(0x9110, 0x911f, via_0_r),
-		new MemoryReadAddress(0x9120, 0x912f, via_1_r),
-		new MemoryReadAddress(0x9130, 0x93ff, MRA_NOP),
-		new MemoryReadAddress(0x9400, 0x97ff, MRA_RAM),		   /*color ram 4 bit */
-		new MemoryReadAddress(0x9800, 0x9fff, MRA_NOP),
+		{0x8000, 0x8fff, MRA_ROM},
+		{0x9000, 0x900f, vic6560_port_r},
+		{0x9010, 0x910f, MRA_NOP},
+		{0x9110, 0x911f, via_0_r},
+		{0x9120, 0x912f, via_1_r},
+		{0x9130, 0x93ff, MRA_NOP},
+		{0x9400, 0x97ff, MRA_RAM},		   /*color ram 4 bit */
+		{0x9800, 0x9fff, MRA_NOP},
 	#if 0
-		new MemoryReadAddress(0xa000, 0xbfff, MRA_RAM),		   /* or nothing */
+		{0xa000, 0xbfff, MRA_RAM},		   /* or nothing */
 	#endif
-		new MemoryReadAddress(0xc000, 0xffff, MRA_ROM),
-		MEMORY_TABLE_END
-	};
+		{0xc000, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress vc20_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x03ff, MWA_RAM, vc20_memory),
-		new MemoryWriteAddress(0x1000, 0x1fff, MWA_RAM),
-		new MemoryWriteAddress(0x8000, 0x8fff, MWA_ROM),
-		new MemoryWriteAddress(0x9000, 0x900f, vic6560_port_w),
-		new MemoryWriteAddress(0x9010, 0x910f, MWA_NOP),
-		new MemoryWriteAddress(0x9110, 0x911f, via_0_w),
-		new MemoryWriteAddress(0x9120, 0x912f, via_1_w),
-		new MemoryWriteAddress(0x9130, 0x93ff, MWA_NOP),
-		new MemoryWriteAddress(0x9400, 0x97ff, vc20_write_9400, vc20_memory_9400),
-		new MemoryWriteAddress(0x9800, 0x9fff, MWA_NOP),
-		new MemoryWriteAddress(0xc000, 0xffff, MWA_NOP),		   /* MWA_ROM }, but logfile */
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( vc20_writemem )
+		{0x0000, 0x03ff, MWA_RAM, &vc20_memory},
+		{0x1000, 0x1fff, MWA_RAM},
+		{0x8000, 0x8fff, MWA_ROM},
+		{0x9000, 0x900f, vic6560_port_w},
+		{0x9010, 0x910f, MWA_NOP},
+		{0x9110, 0x911f, via_0_w},
+		{0x9120, 0x912f, via_1_w},
+		{0x9130, 0x93ff, MWA_NOP},
+		{0x9400, 0x97ff, vc20_write_9400, &vc20_memory_9400},
+		{0x9800, 0x9fff, MWA_NOP},
+		{0xc000, 0xffff, MWA_NOP},		   /* MWA_ROM }, but logfile */
+	MEMORY_END
 	
-	static MemoryReadAddress vc20i_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x03ff, MRA_RAM),
+	static MEMORY_READ_START( vc20i_readmem )
+		{0x0000, 0x03ff, MRA_RAM},
 	#if 0
-		new MemoryReadAddress(0x0400, 0x0fff, MRA_RAM),		   /* ram, rom or nothing; I think read 0xff! */
+		{0x0400, 0x0fff, MRA_RAM},		   /* ram, rom or nothing; I think read 0xff! */
 	#endif
-		new MemoryReadAddress(0x1000, 0x1fff, MRA_RAM),
+		{0x1000, 0x1fff, MRA_RAM},
 	#if 0
-		new MemoryReadAddress(0x2000, 0x3fff, MRA_RAM),		   /* ram, rom or nothing */
-		new MemoryReadAddress(0x4000, 0x5fff, MRA_RAM),		   /* ram, rom or nothing */
-		new MemoryReadAddress(0x6000, 0x7fff, MRA_RAM),		   /* ram, rom or nothing */
+		{0x2000, 0x3fff, MRA_RAM},		   /* ram, rom or nothing */
+		{0x4000, 0x5fff, MRA_RAM},		   /* ram, rom or nothing */
+		{0x6000, 0x7fff, MRA_RAM},		   /* ram, rom or nothing */
 	#endif
-		new MemoryReadAddress(0x8000, 0x8fff, MRA_ROM),
-		new MemoryReadAddress(0x9000, 0x900f, vic6560_port_r),
-		new MemoryReadAddress(0x9010, 0x910f, MRA_NOP),
-		new MemoryReadAddress(0x9110, 0x911f, via_0_r),
-		new MemoryReadAddress(0x9120, 0x912f, via_1_r),
-		new MemoryReadAddress(0x9400, 0x97ff, MRA_RAM),		   /*color ram 4 bit */
-		new MemoryReadAddress(0x9800, 0x980f, via_4_r),
-		new MemoryReadAddress(0x9810, 0x981f, via_5_r),
-		new MemoryReadAddress(0xa000, 0xbfff, MRA_ROM),
-		new MemoryReadAddress(0xc000, 0xffff, MRA_ROM),
-		MEMORY_TABLE_END
-	};
+		{0x8000, 0x8fff, MRA_ROM},
+		{0x9000, 0x900f, vic6560_port_r},
+		{0x9010, 0x910f, MRA_NOP},
+		{0x9110, 0x911f, via_0_r},
+		{0x9120, 0x912f, via_1_r},
+		{0x9400, 0x97ff, MRA_RAM},		   /*color ram 4 bit */
+		{0x9800, 0x980f, via_4_r},
+		{0x9810, 0x981f, via_5_r},
+		{0xa000, 0xbfff, MRA_ROM},
+		{0xc000, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress vc20i_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x03ff, MWA_RAM, vc20_memory),
-		new MemoryWriteAddress(0x1000, 0x1fff, MWA_RAM),
-		new MemoryWriteAddress(0x8000, 0x8fff, MWA_ROM),
-		new MemoryWriteAddress(0x9000, 0x900f, vic6560_port_w),
-		new MemoryWriteAddress(0x9010, 0x910f, MWA_NOP),
-		new MemoryWriteAddress(0x9110, 0x911f, via_0_w),
-		new MemoryWriteAddress(0x9120, 0x912f, via_1_w),
-		new MemoryWriteAddress(0x9400, 0x97ff, vc20_write_9400, vc20_memory_9400),
-		new MemoryWriteAddress(0x9800, 0x980f, via_4_w),
-		new MemoryWriteAddress(0x9810, 0x981f, via_5_w),
-		new MemoryWriteAddress(0xa000, 0xbfff, MWA_ROM),
-		new MemoryWriteAddress(0xc000, 0xffff, MWA_NOP),		   /* MWA_ROM }, but logfile */
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( vc20i_writemem )
+		{0x0000, 0x03ff, MWA_RAM, &vc20_memory},
+		{0x1000, 0x1fff, MWA_RAM},
+		{0x8000, 0x8fff, MWA_ROM},
+		{0x9000, 0x900f, vic6560_port_w},
+		{0x9010, 0x910f, MWA_NOP},
+		{0x9110, 0x911f, via_0_w},
+		{0x9120, 0x912f, via_1_w},
+		{0x9400, 0x97ff, vc20_write_9400, &vc20_memory_9400},
+		{0x9800, 0x980f, via_4_w},
+		{0x9810, 0x981f, via_5_w},
+		{0xa000, 0xbfff, MWA_ROM},
+		{0xc000, 0xffff, MWA_NOP},		   /* MWA_ROM }, but logfile */
+	MEMORY_END
 	
 	#define DIPS_HELPER(bit, name, keycode) \
-	   PORT_BITX(bit, IP_ACTIVE_LOW, IPT_KEYBOARD, name, keycode, IP_JOY_NONE);
-	
-	#define DIPS_HELPER2(bit, name, keycode) \
 	   PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, IP_JOY_NONE);
 	
-	#define DIPS_INPUT \
+	#define DIPS_JOY \
 		PORT_START\
-		PORT_BIT( 0x80, IP_ACTIVE_LOW,	IPT_JOYSTICK_RIGHT | IPF_8WAY );
-		PORT_BIT( 0x40, IP_ACTIVE_LOW,	IPT_UNUSED );
-		PORT_BIT( 0x20, IP_ACTIVE_LOW,	IPT_BUTTON1);
-		PORT_BIT( 0x10, IP_ACTIVE_LOW,	IPT_JOYSTICK_LEFT | IPF_8WAY );
-		PORT_BIT( 0x08, IP_ACTIVE_LOW,	IPT_JOYSTICK_DOWN | IPF_8WAY );
-		PORT_BIT( 0x04, IP_ACTIVE_LOW,	IPT_JOYSTICK_UP | IPF_8WAY );
-		PORT_BIT( 0x03, IP_ACTIVE_LOW,	IPT_UNUSED );
-		PORT_START();  \
-		PORT_BITX( 0x80, IP_ACTIVE_LOW, IPT_BUTTON2, \
-			   "Paddle 2 Button", KEYCODE_DEL, JOYCODE_NONE);
-		PORT_BIT ( 0x60, IP_ACTIVE_LOW, IPT_UNUSED );
-		PORT_BITX( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1, \
-			   "Paddle 1 Button", KEYCODE_INSERT, JOYCODE_NONE);
-		PORT_BIT ( 0x0f, IP_ACTIVE_LOW, IPT_UNUSED );
+		PORT_BITX( 0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP|IPF_8WAY, "Joystick Up", CODE_DEFAULT, CODE_NONE);\
+		PORT_BITX( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_DOWN|IPF_8WAY, "Joystick Down", CODE_DEFAULT, CODE_NONE);\
+		PORT_BITX( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT|IPF_8WAY, "Joystick Left", CODE_DEFAULT, CODE_NONE);\
+		PORT_BITX( 0x08, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT|IPF_8WAY, "Joystick Right", CODE_DEFAULT, CODE_NONE);\
+		PORT_BITX( 0x10, IP_ACTIVE_HIGH, IPT_BUTTON1, "Joystick Button", CODE_DEFAULT, CODE_NONE);\
+		PORT_BITX( 0x20, IP_ACTIVE_HIGH, IPT_BUTTON1, "Paddle 1 Button", KEYCODE_INSERT, CODE_NONE);\
+		PORT_BITX( 0x40, IP_ACTIVE_HIGH, IPT_BUTTON2, "Paddle 2 Button", KEYCODE_DEL, CODE_NONE);\
+		PORT_BITX( 0x80, IP_ACTIVE_HIGH, IPT_BUTTON1, "Lightpen Signal", KEYCODE_LALT, CODE_NONE);\
 		PORT_START();  \
 		PORT_ANALOGX(0xff,128,IPT_PADDLE|IPF_REVERSE,\
-			     30,20,0,255,KEYCODE_HOME,KEYCODE_PGUP,JOYCODE_NONE,JOYCODE_NONE);
+				 30,20,0,255,KEYCODE_HOME,KEYCODE_PGUP,JOYCODE_NONE,JOYCODE_NONE);
 		PORT_START();  \
 		PORT_ANALOGX(0xff,128,IPT_PADDLE|IPF_PLAYER2|IPF_REVERSE,\
-			     30,20,0,255,KEYCODE_END,KEYCODE_PGDN,JOYCODE_NONE,JOYCODE_NONE);
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "DEL INST",          KEYCODE_BACKSPACE)\
-		DIPS_HELPER( 0x40, "Pound",             KEYCODE_MINUS)\
-		DIPS_HELPER( 0x20, "+",                 KEYCODE_PLUS_PAD)\
-		DIPS_HELPER( 0x10, "9 )   RVS-ON",      KEYCODE_9)\
-		DIPS_HELPER( 0x08, "7 '   BLU",         KEYCODE_7)\
-		DIPS_HELPER( 0x04, "5 %   PUR",         KEYCODE_5)\
-		DIPS_HELPER( 0x02, "3 #   RED",         KEYCODE_3)\
-		DIPS_HELPER( 0x01, "1 !   BLK",         KEYCODE_1)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "RETURN",            KEYCODE_ENTER)\
-		DIPS_HELPER( 0x40, "*",                 KEYCODE_ASTERISK)\
-		DIPS_HELPER( 0x20, "P",                 KEYCODE_P)\
-		DIPS_HELPER( 0x10, "I",                 KEYCODE_I)\
-		DIPS_HELPER( 0x08, "Y",                 KEYCODE_Y)\
-		DIPS_HELPER( 0x04, "R",                 KEYCODE_R)\
-		DIPS_HELPER( 0x02, "W",                 KEYCODE_W)\
-		DIPS_HELPER( 0x01, "Arrow-Left",        KEYCODE_TILDE)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "CRSR-RIGHT LEFT",   KEYCODE_6_PAD)\
-		DIPS_HELPER( 0x40, "; ]",               KEYCODE_QUOTE)\
-		DIPS_HELPER( 0x20, "L",                 KEYCODE_L)\
-		DIPS_HELPER( 0x10, "J",                 KEYCODE_J)\
-		DIPS_HELPER( 0x08, "G",                 KEYCODE_G)\
-		DIPS_HELPER( 0x04, "D",                 KEYCODE_D)\
-		DIPS_HELPER( 0x02, "A",                 KEYCODE_A)\
-		DIPS_HELPER( 0x01, "CTRL",              KEYCODE_RCONTROL)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "CRSR-DOWN UP",      KEYCODE_2_PAD)\
-		DIPS_HELPER( 0x40, "/ ?",               KEYCODE_SLASH)\
-		DIPS_HELPER( 0x20, ", <",               KEYCODE_COMMA)\
-		DIPS_HELPER( 0x10, "N",                 KEYCODE_N)\
-		DIPS_HELPER( 0x08, "V",                 KEYCODE_V)\
-		DIPS_HELPER( 0x04, "X",                 KEYCODE_X)\
-		DIPS_HELPER( 0x02, "Left-Shift",        KEYCODE_LSHIFT)\
-		DIPS_HELPER( 0x01, "STOP RUN",          KEYCODE_TAB)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "f1 f2",             KEYCODE_F1)\
-		DIPS_HELPER( 0x40, "Right-Shift",       KEYCODE_RSHIFT)\
-		DIPS_HELPER( 0x20, ". >",               KEYCODE_STOP)\
-		DIPS_HELPER( 0x10, "M",                 KEYCODE_M)\
-		DIPS_HELPER( 0x08, "B",                 KEYCODE_B)\
-		DIPS_HELPER( 0x04, "C",                 KEYCODE_C)\
-		DIPS_HELPER( 0x02, "Z",                 KEYCODE_Z)\
-		DIPS_HELPER( 0x01, "Space",             KEYCODE_SPACE)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "f3 f4",             KEYCODE_F2)\
-		DIPS_HELPER( 0x40, "=",                 KEYCODE_BACKSLASH)\
-		DIPS_HELPER( 0x20, ": [",               KEYCODE_COLON)\
-		DIPS_HELPER( 0x10, "K",                 KEYCODE_K)\
-		DIPS_HELPER( 0x08, "H",                 KEYCODE_H)\
-		DIPS_HELPER( 0x04, "F",                 KEYCODE_F)\
-		DIPS_HELPER( 0x02, "S",                 KEYCODE_S)\
-		DIPS_HELPER( 0x01, "CBM",               KEYCODE_RALT)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "f5 f6",             KEYCODE_F3)\
-		DIPS_HELPER( 0x40, "Arrow-Up Pi",       KEYCODE_CLOSEBRACE)\
-		DIPS_HELPER( 0x20, "At",                KEYCODE_OPENBRACE)\
-		DIPS_HELPER( 0x10, "O",                 KEYCODE_O)\
-		DIPS_HELPER( 0x08, "U",                 KEYCODE_U)\
-		DIPS_HELPER( 0x04, "T",                 KEYCODE_T)\
-		DIPS_HELPER( 0x02, "E",                 KEYCODE_E)\
-		DIPS_HELPER( 0x01, "Q",                 KEYCODE_Q)\
-		PORT_START();  \
-		DIPS_HELPER( 0x80, "f7 f8",             KEYCODE_F4)\
-		DIPS_HELPER( 0x40, "HOME CLR",          KEYCODE_EQUALS)\
-		DIPS_HELPER( 0x20, "-",                 KEYCODE_MINUS_PAD)\
-		DIPS_HELPER( 0x10, "0     RVS-OFF",     KEYCODE_0)\
-		DIPS_HELPER( 0x08, "8 (   YEL",         KEYCODE_8)\
-		DIPS_HELPER( 0x04, "6 &   GRN",         KEYCODE_6)\
-		DIPS_HELPER( 0x02, "4 $   CYN",         KEYCODE_4)\
-		DIPS_HELPER( 0x01, "2 \"   WHT",        KEYCODE_2)\
-		PORT_START();  \
-		PORT_BITX( 0x80, IP_ACTIVE_HIGH, IPF_TOGGLE, \
-			   "SHIFT-LOCK (switch);, KEYCODE_CAPSLOCK, IP_JOY_NONE )\
-		DIPS_HELPER2( 0x40, "RESTORE",               KEYCODE_PRTSCR)\
-		DIPS_HELPER2( 0x20, "Special CRSR Up",       KEYCODE_8_PAD)\
-		DIPS_HELPER2( 0x10, "Special CRSR Left",     KEYCODE_4_PAD)\
-		DIPS_HELPER2( 0x08, "Quickload",       KEYCODE_F8)\
-		DIPS_HELPER2( 0x04, "Tape Drive Play",       KEYCODE_F5)\
-		DIPS_HELPER2( 0x02, "Tape Drive Record",     KEYCODE_F6)\
-		DIPS_HELPER2( 0x01, "Tape Drive Stop",       KEYCODE_F7)
+				 30,20,0,255,KEYCODE_END,KEYCODE_PGDN,JOYCODE_NONE,JOYCODE_NONE);
 	
+	#define DIPS_INPUT \
+		PORT_START();  \
+		DIPS_HELPER( 0x8000, "Arrow-Left",        KEYCODE_TILDE)\
+		DIPS_HELPER( 0x4000, "1 !   BLK",         KEYCODE_1)\
+		DIPS_HELPER( 0x2000, "2 \"   WHT",        KEYCODE_2)\
+		DIPS_HELPER( 0x1000, "3 #   RED",         KEYCODE_3)\
+		DIPS_HELPER( 0x0800, "4 $   CYN",         KEYCODE_4)\
+		DIPS_HELPER( 0x0400, "5 %   PUR",         KEYCODE_5)\
+		DIPS_HELPER( 0x0200, "6 &   GRN",         KEYCODE_6)\
+		DIPS_HELPER( 0x0100, "7 '   BLU",         KEYCODE_7)\
+		DIPS_HELPER( 0x0080, "8 (   YEL",         KEYCODE_8)\
+		DIPS_HELPER( 0x0040, "9 )   RVS-ON",      KEYCODE_9)\
+		DIPS_HELPER( 0x0020, "0     RVS-OFF",     KEYCODE_0)\
+		DIPS_HELPER( 0x0010, "+",                 KEYCODE_PLUS_PAD)\
+		DIPS_HELPER( 0x0008, "-",                 KEYCODE_MINUS_PAD)\
+		DIPS_HELPER( 0x0004, "Pound",             KEYCODE_MINUS)\
+		DIPS_HELPER( 0x0002, "HOME CLR",          KEYCODE_EQUALS)\
+		DIPS_HELPER( 0x0001, "DEL INST",          KEYCODE_BACKSPACE)\
+		PORT_START();  \
+		DIPS_HELPER( 0x8000, "CTRL",              KEYCODE_RCONTROL)\
+		DIPS_HELPER( 0x4000, "Q",                 KEYCODE_Q)\
+		DIPS_HELPER( 0x2000, "W",                 KEYCODE_W)\
+		DIPS_HELPER( 0x1000, "E",                 KEYCODE_E)\
+		DIPS_HELPER( 0x0800, "R",                 KEYCODE_R)\
+		DIPS_HELPER( 0x0400, "T",                 KEYCODE_T)\
+		DIPS_HELPER( 0x0200, "Y",                 KEYCODE_Y)\
+		DIPS_HELPER( 0x0100, "U",                 KEYCODE_U)\
+		DIPS_HELPER( 0x0080, "I",                 KEYCODE_I)\
+		DIPS_HELPER( 0x0040, "O",                 KEYCODE_O)\
+		DIPS_HELPER( 0x0020, "P",                 KEYCODE_P)\
+		DIPS_HELPER( 0x0010, "At",                KEYCODE_OPENBRACE)\
+		DIPS_HELPER( 0x0008, "*",                 KEYCODE_ASTERISK)\
+		DIPS_HELPER( 0x0004, "Arrow-Up Pi",       KEYCODE_CLOSEBRACE)\
+		DIPS_HELPER( 0x0002, "RESTORE",               KEYCODE_PRTSCR)\
+		PORT_START();  \
+		DIPS_HELPER( 0x8000, "STOP RUN",          KEYCODE_TAB)\
+		PORT_BITX( 0x4000, IP_ACTIVE_HIGH, IPF_TOGGLE, \
+			   "SHIFT-LOCK (switch);, KEYCODE_CAPSLOCK, IP_JOY_NONE )\
+		DIPS_HELPER( 0x2000, "A",                 KEYCODE_A)\
+		DIPS_HELPER( 0x1000, "S",                 KEYCODE_S)\
+		DIPS_HELPER( 0x0800, "D",                 KEYCODE_D)\
+		DIPS_HELPER( 0x0400, "F",                 KEYCODE_F)\
+		DIPS_HELPER( 0x0200, "G",                 KEYCODE_G)\
+		DIPS_HELPER( 0x0100, "H",                 KEYCODE_H)\
+		DIPS_HELPER( 0x0080, "J",                 KEYCODE_J)\
+		DIPS_HELPER( 0x0040, "K",                 KEYCODE_K)\
+		DIPS_HELPER( 0x0020, "L",                 KEYCODE_L)\
+		DIPS_HELPER( 0x0010, ": [",               KEYCODE_COLON)\
+		DIPS_HELPER( 0x0008, "; ]",               KEYCODE_QUOTE)\
+		DIPS_HELPER( 0x0004, "=",                 KEYCODE_BACKSLASH)\
+		DIPS_HELPER( 0x0002, "RETURN",            KEYCODE_ENTER)\
+		PORT_START();  \
+		DIPS_HELPER( 0x8000, "CBM",               KEYCODE_RALT)\
+		DIPS_HELPER( 0x4000, "Left-Shift",        KEYCODE_LSHIFT)\
+		DIPS_HELPER( 0x2000, "Z",                 KEYCODE_Z)\
+		DIPS_HELPER( 0x1000, "X",                 KEYCODE_X)\
+		DIPS_HELPER( 0x0800, "C",                 KEYCODE_C)\
+		DIPS_HELPER( 0x0400, "V",                 KEYCODE_V)\
+		DIPS_HELPER( 0x0200, "B",                 KEYCODE_B)\
+		DIPS_HELPER( 0x0100, "N",                 KEYCODE_N)\
+		DIPS_HELPER( 0x0080, "M",                 KEYCODE_M)\
+		DIPS_HELPER( 0x0040, ", <",               KEYCODE_COMMA)\
+		DIPS_HELPER( 0x0020, ". >",               KEYCODE_STOP)\
+		DIPS_HELPER( 0x0010, "/ ?",               KEYCODE_SLASH)\
+		DIPS_HELPER( 0x0008, "Right-Shift",       KEYCODE_RSHIFT)\
+		DIPS_HELPER( 0x0004, "CRSR-DOWN UP",      KEYCODE_2_PAD)\
+		DIPS_HELPER( 0x0002, "CRSR-RIGHT LEFT",   KEYCODE_6_PAD)\
+		PORT_START();  \
+		DIPS_HELPER( 0x8000, "Space",             KEYCODE_SPACE)\
+		DIPS_HELPER( 0x4000, "f1 f2",             KEYCODE_F1)\
+		DIPS_HELPER( 0x2000, "f3 f4",             KEYCODE_F2)\
+		DIPS_HELPER( 0x1000, "f5 f6",             KEYCODE_F3)\
+		DIPS_HELPER( 0x0800, "f7 f8",             KEYCODE_F4)\
+		DIPS_HELPER( 0x0400, "Special CRSR Up",       KEYCODE_8_PAD)\
+		DIPS_HELPER( 0x0200, "Special CRSR Left",     KEYCODE_4_PAD)\
+		DIPS_HELPER( 0x08, "Quickload",       KEYCODE_F8)\
+		DIPS_HELPER( 0x04, "Tape Drive Play",       KEYCODE_F5)\
+		DIPS_HELPER( 0x02, "Tape Drive Record",     KEYCODE_F6)\
+		DIPS_HELPER( 0x01, "Tape Drive Stop",       KEYCODE_F7)
 	
 	#define DIPS_BOTH \
 		PORT_START();  \
@@ -409,12 +388,9 @@ public class vc20
 		PORT_DIPNAME ( 0x01, 0x01, "Serial/Dev 9/VC1541 Floppy");
 		PORT_DIPSETTING(  0, DEF_STR( "No") );\
 		PORT_DIPSETTING(  1, DEF_STR( "Yes") );\
-		PORT_START();  \
-		PORT_BITX( 0x80, IP_ACTIVE_HIGH, IPT_BUTTON2, "Lightpen Signal", KEYCODE_LALT, 0);
 	
 	INPUT_PORTS_START (vic20)
-		DIPS_INPUT
-		DIPS_BOTH
+		DIPS_JOY
 		PORT_START(); 							   /* in 16 lightpen X */
 		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER3,
 					  30, 2, 0, (VIC6560_MAME_XSIZE - 1);
@@ -424,9 +400,115 @@ public class vc20
 		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER4,
 					  30, 2, 0, (VIC6560_MAME_YSIZE - 1);
 					  KEYCODE_UP, KEYCODE_DOWN, JOYCODE_1_UP, JOYCODE_1_DOWN)
+		DIPS_INPUT
+		DIPS_BOTH
 	INPUT_PORTS_END(); }}; 
 	
+	// some different labels to vic20
+	INPUT_PORTS_START (vic1001)
+		DIPS_JOY
+		PORT_START(); 							   /* in 16 lightpen X */
+		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER3,
+					  30, 2, 0, (VIC6560_MAME_XSIZE - 1);
+					  KEYCODE_LEFT, KEYCODE_RIGHT,
+					  JOYCODE_1_LEFT, JOYCODE_1_RIGHT)
+		PORT_START(); 							   /* in 17 lightpen Y */
+		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER4,
+					  30, 2, 0, (VIC6560_MAME_YSIZE - 1);
+					  KEYCODE_UP, KEYCODE_DOWN, JOYCODE_1_UP, JOYCODE_1_DOWN)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "Arrow-Left",        KEYCODE_TILDE)
+		DIPS_HELPER( 0x4000, "1 !   BLK",         KEYCODE_1)
+		DIPS_HELPER( 0x2000, "2 \"   WHT",        KEYCODE_2)
+		DIPS_HELPER( 0x1000, "3 #   RED",         KEYCODE_3)
+		DIPS_HELPER( 0x0800, "4 $   CYN",         KEYCODE_4)
+		DIPS_HELPER( 0x0400, "5 %   PUR",         KEYCODE_5)
+		DIPS_HELPER( 0x0200, "6 &   GRN",         KEYCODE_6)
+		DIPS_HELPER( 0x0100, "7 '   BLU",         KEYCODE_7)
+		DIPS_HELPER( 0x0080, "8 (   YEL",         KEYCODE_8)
+		DIPS_HELPER( 0x0040, "9 )",		KEYCODE_9)
+		DIPS_HELPER( 0x0020, "0",		KEYCODE_0)
+		DIPS_HELPER( 0x0010, "+",                 KEYCODE_PLUS_PAD)
+		DIPS_HELPER( 0x0008, "-",                 KEYCODE_MINUS_PAD)
+		DIPS_HELPER( 0x0004, "Yen",		KEYCODE_MINUS)
+		DIPS_HELPER( 0x0002, "HOME CLR",          KEYCODE_EQUALS)
+		DIPS_HELPER( 0x0001, "DEL INST",          KEYCODE_BACKSPACE)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "CTRL",              KEYCODE_RCONTROL)
+		DIPS_HELPER( 0x4000, "Q",                 KEYCODE_Q)
+		DIPS_HELPER( 0x2000, "W",                 KEYCODE_W)
+		DIPS_HELPER( 0x1000, "E",                 KEYCODE_E)
+		DIPS_HELPER( 0x0800, "R",                 KEYCODE_R)
+		DIPS_HELPER( 0x0400, "T",                 KEYCODE_T)
+		DIPS_HELPER( 0x0200, "Y",                 KEYCODE_Y)
+		DIPS_HELPER( 0x0100, "U",                 KEYCODE_U)
+		DIPS_HELPER( 0x0080, "I",                 KEYCODE_I)
+		DIPS_HELPER( 0x0040, "O",                 KEYCODE_O)
+		DIPS_HELPER( 0x0020, "P",                 KEYCODE_P)
+		DIPS_HELPER( 0x0010, "At",                KEYCODE_OPENBRACE)
+		DIPS_HELPER( 0x0008, "*",                 KEYCODE_ASTERISK)
+		DIPS_HELPER( 0x0004, "Arrow-Up Pi",       KEYCODE_CLOSEBRACE)
+		DIPS_HELPER( 0x0002, "RESTORE",               KEYCODE_PRTSCR)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "STOP RUN",          KEYCODE_TAB)
+		PORT_BITX( 0x4000, IP_ACTIVE_HIGH, IPF_TOGGLE, 
+			   "SHIFT-LOCK (switch);, KEYCODE_CAPSLOCK, IP_JOY_NONE )
+		DIPS_HELPER( 0x2000, "A",                 KEYCODE_A)
+		DIPS_HELPER( 0x1000, "S",                 KEYCODE_S)
+		DIPS_HELPER( 0x0800, "D",                 KEYCODE_D)
+		DIPS_HELPER( 0x0400, "F",                 KEYCODE_F)
+		DIPS_HELPER( 0x0200, "G",                 KEYCODE_G)
+		DIPS_HELPER( 0x0100, "H",                 KEYCODE_H)
+		DIPS_HELPER( 0x0080, "J",                 KEYCODE_J)
+		DIPS_HELPER( 0x0040, "K",                 KEYCODE_K)
+		DIPS_HELPER( 0x0020, "L",                 KEYCODE_L)
+		DIPS_HELPER( 0x0010, ": [",               KEYCODE_COLON)
+		DIPS_HELPER( 0x0008, "; ]",               KEYCODE_QUOTE)
+		DIPS_HELPER( 0x0004, "=",                 KEYCODE_BACKSLASH)
+		DIPS_HELPER( 0x0002, "RETURN",            KEYCODE_ENTER)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "CBM",               KEYCODE_RALT)
+		DIPS_HELPER( 0x4000, "Left-Shift",        KEYCODE_LSHIFT)
+		DIPS_HELPER( 0x2000, "Z",                 KEYCODE_Z)
+		DIPS_HELPER( 0x1000, "X",                 KEYCODE_X)
+		DIPS_HELPER( 0x0800, "C",                 KEYCODE_C)
+		DIPS_HELPER( 0x0400, "V",                 KEYCODE_V)
+		DIPS_HELPER( 0x0200, "B",                 KEYCODE_B)
+		DIPS_HELPER( 0x0100, "N",                 KEYCODE_N)
+		DIPS_HELPER( 0x0080, "M",                 KEYCODE_M)
+		DIPS_HELPER( 0x0040, ", <",               KEYCODE_COMMA)
+		DIPS_HELPER( 0x0020, ". >",               KEYCODE_STOP)
+		DIPS_HELPER( 0x0010, "/ ?",               KEYCODE_SLASH)
+		DIPS_HELPER( 0x0008, "Right-Shift",       KEYCODE_RSHIFT)
+		DIPS_HELPER( 0x0004, "CRSR-DOWN UP",      KEYCODE_2_PAD)
+		DIPS_HELPER( 0x0002, "CRSR-RIGHT LEFT",   KEYCODE_6_PAD)
+		PORT_START(); 
+		DIPS_HELPER( 0x8000, "Space",             KEYCODE_SPACE)
+		DIPS_HELPER( 0x4000, "f1 f2",             KEYCODE_F1)
+		DIPS_HELPER( 0x2000, "f3 f4",             KEYCODE_F2)
+		DIPS_HELPER( 0x1000, "f5 f6",             KEYCODE_F3)
+		DIPS_HELPER( 0x0800, "f7 f8",             KEYCODE_F4)
+		DIPS_HELPER( 0x0400, "Special CRSR Up",       KEYCODE_8_PAD)
+		DIPS_HELPER( 0x0200, "Special CRSR Left",     KEYCODE_4_PAD)
+		DIPS_HELPER( 0x08, "Quickload",       KEYCODE_F8)
+		DIPS_HELPER( 0x04, "Tape Drive Play",       KEYCODE_F5)
+		DIPS_HELPER( 0x02, "Tape Drive Record",     KEYCODE_F6)
+		DIPS_HELPER( 0x01, "Tape Drive Stop",       KEYCODE_F7)
+		DIPS_BOTH
+	INPUT_PORTS_END(); }}; 
+	
+	
 	INPUT_PORTS_START (vic20i)
+		DIPS_JOY
+		PORT_START(); 							   /* in 16 lightpen X */
+		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER3,
+					  30, 2, 0, (VIC6560_MAME_XSIZE - 1);
+					  KEYCODE_LEFT, KEYCODE_RIGHT,
+					  JOYCODE_1_LEFT, JOYCODE_1_RIGHT)
+		PORT_START(); 							   /* in 17 lightpen Y */
+		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER4,
+					  30, 2, 0, (VIC6560_MAME_YSIZE - 1);
+					  KEYCODE_UP, KEYCODE_DOWN, JOYCODE_1_UP, JOYCODE_1_DOWN)
 		DIPS_INPUT
 		PORT_START(); 
 		PORT_DIPNAME ( 0x07, 0, "RAM Cartridge");
@@ -481,22 +563,10 @@ public class vc20
 		PORT_DIPSETTING(  0, DEF_STR( "No") );
 		PORT_DIPSETTING(  1, DEF_STR( "Yes") );
 	#endif
-		PORT_START(); 
-		PORT_BITX( 0x80, IP_ACTIVE_HIGH, IPT_BUTTON2, "Lightpen Signal", KEYCODE_LALT, 0);
-		PORT_START(); 							   /* in 16 lightpen X */
-		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER3,
-					  30, 2, 0, (VIC6560_MAME_XSIZE - 1);
-					  KEYCODE_LEFT, KEYCODE_RIGHT,
-					  JOYCODE_1_LEFT, JOYCODE_1_RIGHT)
-		PORT_START(); 							   /* in 17 lightpen Y */
-		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER4,
-					  30, 2, 0, (VIC6560_MAME_YSIZE - 1);
-					  KEYCODE_UP, KEYCODE_DOWN, JOYCODE_1_UP, JOYCODE_1_DOWN)
 	INPUT_PORTS_END(); }}; 
 	
 	INPUT_PORTS_START (vc20)
-		DIPS_INPUT
-		DIPS_BOTH
+		DIPS_JOY
 		PORT_START(); 							   /* in 16 lightpen X */
 		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER3,
 					  30, 2, 0, (VIC6561_MAME_XSIZE - 1);
@@ -507,7 +577,104 @@ public class vc20
 					  30, 2, 0, (VIC6561_MAME_YSIZE - 1);
 					  KEYCODE_UP, KEYCODE_DOWN,
 					  JOYCODE_1_UP, JOYCODE_1_DOWN)
+		DIPS_INPUT
+		DIPS_BOTH
 	INPUT_PORTS_END(); }}; 
+	
+	// some different labels to vc20
+	INPUT_PORTS_START (vic20swe)
+		DIPS_JOY
+		PORT_START(); 							   /* in 16 lightpen X */
+		PORT_ANALOGX (0xff, 0, IPT_PADDLE | IPF_PLAYER3,
+					  30, 2, 0, (VIC6561_MAME_XSIZE - 1);
+					  KEYCODE_LEFT, KEYCODE_RIGHT,
+					  JOYCODE_1_LEFT, JOYCODE_1_RIGHT)
+		PORT_START(); 							   /* in 17 lightpen Y */
+		PORT_ANALOGX (0x1ff, 0, IPT_PADDLE | IPF_PLAYER4,
+					  30, 2, 0, (VIC6561_MAME_YSIZE - 1);
+					  KEYCODE_UP, KEYCODE_DOWN,
+					  JOYCODE_1_UP, JOYCODE_1_DOWN)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "Arrow-Left",        KEYCODE_TILDE)
+		DIPS_HELPER( 0x4000, "1 !   BLK",         KEYCODE_1)
+		DIPS_HELPER( 0x2000, "2 \"   WHT",        KEYCODE_2)
+		DIPS_HELPER( 0x1000, "3 #   RED",         KEYCODE_3)
+		DIPS_HELPER( 0x0800, "4 $   CYN",         KEYCODE_4)
+		DIPS_HELPER( 0x0400, "5 %   PUR",         KEYCODE_5)
+		DIPS_HELPER( 0x0200, "6 &   GRN",         KEYCODE_6)
+		DIPS_HELPER( 0x0100, "7 '   BLU",         KEYCODE_7)
+		DIPS_HELPER( 0x0080, "8 (   YEL",         KEYCODE_8)
+		DIPS_HELPER( 0x0040, "9 )   RVS-ON",      KEYCODE_9)
+		DIPS_HELPER( 0x0020, "0     RVS-OFF",     KEYCODE_0)
+		DIPS_HELPER( 0x0010, "-",                 KEYCODE_PLUS_PAD)
+		DIPS_HELPER( 0x0008, "=",                 KEYCODE_MINUS_PAD)
+		DIPS_HELPER( 0x0004, ":     *",             KEYCODE_MINUS)
+		DIPS_HELPER( 0x0002, "HOME CLR",          KEYCODE_EQUALS)
+		DIPS_HELPER( 0x0001, "DEL INST",          KEYCODE_BACKSPACE)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "CTRL",              KEYCODE_RCONTROL)
+		DIPS_HELPER( 0x4000, "Q",                 KEYCODE_Q)
+		DIPS_HELPER( 0x2000, "W",                 KEYCODE_W)
+		DIPS_HELPER( 0x1000, "E",                 KEYCODE_E)
+		DIPS_HELPER( 0x0800, "R",                 KEYCODE_R)
+		DIPS_HELPER( 0x0400, "T",                 KEYCODE_T)
+		DIPS_HELPER( 0x0200, "Y",                 KEYCODE_Y)
+		DIPS_HELPER( 0x0100, "U",                 KEYCODE_U)
+		DIPS_HELPER( 0x0080, "I",                 KEYCODE_I)
+		DIPS_HELPER( 0x0040, "O",                 KEYCODE_O)
+		DIPS_HELPER( 0x0020, "P",                 KEYCODE_P)
+		DIPS_HELPER( 0x0010, "Overcircle-A",                KEYCODE_OPENBRACE)
+		DIPS_HELPER( 0x0008, "At",                 KEYCODE_ASTERISK)
+		DIPS_HELPER( 0x0004, "Arrow-Up Pi",       KEYCODE_CLOSEBRACE)
+		DIPS_HELPER( 0x0002, "RESTORE",               KEYCODE_PRTSCR)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "STOP RUN",          KEYCODE_TAB)
+		PORT_BITX( 0x4000, IP_ACTIVE_HIGH, IPF_TOGGLE, 
+			   "SHIFT-LOCK (switch);, KEYCODE_CAPSLOCK, IP_JOY_NONE )
+		DIPS_HELPER( 0x2000, "A",                 KEYCODE_A)
+		DIPS_HELPER( 0x1000, "S",                 KEYCODE_S)
+		DIPS_HELPER( 0x0800, "D",                 KEYCODE_D)
+		DIPS_HELPER( 0x0400, "F",                 KEYCODE_F)
+		DIPS_HELPER( 0x0200, "G",                 KEYCODE_G)
+		DIPS_HELPER( 0x0100, "H",                 KEYCODE_H)
+		DIPS_HELPER( 0x0080, "J",                 KEYCODE_J)
+		DIPS_HELPER( 0x0040, "K",                 KEYCODE_K)
+		DIPS_HELPER( 0x0020, "L",                 KEYCODE_L)
+		DIPS_HELPER( 0x0010, "Diaresis-O",               KEYCODE_COLON)
+		DIPS_HELPER( 0x0008, "Diaresis-A",               KEYCODE_QUOTE)
+		DIPS_HELPER( 0x0004, ";        +",                 KEYCODE_BACKSLASH)
+		DIPS_HELPER( 0x0002, "RETURN",            KEYCODE_ENTER)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "CBM",               KEYCODE_RALT)
+		DIPS_HELPER( 0x4000, "Left-Shift",        KEYCODE_LSHIFT)
+		DIPS_HELPER( 0x2000, "Z",                 KEYCODE_Z)
+		DIPS_HELPER( 0x1000, "X",                 KEYCODE_X)
+		DIPS_HELPER( 0x0800, "C",                 KEYCODE_C)
+		DIPS_HELPER( 0x0400, "V",                 KEYCODE_V)
+		DIPS_HELPER( 0x0200, "B",                 KEYCODE_B)
+		DIPS_HELPER( 0x0100, "N",                 KEYCODE_N)
+		DIPS_HELPER( 0x0080, "M",                 KEYCODE_M)
+		DIPS_HELPER( 0x0040, ", <",               KEYCODE_COMMA)
+		DIPS_HELPER( 0x0020, ". >",               KEYCODE_STOP)
+		DIPS_HELPER( 0x0010, "/ ?",               KEYCODE_SLASH)
+		DIPS_HELPER( 0x0008, "Right-Shift",       KEYCODE_RSHIFT)
+		DIPS_HELPER( 0x0004, "CRSR-DOWN UP",      KEYCODE_2_PAD)
+		DIPS_HELPER( 0x0002, "CRSR-RIGHT LEFT",   KEYCODE_6_PAD)
+		PORT_START();  
+		DIPS_HELPER( 0x8000, "Space",             KEYCODE_SPACE)
+		DIPS_HELPER( 0x4000, "f1 f2",             KEYCODE_F1)
+		DIPS_HELPER( 0x2000, "f3 f4",             KEYCODE_F2)
+		DIPS_HELPER( 0x1000, "f5 f6",             KEYCODE_F3)
+		DIPS_HELPER( 0x0800, "f7 f8",             KEYCODE_F4)
+		DIPS_HELPER( 0x0400, "Special CRSR Up",       KEYCODE_8_PAD)
+		DIPS_HELPER( 0x0200, "Special CRSR Left",     KEYCODE_4_PAD)
+		DIPS_HELPER( 0x08, "Quickload",       KEYCODE_F8)
+		DIPS_HELPER( 0x04, "Tape Drive Play",       KEYCODE_F5)
+		DIPS_HELPER( 0x02, "Tape Drive Record",     KEYCODE_F6)
+		DIPS_HELPER( 0x01, "Tape Drive Stop",       KEYCODE_F7)
+		DIPS_BOTH
+	INPUT_PORTS_END(); }}; 
+	
 	
 	/* Initialise the vc20 palette */
 	static void vc20_init_palette (UBytePtr sys_palette,
@@ -515,7 +682,7 @@ public class vc20
 								   const UBytePtr color_prom)
 	{
 		memcpy (sys_palette, vic6560_palette, sizeof (vic6560_palette));
-	/*  memcpy(sys_colortable,colortable,sizeof(colortable)); */
+	/*	memcpy(sys_colortable,colortable,sizeof(colortable)); */
 	}
 	
 	#if 0
@@ -523,13 +690,15 @@ public class vc20
 		ROM_LOAD ("901460.03", 0x8000, 0x1000, 0x83e032a6);
 		/* basic */
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
+		/* kernel ntsc-m of vic1001? */
+		ROM_LOAD ("901486.02", 0xe000, 0x2000, 0x336900d7);
 		/* kernel ntsc */
 		ROM_LOAD ("901486.06", 0xe000, 0x2000, 0xe5e7c174);
 		/* kernel pal */
 		ROM_LOAD ("901486.07", 0xe000, 0x2000, 0x4be07cb4);
 	
 		/* patched pal system for swedish/finish keyboard and chars */
-	    /* but in rom? (maybe patched means in this case nec version) */
+		/* but in rom? (maybe patched means in this case nec version) */
 		ROM_LOAD ("nec22101.207", 0x8000, 0x1000, 0xd808551d);
 		ROM_LOAD ("nec22081.206", 0xe000, 0x2000, 0xb2a60662);
 	
@@ -538,21 +707,28 @@ public class vc20
 	#endif
 	
 	ROM_START (vic20)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1,0);
 		ROM_LOAD ("901460.03", 0x8000, 0x1000, 0x83e032a6);
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
 		ROM_LOAD ("901486.06", 0xe000, 0x2000, 0xe5e7c174);
 	ROM_END(); }}; 
 	
+	ROM_START (vic1001)
+		ROM_REGION (0x10000, REGION_CPU1,0);
+		ROM_LOAD ("901460.02", 0x8000, 0x1000, 0xfcfd8a4b);
+		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
+		ROM_LOAD ("901486.02", 0xe000, 0x2000, 0x336900d7);
+	ROM_END(); }}; 
+	
 	ROM_START (vic20swe)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1,0);
 		ROM_LOAD ("nec22101.207", 0x8000, 0x1000, 0xd808551d);
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
 		ROM_LOAD ("nec22081.206", 0xe000, 0x2000, 0xb2a60662);
 	ROM_END(); }}; 
 	
 	ROM_START (vic20v)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1,0);
 		ROM_LOAD ("901460.03", 0x8000, 0x1000, 0x83e032a6);
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
 		ROM_LOAD ("901486.06", 0xe000, 0x2000, 0xe5e7c174);
@@ -560,7 +736,7 @@ public class vc20
 	ROM_END(); }}; 
 	
 	ROM_START (vic20i)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1,0);
 		ROM_LOAD ("901460.03", 0x8000, 0x1000, 0x83e032a6);
 		ROM_LOAD ("325329.04", 0xb000, 0x800, 0xd37b6335);
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
@@ -569,14 +745,14 @@ public class vc20
 	ROM_END(); }}; 
 	
 	ROM_START (vc20)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1,0);
 		ROM_LOAD ("901460.03", 0x8000, 0x1000, 0x83e032a6);
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
 		ROM_LOAD ("901486.07", 0xe000, 0x2000, 0x4be07cb4);
 	ROM_END(); }}; 
 	
 	ROM_START (vc20v)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1,0);
 		ROM_LOAD ("901460.03", 0x8000, 0x1000, 0x83e032a6);
 		ROM_LOAD ("901486.01", 0xc000, 0x2000, 0xdb4c43c1);
 		ROM_LOAD ("901486.07", 0xe000, 0x2000, 0x4be07cb4);
@@ -810,8 +986,8 @@ public class vc20
 			IO_CARTSLOT,				   /* type */
 			2,							   /* normal 1 *//* count */
 			"a0\00020\00040\00060\0rom\0bin\0",/* file extensions */
-			NULL,						   /* private */
-			vc20_rom_id,				   /* id */
+			IO_RESET_ALL,				   /* reset if file changed */
+			0,
 			vc20_rom_load,				   /* init */
 			NULL,						   /* exit */
 			NULL,						   /* info */
@@ -836,8 +1012,8 @@ public class vc20
 			IO_CARTSLOT,				   /* type */
 			2,							   /* normal 1 *//* count */
 			"a0\00020\00040\00060\0rom\0bin\0",/* file extensions */
-			NULL,						   /* private */
-			vc20_rom_id,				   /* id */
+			IO_RESET_ALL,				   /* reset if file changed */
+			0,
 			vc20_rom_load,				   /* init */
 			NULL,						   /* exit */
 			NULL,						   /* info */
@@ -864,7 +1040,7 @@ public class vc20
 			2,							   /* normal 1 *//* count */
 			"a0\00020\00040\00060\0rom\0bin\0",/* file extensions */
 			IO_RESET_ALL,				   /* reset if file changed */
-	        vc20_rom_id,                   /* id */
+			0,
 			vc20_rom_load,				   /* init */
 			NULL,						   /* exit */
 			NULL,						   /* info */
@@ -885,20 +1061,40 @@ public class vc20
 	
 	#define init_vc20		vc20_driver_init
 	#define init_vic20		vic20_driver_init
-	#define init_vic20i     vic20ieee_driver_init
+	#define init_vic1001		vic20_driver_init
+	#define init_vic20i 	vic20ieee_driver_init
 	#define io_vic20		io_vc20
-	#define io_vic20swe		io_vc20
+	#define io_vic1001		io_vc20
+	#define io_vic20swe 	io_vc20
 	#define io_vic20v		io_vc20v
-	/*#define io_vic20i		io_vc20i */
+	/*#define io_vic20i 	io_vc20i */
 	#define io_vic20i		io_vc20
 	
-	/*		YEAR	NAME		PARENT	MACHINE	INPUT		INIT	COMPANY								FULLNAME */
+	/*		YEAR	NAME		PARENT	MACHINE INPUT		INIT	COMPANY 							FULLNAME */
 	
-	COMPX (	1981,	vic20,		0,		vic20,	vic20,		vic20,	"Commodore Business Machines Co.",	"VIC20 (NTSC)",	GAME_IMPERFECT_SOUND)
-	COMPX (	1981,	vic20i,		vic20,	vic20i,	vic20i,		vic20i,	"Commodore Business Machines Co.",	"VIC20 (NTSC), IEEE488 Interface (SYS45065)",	GAME_IMPERFECT_SOUND)
-	COMPX (	1981,	vc20,		vic20,	vc20,	vc20,		vc20,	"Commodore Business Machines Co.", 	"VC20 (PAL)",		GAME_IMPERFECT_SOUND)
-	COMPX (	1981,	vic20swe,	vic20,	vc20,	vc20,		vc20,	"Commodore Business Machines Co.",	"VIC20 PAL, Swedish Expansion Kit", GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vic20,		0,		vic20,	vic20,		vic20,	"Commodore Business Machines Co.",  "VIC20 (NTSC)", GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vic20i, 	vic20,	vic20i, vic20i, 	vic20i, "Commodore Business Machines Co.",  "VIC20 (NTSC), IEEE488 Interface (SYS45065)",   GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vic1001,	vic20,	vic20,	vic1001,		vic20,	"Commodore Business Machines Co.",  "VIC1001 (NTSC)", GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vc20,		vic20,	vc20,	vc20,		vc20,	"Commodore Business Machines Co.",  "VIC20/VC20(German) PAL",       GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vic20swe,	vic20,	vc20,	vic20swe,		vc20,	"Commodore Business Machines Co.",  "VIC20 PAL, Swedish Expansion Kit", GAME_IMPERFECT_SOUND)
 	// please leave the following as testdriver only
-	COMPX (	1981,	vic20v,		vic20,	vic20v,	vic20,		vic20,	"Commodore Business Machines Co.",	"VIC20 (NTSC), VC1540", GAME_IMPERFECT_SOUND)
-	COMPX (	1981,	vc20v,		vic20,	vc20v,	vic20,		vc20,	"Commodore Business Machines Co.",	"VC20 (PAL), VC1541", GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vic20v, 	vic20,	vic20v, vic20,		vic20,	"Commodore Business Machines Co.",  "VIC20 (NTSC), VC1540", GAME_IMPERFECT_SOUND)
+	COMPX ( 1981,	vc20v,		vic20,	vc20v,	vic20,		vc20,	"Commodore Business Machines Co.",  "VC20 (PAL), VC1541", GAME_IMPERFECT_SOUND)
+	
+	
+	#ifdef RUNTIME_LOADER
+	extern void vc20_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"vic20")==0) drivers[i]=&driver_vic20;
+			if ( strcmp(drivers[i].name,"vic1001")==0) drivers[i]=&driver_vic1001;
+			if ( strcmp(drivers[i].name,"vic20i")==0) drivers[i]=&driver_vic20i;
+			if ( strcmp(drivers[i].name,"vc20")==0) drivers[i]=&driver_vc20;
+			if ( strcmp(drivers[i].name,"vic20swe")==0) drivers[i]=&driver_vic20swe;
+			if ( strcmp(drivers[i].name,"vic20v")==0) drivers[i]=&driver_vic20v;
+			if ( strcmp(drivers[i].name,"vc20v")==0) drivers[i]=&driver_vc20v;
+		}
+	}
+	#endif
 }

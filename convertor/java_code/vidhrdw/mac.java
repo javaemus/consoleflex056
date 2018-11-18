@@ -33,7 +33,7 @@ public class mac
 		free(old_display);
 	} };
 	
-	public static VhUpdatePtr mac_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void mac_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		UINT16	data;
 		UINT16	*old;
@@ -71,6 +71,6 @@ public class mac
 				old++;
 			}
 		}
-	} };
+	}
 	
 }

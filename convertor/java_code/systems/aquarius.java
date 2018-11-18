@@ -37,45 +37,37 @@ public class aquarius
 	
 	/* port i/o functions */
 	
-	static IOReadPort aquarius_readport[] =
-	{
-		new IOReadPort(0xfe, 0xfe, aquarius_port_fe_r),
-		new IOReadPort(0xff, 0xff, aquarius_port_ff_r),
-		new IOReadPort(-1)
-	};
+	PORT_READ_START( aquarius_readport )
+		{0xfe, 0xfe, aquarius_port_fe_r},
+		{0xff, 0xff, aquarius_port_ff_r},
+	PORT_END
 	
-	static IOWritePort aquarius_writeport[] =
-	{
-		new IOWritePort(0xfc, 0xfc, aquarius_port_fc_w),
-		new IOWritePort(0xfe, 0xfe, aquarius_port_fe_w),
-		new IOWritePort(0xff, 0xff, aquarius_port_ff_w),
-		new IOWritePort(-1)
-	};
+	PORT_WRITE_START( aquarius_writeport )
+		{0xfc, 0xfc, aquarius_port_fc_w},
+		{0xfe, 0xfe, aquarius_port_fe_w},
+		{0xff, 0xff, aquarius_port_ff_w},
+	PORT_END
 	
 	/* Memory w/r functions */
 	
-	static MemoryReadAddress aquarius_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x1fff, MRA_ROM),
-		new MemoryReadAddress(0x2000, 0x2fff, MRA_NOP),
-		new MemoryReadAddress(0x3000, 0x37ff, videoram_r),
-		new MemoryReadAddress(0x3800, 0x3fff, MRA_RAM),
-		new MemoryReadAddress(0x4000, 0x7fff, MRA_NOP),
-		new MemoryReadAddress(0x8000, 0xffff, MRA_NOP),
+	MEMORY_READ_START( aquarius_readmem )
+		{0x0000, 0x1fff, MRA_ROM},
+		{0x2000, 0x2fff, MRA_NOP},
+		{0x3000, 0x37ff, videoram_r},
+		{0x3800, 0x3fff, MRA_RAM},
+		{0x4000, 0x7fff, MRA_NOP},
+		{0x8000, 0xffff, MRA_NOP},
 	
-		new MemoryReadAddress(-1)
-	};
+	MEMORY_END
 	
-	static MemoryWriteAddress aquarius_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x1fff, MWA_ROM),
-		new MemoryWriteAddress(0x2000, 0x2fff, MWA_NOP),
-		new MemoryWriteAddress(0x3000, 0x37ff, videoram_w, videoram, videoram_size),
-		new MemoryWriteAddress(0x3800, 0x3fff, MWA_RAM),
-		new MemoryWriteAddress(0x4000, 0x7fff, MWA_NOP),
-		new MemoryWriteAddress(0x8000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)
-	};
+	MEMORY_WRITE_START( aquarius_writemem )
+		{0x0000, 0x1fff, MWA_ROM},
+		{0x2000, 0x2fff, MWA_NOP},
+		{0x3000, 0x37ff, videoram_w, &videoram, &videoram_size},
+		{0x3800, 0x3fff, MWA_RAM},
+		{0x4000, 0x7fff, MWA_NOP},
+		{0x8000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
 	/* graphics output */
 	
@@ -94,31 +86,30 @@ public class aquarius
 	static GfxDecodeInfo aquarius_gfxdecodeinfo[] =
 	{
 		new GfxDecodeInfo( 1, 0x0000, aquarius_charlayout, 0, 256),
-		new GfxDecodeInfo(-1)
-	};
+	MEMORY_END
 	
 	static	unsigned	char	aquarius_palette[] =
-	{
+	new GfxDecodeInfo(
 		0x00, 0x00, 0x00,	/* Black */
-		0x00, 0x00, 0xff,	/* Blue */
-		0x00, 0xff, 0x00,	/* Green */
-		0xff, 0x00, 0x00,	/* Red */
-		0x00, 0xff, 0xff,	/* Cyan*/
-		0xff, 0x00, 0xff,	/* Magenta */
-		0xff, 0xff, 0x00,	/* Yellow */
-		0x55, 0x55, 0x55,	/* Dark Grey */
-		0x80, 0x80, 0xff,	/* */
-		0x80, 0xff, 0x80,	/* */
-		0xff, 0x80, 0x80,	/* */
-		0x80, 0xff, 0xff,	/* */
-		0xff, 0x80, 0xff,	/* */
-		0xff, 0xff, 0x80,	/* */
-		0xaa, 0xaa, 0xaa,	/* Light Grey */
+		0xff, 0x7f, 0x7f,	/* Red */
+		0x7f, 0xff, 0x7f,	/* Green */
+		0xff, 0xff, 0x7f,	/* Yellow */
+		0x7f, 0x7f, 0xff,	/* Blue */
+		0xff, 0x7f, 0xff,	/* Magenta */
+		0x7f, 0xff, 0xff,	/* Cyan */
 		0xff, 0xff, 0xff,	/* White */
-	};
+		0x00, 0x00, 0x00,	/* Black */
+		0x7f, 0x00, 0x00,	/* Dark Red */
+		0x00, 0x7f, 0x00,	/* Dark Green */
+		0x7f, 0x7f, 0x00,	/* Dark Yellow */
+		0x00, 0x00, 0x7f,	/* Dark Blue */
+		0x7f, 0x00, 0x7f,	/* Dark Magenta */
+		0x00, 0x7f, 0x7f,	/* Dark Cyan */
+		0x7f, 0x7f, 0x7f,	/* Grey */
+	);
 	
 	static	unsigned	short	aquarius_colortable[] =
-	{
+	new GfxDecodeInfo(
 	    0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0,10, 0,11, 0,12, 0,13, 0,14, 0,15, 0,
 	    0, 1, 1, 1, 2, 1, 3, 1, 4, 1, 5, 1, 6, 1, 7, 1, 8, 1, 9, 1,10, 1,11, 1,12, 1,13, 1,14, 1,15, 1,
 	    0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6, 2, 7, 2, 8, 2, 9, 2,10, 2,11, 2,12, 2,13, 2,14, 2,15, 2,
@@ -135,14 +126,14 @@ public class aquarius
 	    0,13, 1,13, 2,13, 3,13, 4,13, 5,13, 6,13, 7,13, 8,13, 9,13,10,13,11,13,12,13,13,13,14,13,15,13,
 	    0,14, 1,14, 2,14, 3,14, 4,14, 5,14, 6,14, 7,14, 8,14, 9,14,10,14,11,14,12,14,13,14,14,14,15,14,
 	    0,15, 1,15, 2,15, 3,15, 4,15, 5,15, 6,15, 7,15, 8,15, 9,15,10,15,11,15,12,15,13,15,14,15,15,15,
-	};
+	);
 	
 	static	void	aquarius_init_palette (UBytePtr sys_palette,
 				unsigned short *sys_colortable, const UBytePtr color_prom)
-	{
+	new GfxDecodeInfo(
 		memcpy (sys_palette, aquarius_palette, sizeof (aquarius_palette));
 		memcpy (sys_colortable, aquarius_colortable, sizeof (aquarius_colortable));
-	}
+	)
 	
 	/* Keyboard input */
 	
@@ -231,12 +222,12 @@ public class aquarius
 	/* Sound output */
 	
 	static struct Speaker_interface aquarius_speaker =
-	{
+	new GfxDecodeInfo(
 		1,			/* one speaker */
 		{ 100 },	/* mixing levels */
 		{ 0 },		/* optional: number of different levels */
 		{ NULL }	/* optional: level lookup table */
-	};
+	);
 	
 	/* Machine definition */
 	
@@ -277,9 +268,9 @@ public class aquarius
 	);
 	
 	static RomLoadPtr rom_aquarius = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("aq2.rom", 0x0000, 0x2000, 0xa2d15bcf);
-		ROM_REGION(0x0800, REGION_GFX1);
+		ROM_REGION(0x0800, REGION_GFX1,0);
 		ROM_LOAD("aq2.chr", 0x0000, 0x0800, BADCRC(0x0b3edeed);
 	ROM_END(); }}; 
 	
@@ -289,5 +280,5 @@ public class aquarius
 	};
 	
 	/*		YEAR	NAME		PARENT		MACHINE		INPUT		INIT	COMPANY		FULLNAME */
-	COMPX(	1983,	aquarius,	0,			aquarius,	aquarius,	0,		"Mattel",	"Aquarius", GAME_WRONG_COLORS )
+	COMP(	1983,	aquarius,	0,			aquarius,	aquarius,	0,		"Mattel",	"Aquarius" )
 }

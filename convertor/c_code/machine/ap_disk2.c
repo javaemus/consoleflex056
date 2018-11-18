@@ -21,6 +21,8 @@
 #include "driver.h"
 #include "includes/apple2.h"
 
+extern void apple2_floppy_exit(int id);
+
 #define TOTAL_TRACKS		35 /* total number of tracks we support, can be 40 */
 #define NIBBLE_SIZE			374
 
@@ -60,8 +62,8 @@ static unsigned char r_skewing6[0x10] =
 void apple2_slot6_init(void)
 {
 	/* Set the two drive LEDs to OFF */
-	osd_led_w(0,0);
-	osd_led_w(2,0);
+	set_led_status(0,0);
+	set_led_status(2,0);
 
 	/* TODO: remove following ugly hacked-in code */
 	track6[0]     = track6[1]     = TOTAL_TRACKS; /* go to the middle of the disk */
@@ -74,10 +76,12 @@ void apple2_slot6_init(void)
 	return;
 }
 
+void apple2_floppy_exit(int id);
+
 void apple2_slot6_stop (void)
 {
-	free (a2_drives[0].data);
-	free (a2_drives[1].data);
+	apple2_floppy_exit(0);
+	apple2_floppy_exit(1);
 }
 
 int apple2_floppy_init(int id)
@@ -89,10 +93,10 @@ int apple2_floppy_init(int id)
 	int i;
 
 	if (device_filename(IO_FLOPPY,id) == NULL)
-		return INIT_OK;
+		return INIT_PASS;
 
     a2_drives[id].data = malloc (NIBBLE_SIZE*16*TOTAL_TRACKS);
-	if (!a2_drives[id].data) return INIT_FAILED;
+	if (!a2_drives[id].data) return INIT_FAIL;
 
 	/* Default everything to sync byte 0xFF */
 	memset(a2_drives[id].data, 0xff, NIBBLE_SIZE*16*TOTAL_TRACKS);
@@ -105,11 +109,11 @@ int apple2_floppy_init(int id)
 	a2_drives[id].bytepos = 0;
 	a2_drives[id].trackpos = 0;
 
-	f = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+	f = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 	if (f==NULL)
 	{
 		logerror("Couldn't open image.\n");
-		return INIT_FAILED;
+		return INIT_FAIL;
 	}
 
 	for (t = 0; t < TOTAL_TRACKS; t ++)
@@ -117,7 +121,7 @@ int apple2_floppy_init(int id)
 		if (osd_fseek(f,256*16*t,SEEK_CUR)!=0)
 		{
 			logerror("Couldn't find track %d.\n", t);
-			return INIT_FAILED;
+			return INIT_FAIL;
 		}
 
 		for (s = 0; s < 16; s ++)
@@ -132,13 +136,13 @@ int apple2_floppy_init(int id)
 			if (osd_fseek(f,sec_pos,SEEK_SET)!=0)
 			{
 				logerror("Couldn't find sector %d.\n", s);
-				return INIT_FAILED;
+				return INIT_FAIL;
 			}
 
 			if (osd_fread(f,data,256)<256)
 			{
 				logerror("Couldn't read track %d sector %d (pos: %d).\n", t, s, sec_pos);
-				return INIT_FAILED;
+				return INIT_FAIL;
 			}
 
 
@@ -213,8 +217,18 @@ int apple2_floppy_init(int id)
 	}
 #endif
 
-	return INIT_OK;
+	return INIT_PASS;
 }
+
+void	apple2_floppy_exit(int id)
+{
+	if (a2_drives[id].data)
+	{
+		free (a2_drives[id].data);
+		a2_drives[id].data = NULL;
+	}
+}
+
 
 /* For now, make disks read-only!!! */
 static void WriteByte(int drive, int theByte)
@@ -292,13 +306,13 @@ READ_HANDLER ( apple2_c0xx_slot6_r )
 		/* MOTOROFF */
 		case 0x08:
 			a2_drives[cur_drive].motor = SWITCH_OFF;
-			osd_led_w(0,0);		/* We use 0 and 2 for drives */
-			osd_led_w(2,0);		/* We use 0 and 2 for drives */
+			set_led_status(0,0);	 /* We use 0 and 2 for drives */
+			set_led_status(2,0);	 /* We use 0 and 2 for drives */
 			break;
 		/* MOTORON */
 		case 0x09:
 			a2_drives[cur_drive].motor = SWITCH_ON;
-			osd_led_w(cur_drive*2,1);		/* We use 0 and 2 for drives */
+			set_led_status(cur_drive*2,1);		 /* We use 0 and 2 for drives */
 			break;
 		/* DRIVE1 */
 		case 0x0A:
@@ -306,8 +320,8 @@ READ_HANDLER ( apple2_c0xx_slot6_r )
 			/* Only one drive can be "on" at a time */
 			if (a2_drives[cur_drive].motor == SWITCH_ON)
 			{
-				osd_led_w(0,1);
-				osd_led_w(2,0);
+				set_led_status(0,1);
+				set_led_status(2,0);
 			}
 			break;
 		/* DRIVE2 */
@@ -316,8 +330,8 @@ READ_HANDLER ( apple2_c0xx_slot6_r )
 			/* Only one drive can be "on" at a time */
 			if (a2_drives[cur_drive].motor == SWITCH_ON)
 			{
-				osd_led_w(0,0);
-				osd_led_w(2,1);
+				set_led_status(0,0);
+				set_led_status(2,1);
 			}
 			break;
 		/* Q6L - set transistor Q6 low */

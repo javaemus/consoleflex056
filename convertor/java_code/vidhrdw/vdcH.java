@@ -12,6 +12,7 @@ public class vdcH
 	READ_HANDLER ( vdc_r );
 	READ_HANDLER ( vce_r );
 	WRITE_HANDLER ( vce_w );
+	void pce_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
 	
 	/* Screen timing stuff */
 	
@@ -79,7 +80,7 @@ public class vdcH
 	    UINT8 vdc_latch;
 	    pair vdc_data[32];
 	    int status;
-	    struct osd_bitmap *bmp;
+	    struct mame_bitmap *bmp;
 	}VDC;
 	
 	
@@ -88,7 +89,8 @@ public class vdcH
 	/* from vidhrdw\vdc.c */
 	
 	extern VDC vdc;
-	extern extern extern extern WRITE_HANDLER ( vdc_w );
+	extern extern extern void pce_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+	extern WRITE_HANDLER ( vdc_w );
 	extern READ_HANDLER ( vdc_r );
 	extern WRITE_HANDLER ( vce_w );
 	extern READ_HANDLER ( vce_r );

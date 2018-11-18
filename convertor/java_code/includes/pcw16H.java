@@ -8,3 +8,4 @@
 #define PCW16_SCREEN_HEIGHT	(PCW16_DISPLAY_HEIGHT  + (PCW16_BORDER_HEIGHT<<1))
 
 void pcw16_init_palette(UBytePtr sys_palette, unsigned short *sys_colortable, const UBytePtr color_prom);
+void pcw16_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);

@@ -371,6 +371,7 @@ typedef struct {
 
 extern ANTIC antic;
 
+void atari_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
 
 
 #if ACCURATE_ANTIC_READMEM

@@ -63,13 +63,13 @@ public class snes
 	} };
 	
 	/***************************************************************************
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function,
 	  it will be called by the main emulation engine.
 	***************************************************************************/
-	public static VhUpdatePtr snes_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void snes_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
-	} };
+	}
 	
 	/*   ------ SNES SCREEN DECODING TO BE FOUND HERE -------- */
 	
@@ -80,7 +80,7 @@ public class snes
 	UBytePtr TileAddress_;		/* Tile Address during plane update */
 	UBytePtr TileAddress_Y;		/* Tile Address during plane update if Y flipped */
 	
-	struct osd_bitmap *snes_bitmap;
+	struct mame_bitmap *snes_bitmap;
 	
 	unsigned char ColourBase1=1,ColourBase2=2,ColourBase4=4,ColourBase8=8;
 	unsigned long Tile_Offset_Table_8[8]={0,2,4,6,8,10,12,14};
@@ -1093,7 +1093,7 @@ public class snes
 		return bits;
 	}
 	
-	void RenderSNESScreenLine(struct osd_bitmap *bitmap,int curLine)
+	void RenderSNESScreenLine(struct mame_bitmap *bitmap,int curLine)
 	{
 		static unsigned char hdmaEnable;						// Which hdma channels to look at this scanline
 		int a,tmp;

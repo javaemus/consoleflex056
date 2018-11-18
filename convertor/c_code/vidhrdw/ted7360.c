@@ -1,6 +1,7 @@
 /***************************************************************************
 
 	TExt Display 7360
+	PeT mess@utanet.at
 
 ***************************************************************************/
 /*
@@ -360,7 +361,7 @@ Video part
 #include "includes/cbm.h"
 #include "includes/c16.h"
 #include "includes/vc20tape.h"
-#include "includes/c1551.h"
+#include "includes/cbmserb.h"
 #include "includes/vc1541.h"
 
 #include "includes/ted7360.h"
@@ -493,12 +494,12 @@ static int y_begin, y_end;
 
 static UINT16 c16_bitmap[2], bitmapmulti[4], mono[2], monoinversed[2], multi[4], ecmcolor[2], colors[5];
 
-static struct osd_bitmap *ted7360_bitmap;	/* Machine->scrbitmap for speedup */
+static struct mame_bitmap *ted7360_bitmap;	/* Machine->scrbitmap for speedup */
 static int rasterline = 0, lastline = 0;
 static double rastertime;
 static void ted7360_drawlines (int first, int last);
 
-static unsigned short cursorcolortable[2] =
+static UINT32 cursorcolortable[2] =
 {0};
 static struct GfxLayout cursorlayout =
 {
@@ -569,7 +570,8 @@ static void ted7360_timer_timeout (int which)
 	switch (which)
 	{
 	case 1:
-		timer1 = timer_set (TEDTIME_IN_CYCLES (0x10000), 1, ted7360_timer_timeout);
+	    // prooved by digisound of several intros like eoroidpro
+		timer1 = timer_set (TEDTIME_IN_CYCLES (TIMER1), 1, ted7360_timer_timeout);
 		ted7360_set_interrupt (8);
 		break;
 	case 2:
@@ -884,7 +886,6 @@ READ_HANDLER ( ted7360_port_r )
 		break;
 	case 9:
 		val = ted7360[offset] | 1;
-		val |= 4; //rasterirq, lone07 seams to need this
 		break;
 	case 0xa:
 		val = ted7360[offset];
@@ -947,7 +948,7 @@ static void ted7360_draw_character (int ybegin, int yend, int ch, int yoff, int 
 {
 	int y, code;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -966,7 +967,7 @@ static void ted7360_draw_character (int ybegin, int yend, int ch, int yoff, int 
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			if (INROM)
@@ -990,7 +991,7 @@ static void ted7360_draw_character_multi (int ybegin, int yend, int ch, int yoff
 {
 	int y, code;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -1009,7 +1010,7 @@ static void ted7360_draw_character_multi (int ybegin, int yend, int ch, int yoff
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			if (INROM)
@@ -1033,7 +1034,7 @@ static void ted7360_draw_bitmap (int ybegin, int yend,
 {
 	int y, code;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -1049,7 +1050,7 @@ static void ted7360_draw_bitmap (int ybegin, int yend,
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			code = vic_dma_read (bitmapaddr + ch * 8 + y);
@@ -1070,7 +1071,7 @@ static void ted7360_draw_bitmap_multi (int ybegin, int yend,
 {
 	int y, code;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -1086,7 +1087,7 @@ static void ted7360_draw_bitmap_multi (int ybegin, int yend,
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			code = vic_dma_read (bitmapaddr + ch * 8 + y);
@@ -1107,7 +1108,7 @@ static void ted7360_draw_cursor (int ybegin, int yend, int yoff, int xoff,
 {
 	int y;
 
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
 		for (y = ybegin; y <= yend; y++)
 		{
@@ -1115,7 +1116,7 @@ static void ted7360_draw_cursor (int ybegin, int yend, int yoff, int xoff,
 		}
 	}
 	else
-	{
+*/	{
 		for (y = ybegin; y <= yend; y++)
 		{
 			memset16 ((short *) ted7360_bitmap->line[yoff + y] + xoff, color, 8);
@@ -1125,196 +1126,186 @@ static void ted7360_draw_cursor (int ybegin, int yend, int yoff, int xoff,
 
 static void ted7360_drawlines (int first, int last)
 {
-	int line, vline, end;
-	int attr, ch, c1, c2, ecm;
-	int offs, yoff, xoff, ybegin, yend, xbegin, xend;
-	int i;
-
-	lastline = last;
-
-	if (osd_skip_this_frame ())
-		return;
-
-	/* top part of display not rastered */
-	first -= TED7360_YPOS;
-	last -= TED7360_YPOS;
-	if ((first >= last) || (last <= 0))
-		return;
-	if (first < 0)
-		first = 0;
-
-	if (!SCREENON)
+    int line, vline, end;
+    int attr, ch, c1, c2, ecm;
+    int offs, yoff, xoff, ybegin, yend, xbegin, xend;
+    int i;
+    
+    lastline = last;
+    
+    if (osd_skip_this_frame ())
+	return;
+    
+    /* top part of display not rastered */
+    first -= TED7360_YPOS;
+    last -= TED7360_YPOS;
+    if ((first >= last) || (last <= 0))
+	return;
+    if (first < 0)
+	first = 0;
+    
+    if (!SCREENON)
+    {
+/*	if (Machine->color_depth == 8)
 	{
-		if (Machine->color_depth == 8)
-		{
-			for (line = first; (line < last) && (line < ted7360_bitmap->height); line++)
-				memset (ted7360_bitmap->line[line], Machine->pens[0], ted7360_bitmap->width);
-		}
-		else
-		{
-			for (line = first; (line < last) && (line < ted7360_bitmap->height); line++)
-				memset16 (ted7360_bitmap->line[line], Machine->pens[0], ted7360_bitmap->width);
-		}
-		return;
-	}
-
-	if (COLUMNS40)
-		xbegin = XPOS, xend = xbegin + 320;
-	else
-		xbegin = XPOS + 7, xend = xbegin + 304;
-
-	if (last < y_begin)
-		end = last;
-	else
-		end = y_begin + YPOS;
-	if (Machine->color_depth == 8)
-	{
-		for (line = first; line < end; line++)
-			memset (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
-					ted7360_bitmap->width);
+	    for (line = first; (line < last) && (line < ted7360_bitmap->height); line++)
+		memset (ted7360_bitmap->line[line], Machine->pens[0], ted7360_bitmap->width);
 	}
 	else
-	{
-		for (line = first; line < end; line++)
-			memset16 (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
-					  ted7360_bitmap->width);
+*/	{
+	    for (line = first; (line < last) && (line < ted7360_bitmap->height); line++)
+		memset16 (ted7360_bitmap->line[line], Machine->pens[0], ted7360_bitmap->width);
 	}
-	if (LINES25)
-	{
-		vline = line - y_begin - YPOS;
-	}
-	else
-	{
-		vline = line - y_begin - YPOS + 8 - VERTICALPOS;
-	}
-	if (last < y_end + YPOS)
-		end = last;
-	else
-		end = y_end + YPOS;
-	for (; line < end; vline = (vline + 8) & ~7, line = line + 1 + yend - ybegin)
-	{
-		offs = (vline >> 3) * 40;
-		ybegin = vline & 7;
-		yoff = line - ybegin;
-		yend = (yoff + 7 < end) ? 7 : (end - yoff - 1);
+	return;
+    }
+    
+    if (COLUMNS40)
+	xbegin = XPOS, xend = xbegin + 320;
+    else
+	xbegin = XPOS + 7, xend = xbegin + 304;
+    
+    if (last < y_begin)
+	end = last;
+    else
+	end = y_begin + YPOS;
+/*    if (Machine->color_depth == 8)
+    {
+	for (line = first; line < end; line++)
+	    memset (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
+		    ted7360_bitmap->width);
+    }
+    else
+*/   {
+	for (line = first; line < end; line++)
+	    memset16 (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
+		      ted7360_bitmap->width);
+    }
+    if (LINES25)
+    {
+	vline = line - y_begin - YPOS;
+    }
+    else
+    {
+	vline = line - y_begin - YPOS + 8 - VERTICALPOS;
+    }
+    if (last < y_end + YPOS)
+	end = last;
+    else
+	end = y_end + YPOS;
+    for (; line < end; vline = (vline + 8) & ~7, line = line + 1 + yend - ybegin)
+    {
+	offs = (vline >> 3) * 40;
+	ybegin = vline & 7;
+	yoff = line - ybegin;
+	yend = (yoff + 7 < end) ? 7 : (end - yoff - 1);
 		/* rendering 39 characters */
-		/* left and right borders are overwritten later */
-
-		for (xoff = x_begin + XPOS; xoff < x_end + XPOS; xoff += 8, offs++)
+	/* left and right borders are overwritten later */
+	
+	for (xoff = x_begin + XPOS; xoff < x_end + XPOS; xoff += 8, offs++)
+	{
+	    if (HIRESON)
+	    {
+		ch = vic_dma_read ((videoaddr | 0x400) + offs);
+		attr = vic_dma_read (((videoaddr) + offs));
+		c1 = ((ch >> 4) & 0xf) | (attr << 4);
+		c2 = (ch & 0xf) | (attr & 0x70);
+		bitmapmulti[1] = c16_bitmap[1] = Machine->pens[c1 & 0x7f];
+		bitmapmulti[2] = c16_bitmap[0] = Machine->pens[c2 & 0x7f];
+		if (MULTICOLORON)
 		{
-			if (HIRESON)
-			{
-				ch = vic_dma_read ((videoaddr | 0x400) + offs);
-				attr = vic_dma_read (((videoaddr) + offs));
-				c1 = ((ch >> 4) & 0xf) | (attr << 4);
-				c2 = (ch & 0xf) | (attr & 0x70);
-				bitmapmulti[1] = c16_bitmap[1] = Machine->pens[c1 & 0x7f];
-				bitmapmulti[2] = c16_bitmap[0] = Machine->pens[c2 & 0x7f];
-				if (MULTICOLORON)
-				{
-					ted7360_draw_bitmap_multi (ybegin, yend, offs, yoff, xoff);
-				}
-				else
-				{
-					ted7360_draw_bitmap (ybegin, yend, offs, yoff, xoff);
-				}
-			}
-			else
-			{
-				ch = vic_dma_read ((videoaddr | 0x400) + offs);
-				attr = vic_dma_read (((videoaddr) + offs));
-				/* draw the character */
-				if (cursor1 && (offs == CURSOR1POS))
-				{
-#ifndef GFX
-					ted7360_draw_cursor (ybegin, yend, yoff, xoff,
-										 Machine->pens[attr & 0x7f]);
-#else
-					drawgfx (ted7360_bitmap, cursorelement, 0, Machine->pens[attr & 0x7f], 0, 0,
-							 xoff, yoff, 0, TRANSPARENCY_NONE, 0);
-#endif
-				}
-				else if (ECMON)
-				{
-					ecm = ch >> 6;
-					ecmcolor[0] = colors[ecm];
-					ecmcolor[1] = Machine->pens[attr & 0x7f];
-					ted7360_draw_character (ybegin, yend, ch & ~0xC0, yoff, xoff, ecmcolor);
-				}
-				else if (REVERSEON && (ch & 0x80))
-				{
-					if (MULTICOLORON && (attr & 8))
-					{				   /* multicolor and hardware reverse? */
-						multi[3] = Machine->pens[attr & 0x77];
-						ted7360_draw_character_multi (ybegin, yend, ch & ~0x80, yoff, xoff);
-					}
-					else
-					{
-						monoinversed[0] = Machine->pens[attr & 0x7f];
-						if (!MULTICOLORON && cursor1 && (attr & 0x80))
-							ted7360_draw_cursor (ybegin, yend, yoff, xoff, monoinversed[0]);
-						else
-							ted7360_draw_character (ybegin, yend, ch & ~0x80, yoff, xoff,
-													monoinversed);
-					}
-				}
-				else
-				{
-					if (MULTICOLORON && (attr & 8))
-					{
-						multi[3] = Machine->pens[attr & 0x77];
-						ted7360_draw_character_multi (ybegin, yend, ch, yoff, xoff);
-					}
-					else
-					{
-						mono[1] = Machine->pens[attr & 0x7f];
-						if (!MULTICOLORON && cursor1 && (attr & 0x80))
-							ted7360_draw_cursor (ybegin, yend, yoff, xoff, mono[0]);
-						else
-							ted7360_draw_character (ybegin, yend, ch, yoff, xoff, mono);
-					}
-				}
-			}
-		}
-		if (Machine->color_depth == 8)
-		{
-			for (i = ybegin; i <= yend; i++)
-			{
-				memset (ted7360_bitmap->line[yoff + i], Machine->pens[FRAMECOLOR], xbegin);
-				memset (ted7360_bitmap->line[yoff + i] + xend, Machine->pens[FRAMECOLOR],
-						ted7360_bitmap->width - xend);
-			}
+		    ted7360_draw_bitmap_multi (ybegin, yend, offs, yoff, xoff);
 		}
 		else
 		{
-			for (i = ybegin; i <= yend; i++)
-			{
-				memset16 (ted7360_bitmap->line[yoff + i], Machine->pens[FRAMECOLOR],
-						  xbegin);
-				memset16 ((short *) ted7360_bitmap->line[yoff + i] + xend,
-						  Machine->pens[FRAMECOLOR], ted7360_bitmap->width - xend);
-			}
+		    ted7360_draw_bitmap (ybegin, yend, offs, yoff, xoff);
 		}
+	    }
+	    else
+	    {
+		ch = vic_dma_read ((videoaddr | 0x400) + offs);
+		attr = vic_dma_read (((videoaddr) + offs));
+		// levente harsfalvi's docu says cursor off in ecm and multicolor
+		if (ECMON) {
+		    // hardware reverse off
+		    ecm = ch >> 6;
+		    ecmcolor[0] = colors[ecm];
+		    ecmcolor[1] = Machine->pens[attr & 0x7f];
+		    ted7360_draw_character (ybegin, yend, ch & ~0xC0, yoff, xoff, ecmcolor);
+		} else if (MULTICOLORON) {
+		    // hardware reverse off
+		    if (attr & 8) {
+			multi[3] = Machine->pens[attr & 0x77];
+			ted7360_draw_character_multi (ybegin, yend, ch, yoff, xoff);
+		    } else {
+			mono[1] = Machine->pens[attr & 0x7f];
+			ted7360_draw_character (ybegin, yend, ch, yoff, xoff,
+						mono);
+		    }
+		} else if (cursor1 && (offs == CURSOR1POS)) {
+#ifndef GFX
+		    ted7360_draw_cursor (ybegin, yend, yoff, xoff,
+					 Machine->pens[attr & 0x7f]);
+#else
+		    drawgfx (ted7360_bitmap, cursorelement, 0, Machine->pens[attr & 0x7f], 0, 0,
+			     xoff, yoff, 0, TRANSPARENCY_NONE, 0);
+#endif
+		} else if (REVERSEON && (ch & 0x80)) {
+		    monoinversed[0] = Machine->pens[attr & 0x7f];
+		    if (cursor1 && (attr & 0x80))
+			ted7360_draw_cursor (ybegin, yend, yoff, xoff, monoinversed[0]);
+		    else
+			ted7360_draw_character (ybegin, yend, ch & ~0x80, yoff, xoff,
+						monoinversed);
+		}
+		else
+		{
+		    mono[1] = Machine->pens[attr & 0x7f];
+		    if (cursor1 && (attr & 0x80))
+			ted7360_draw_cursor (ybegin, yend, yoff, xoff, mono[0]);
+		    else
+			ted7360_draw_character (ybegin, yend, ch, yoff, xoff, mono);
+		}
+	    }
 	}
-	if (last < ted7360_bitmap->height)
-		end = last;
-	else
-		end = ted7360_bitmap->height;
-	if (Machine->color_depth == 8)
+/*	if (Machine->color_depth == 8)
 	{
-		for (; line < end; line++)
-			memset (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
-					ted7360_bitmap->width);
+	    for (i = ybegin; i <= yend; i++)
+	    {
+		memset (ted7360_bitmap->line[yoff + i], Machine->pens[FRAMECOLOR], xbegin);
+		memset (ted7360_bitmap->line[yoff + i] + xend, Machine->pens[FRAMECOLOR],
+			ted7360_bitmap->width - xend);
+	    }
 	}
 	else
-	{
-		for (; line < end; line++)
-			memset16 (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
-					  ted7360_bitmap->width);
+*/	{
+	    for (i = ybegin; i <= yend; i++)
+	    {
+		memset16 (ted7360_bitmap->line[yoff + i], Machine->pens[FRAMECOLOR],
+			  xbegin);
+		memset16 ((short *) ted7360_bitmap->line[yoff + i] + xend,
+			  Machine->pens[FRAMECOLOR], ted7360_bitmap->width - xend);
+	    }
 	}
+    }
+    if (last < ted7360_bitmap->height)
+	end = last;
+    else
+	end = ted7360_bitmap->height;
+/*    if (Machine->color_depth == 8)
+    {
+	for (; line < end; line++)
+	    memset (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
+		    ted7360_bitmap->width);
+    }
+    else
+*/    {
+	for (; line < end; line++)
+	    memset16 (ted7360_bitmap->line[line], Machine->pens[FRAMECOLOR],
+		      ted7360_bitmap->width);
+    }
 }
 
-static void ted7360_draw_text (struct osd_bitmap *bitmap, char *text, int *y)
+static void ted7360_draw_text (struct mame_bitmap *bitmap, char *text, int *y)
 {
 	int x, x0, y1t, width = (Machine->visible_area.max_x -
 							 Machine->visible_area.min_x) / Machine->uifont->width;
@@ -1377,6 +1368,6 @@ int ted7360_raster_interrupt (void)
 	return ignore_interrupt ();
 }
 
-void ted7360_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
+void ted7360_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 {
 }

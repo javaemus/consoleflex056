@@ -127,7 +127,7 @@ public class nascom1
 	{
 		void	*file;
 	
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		if (file != 0)
 		{
 			nascom1_tape_size = osd_fsize(file);
@@ -183,7 +183,7 @@ public class nascom1
 	
 		return (1);
 	
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		if (file != 0)
 		{
 			done = 0;

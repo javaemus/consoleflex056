@@ -19,7 +19,7 @@
 			Snemul
 			Nlksnes
 			and the others....
-  		The original SNEeSe team members (other than myself ;-)) - 
+  		The original SNEeSe team members (other than myself ;-)) -
 			Charles Bilyue - Your continued work on SNEeSe is fantastic!
 			Santeri Saarimaa - Who'd have thought I'd come back to emulation ;-)
 
@@ -30,16 +30,15 @@
 //#define EMULATE_SPC700												// If commented out the core will use skipper emulation
 
 int snes_load_rom (int id);
-int snes_id_rom (int id);
 void snes_exit_rom (int id);
 void snes_init_machine(void);
 void snes_shutdown_machine(void);
 
 int snes_vh_start(void);
 void snes_vh_stop(void);
-void snes_vh_screenrefresh(struct osd_bitmap *bitmap, int full_refresh);
+void snes_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
 
-void RenderSNESScreenLine(struct osd_bitmap *,int);
+void RenderSNESScreenLine(struct mame_bitmap *,int);
 
 extern unsigned short palIndx[256+1];			// +1 for fixed colour backdrop
 extern unsigned short fixedColour;					// Fixed color encoded into here

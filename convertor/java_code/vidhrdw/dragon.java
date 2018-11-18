@@ -46,38 +46,105 @@ public class dragon
 	
 	static int coco3_hires;
 	static int coco3_gimevhreg[8];
-	static int coco3_borderred, coco3_bordergreen, coco3_borderblue;
 	static int sam_videomode;
-	static int coco3_somethingdirty;
 	static int coco3_blinkstatus;
-	static struct GfxElement *coco3font;
+	static int coco3_vidbase;
 	
 	#define MAX_HIRES_VRAM	57600
 	
+	#ifdef MAME_DEBUG
+	#define LOG_BORDER	0
 	#define LOG_PALETTE	0
 	#define LOG_GIME	0
 	#define LOG_VIDEO	0
+	#define LOG_MISC	0
+	#else /* !MAME_DEBUG */
+	#define LOG_BORDER	0
+	#define LOG_PALETTE	0
+	#define LOG_GIME	0
+	#define LOG_VIDEO	0
+	#define LOG_MISC	0
+	#endif /* MAME_DEBUG */
+	
+	static int coco3_palette_recalc(int force);
+	static int coco3_calculate_rows(int *bordertop, int *borderbottom);
+	
+	/* -------------------------------------------------- */
+	
+	#if 0
+	static void coco3_getvideoinfo(int full_refresh, struct rasterbits_source *rs,
+		struct rasterbits_videomode *rvm, struct rasterbits_frame *rf);
+	#endif
 	
 	/* --------------------------------------------------
 	 * CoCo 1/2 Stuff
 	 * -------------------------------------------------- */
 	
-	static void dragon_vblank(void)
+	void dragon_charproc(UINT8 c);
+	void dragon_charproc(UINT8 c)
 	{
-		/* clear vblank */
-		pia_0_cb1_w (0, 0);
+		int inv;
+	
+		inv = (c & 0x40) ? 1 : 0;
+	
+		m6847_as_w(0,	(c & 0x80) || (m6847_intext_r(0)));
+		m6847_inv_w(0,	inv);
+	}
+	
+	static void coco2b_charproc(UINT8 c)
+	{
+		int inv;
+		int gm0;
+	
+		gm0 = m6847_gm0_r(0);
+	
+		if (gm0 && (c < 0x20)) {
+			/* A lowercase char */
+			inv = 1;
+		}
+		else {
+			/* something else */
+			inv = (c & 0x40) ? 1 : 0;
+		}
+	
+		m6847_as_w(0, (c & 0x80) || (!gm0 && m6847_intext_r(0)));
+		m6847_inv_w(0, inv);
+	}
+	
+	static int internal_dragon_vh_start(int m6847_version, void (*charproc)(UINT8))
+	{
+		struct m6847_init_params p;
+	
+		m6847_vh_normalparams(&p);
+		p.version = m6847_version;
+		p.artifactdipswitch = COCO_DIP_ARTIFACTING;
+		p.ram = memory_region(REGION_CPU1);
+		p.ramsize = 0x10000;
+		p.charproc = charproc;
+		p.hs_func = coco_m6847_hs_w;
+		p.fs_func = coco_m6847_fs_w;
+		p.callback_delay = (TIME_IN_HZ(894886) * 2);
+	
+		if (m6847_vh_start(&p))
+			return 1;
+	
+		sam_videomode = 0;
+		return 0;
 	}
 	
 	public static VhStartPtr dragon_vh_start = new VhStartPtr() { public int handler() 
 	{
-		if (m6847_vh_start())
-			return 1;
+		return internal_dragon_vh_start(M6847_VERSION_ORIGINAL_PAL, dragon_charproc );
+	} };
 	
-		m6847_set_vram(memory_region(REGION_CPU1), 0xffff);
-		m6847_set_vblank_proc(dragon_vblank);
-		m6847_set_artifact_dipswitch(12);
-		sam_videomode = 0;
-		return 0;
+	public static VhStartPtr coco_vh_start = new VhStartPtr() { public int handler() 
+	{
+		return internal_dragon_vh_start(M6847_VERSION_ORIGINAL_NTSC, dragon_charproc );
+	} };
+	
+	public static VhStartPtr coco2b_vh_start = new VhStartPtr() { public int handler() 
+	{
+		return internal_dragon_vh_start(M6847_VERSION_M6847T1_NTSC, coco2b_charproc);
 	} };
 	
 	WRITE_HANDLER(coco_ram_w)
@@ -90,137 +157,38 @@ public class dragon
 		}
 	}
 	
-	WRITE_HANDLER(dragon_sam_display_offset)
-	{
-		UINT16 d_offset = m6847_get_video_offset();
-	
-		if ((offset & 0x01) != 0)
-			d_offset |= 0x01 << (offset/2 + 9);
-		else
-			d_offset &= ~(0x01 << (offset/2 + 9));
-	
-		m6847_set_video_offset(d_offset);
-	}
-	
-	WRITE_HANDLER(dragon_sam_vdg_mode)
-	{
-		/* SAM Video modes:
-		 *
-		 * 000	Text
-		 * 001	G1C/G1R
-		 * 010	G2C
-		 * 011	G2R
-		 * 100	G3C
-		 * 101	G3R
-		 * 110	G4C/G4R
-		 * 111	Reserved/Invalid
-		 */
-	
-		static int sammode2vmode[] = {
-			M6847_MODE_TEXT,	/* 0 */
-			M6847_MODE_G1C,		/* 1 */
-			M6847_MODE_G2C,		/* 2 */
-			M6847_MODE_G2R,		/* 3 */
-			M6847_MODE_G3C,		/* 4 */
-			M6847_MODE_G3R,		/* 5 */
-			M6847_MODE_G4R,		/* 6 */
-			M6847_MODE_G4R		/* 7 */
-		};
-	
-		if ((offset & 0x01) != 0)
-			sam_videomode |= 0x01 << (offset/2);
-		else
-			sam_videomode &= ~(0x01 << (offset/2));
-	
-		m6847_set_vmode(sammode2vmode[sam_videomode]);
-	}
-	
 	/* --------------------------------------------------
 	 * CoCo 3 Stuff
 	 * -------------------------------------------------- */
 	
-	struct GfxElement *build_coco3_font(void)
+	static void coco3_rastertrack_getvideomode(struct rastertrack_hvars *hvars);
+	static void coco3_rastertrack_newscreen(struct rastertrack_vvars *vvars, struct rastertrack_hvars *hvars);
+	
+	static struct rastertrack_interface coco3_rastertrack_intf =
 	{
-		static unsigned short colortable[2];
-		static GfxLayout fontlayout8x8 = new GfxLayout
-		(
-			8,8,	/* 8*8 characters */
-			128+1,	 /* 128 characters + 1 "underline" */
-			1,	/* 1 bit per pixel */
-			new int[] { 0 },
-			new int[] { 0, 1, 2, 3, 4, 5, 6, 7, },	/* straightforward layout */
-			new int[] { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 },
-			8*8	/* every char takes 12 consecutive bytes */
-		);
-	
-		unsigned char buf[129 * 8];
-		struct GfxElement *font;
-		UINT8 *mem;
-	
-		mem = memory_region(REGION_CPU1);
-	
-		/* The font info for the CoCo 3 hi res text modes happens to be
-		 * same as the font info used for the HPRINT command, which is in
-		 * the CoCo 3 ROM, so we get it from there
-		 */
-	
-		/* Characters 0-31 are at $FA10 - $FB0F */
-		memcpy(buf, &mem[0x80000 + 0xfa10 - 0x8000], 32 * 8);
-	
-		/* Characters 32-127 are at $F09D - $F39C */
-		memcpy(&buf[8*32], &mem[0x80000 + 0xf09d - 0x8000], 96 * 8);
-	
-		/* The underline character is stored as "Character 128" */
-		buf[8 * 128 + 0] = 0;
-		buf[8 * 128 + 1] = 0;
-		buf[8 * 128 + 2] = 0;
-		buf[8 * 128 + 3] = 0;
-		buf[8 * 128 + 4] = 0;
-		buf[8 * 128 + 5] = 0;
-		buf[8 * 128 + 6] = 0;
-		buf[8 * 128 + 7] = 0xff;
-	
-		font = decodegfx(buf,&fontlayout8x8);
-		if (font != 0)
-		{
-			/* colortable will be set at run time */
-			memset(colortable,0,sizeof(colortable));
-			font.colortable = colortable;
-			font.total_colors = 2;
-		}
-		return font;
-	}
-	
-	static void drawgfx_wf(struct osd_bitmap *dest,const struct GfxElement *gfx,
-		unsigned int code,int sx,int sy,
-		const struct rectangle *clip,int transparency,int transparent_color, int wf)
-	{
-		if (wf == 1) {
-			drawgfx(dest, gfx, code, 0, 0, 0, sx, sy, clip, transparency, transparent_color);
-		}
-		else {
-			/* drawgfxzoom doesnt directly take TRANSPARENCY_NONE */
-			if (transparency == TRANSPARENCY_NONE) {
-				transparency = TRANSPARENCY_PEN;
-				transparent_color = -1;
-			}
-			drawgfxzoom(dest, gfx, code, 0, 0, 0, sx, sy, clip, transparency, transparent_color, (1<<16) * wf, 1<<16);
-		}
-	}
+		263,
+		coco3_rastertrack_newscreen,
+		NULL,
+		internal_m6847_rastertrack_endcontent,
+		coco3_rastertrack_getvideomode,
+		RI_PALETTERECALC
+	};
 	
 	public static VhStartPtr coco3_vh_start = new VhStartPtr() { public int handler() 
 	{
 	    int i;
+		struct m6847_init_params p;
 	
-		if (internal_m6847_vh_start(MAX_HIRES_VRAM)) {
-			paletteram = NULL;
-			return 1;
-		}
+		m6847_vh_normalparams(&p);
+		p.version = M6847_VERSION_M6847T1_NTSC;
+		p.artifactdipswitch = COCO_DIP_ARTIFACTING;
+		p.ram = memory_region(REGION_CPU1);
+		p.ramsize = 0x80000;
+		p.charproc = coco2b_charproc;
+		p.hs_func = coco3_m6847_hs_w;
+		p.fs_func = coco3_m6847_fs_w;
 	
-		m6847_set_vram(memory_region(REGION_CPU1) + 0x70000, 0xffff);
-		m6847_set_artifact_dipswitch(12);
-	
-		if ((coco3font = build_coco3_font())==NULL) {
+		if (internal_m6847_vh_start(&p, &coco3_rastertrack_intf, MAX_HIRES_VRAM)) {
 			paletteram = NULL;
 			return 1;
 		}
@@ -230,14 +198,13 @@ public class dragon
 			return 1;
 	
 		memset(paletteram, 0, 16 * sizeof(int));
-		for (i = 0; i < 16; i++)
-			palette_change_color(i, 0, 0, 0);
+	
 	
 		for (i = 0; i < (sizeof(coco3_gimevhreg) / sizeof(coco3_gimevhreg[0])); i++)
 			coco3_gimevhreg[i] = 0;
 	
-		coco3_hires = coco3_somethingdirty = coco3_blinkstatus = 0;
-		coco3_borderred = coco3_bordergreen = coco3_borderblue = -1;
+		coco3_hires = coco3_blinkstatus = 0;
+		coco3_palette_recalc(1);
 		return 0;
 	} };
 	
@@ -252,209 +219,224 @@ public class dragon
 	
 	static void coco3_compute_color(int color, int *red, int *green, int *blue)
 	{
-		if ((readinputport(12) & 0x08) == 0) {
+		int r, g, b;
+	
+		if ((readinputport(COCO3_DIP_MONITORTYPE) & COCO3_DIP_MONITORTYPE_MASK) == 0) {
 			/* CMP colors
 			 *
 			 * These colors are of the format IICCCC, where II is the intensity and
 			 * CCCC is the base color.  There is some weirdness because intensity
-			 * is often different for each base color.  Thus a table is used here
-			 * to map to RGB colors
+			 * is often different for each base color.
 			 *
-			 * This table was based on a color table the "Super Extended Color Basic
-			 * Unravelled" (http://www.giftmarket.org/unravelled/unravelled.shtml)
-			 * that mapped RGB to CMP, then I compared it with the palette that the
-			 * CoCo III uses on startup for CMP. Where they conflicted, the CoCo III
-			 * startup palette took precedence. Where neither of them helped, I guessed
+			 * The following CoCo BASIC program was used to approximate composite
+			 * colors.  (Program by SockMaster)
 			 *
-			 * The fault of this table is that some colors directly map to each other.
-			 * I do not like this, so if anyone can come up with a better formula, I'm
-			 * all ears.
+			 *	10 POKE65497,0:DIMR(63),G(63),B(63):WIDTH80:PALETTE0,0:PALETTE8,54:CLS1
+			 *	20 SAT=92:CON=53:BRI=-16:L(0)=0:L(1)=47:L(2)=120:L(3)=255
+			 *	30 W=.4195456981879*1.01:A=W*9.2:S=A+W*5:D=S+W*5:P=0:FORH=0TO3:P=P+1
+			 *	40 BRI=BRI+CON:FORG=1TO15:R(P)=COS(A)*SAT+BRI
+			 *	50 G(P)=(COS(S)*SAT)*.50+BRI:B(P)=(COS(D)*SAT)*1.9+BRI:P=P+1
+			 *	55 A=A+W:S=S+W:D=D+W:NEXT:R(P-16)=L(H):G(P-16)=L(H):B(P-16)=L(H)
+			 *	60 NEXT:R(63)=R(48):G(63)=G(48):B(63)=B(48)
+			 *	70 FORH=0TO63STEP1:R=INT(R(H)):G=INT(G(H)):B=INT(B(H)):IFR<0THENR=0
+			 *	80 IFG<0THENG=0
+			 *	90 IFB<0THENB=0
+			 *	91 IFR>255THENR=255
+			 *	92 IFG>255THENG=255
+			 *	93 IFB>255THENB=255
+			 *	100 PRINTRIGHT$(STR$(H),2);" $";:R=R+256:G=G+256:B=B+256
+			 *	110 PRINTRIGHT$(HEX$(R),2);",$";RIGHT$(HEX$(G),2);",$";RIGHT$(HEX$(B),2)
+			 *	115 IF(H AND15)=15 THENIFINKEY$=""THEN115ELSEPRINT
+			 *	120 NEXT
 			 */
 			static const UINT8 cmp2rgb[] = {
-				0,	/*  0 - Black */
-				21,	/*  1 - Magenta tint green */
-				2,	/*  2 - Low intensity green */
-				20,	/*  3 - Red tint green */
-				49,	/*  4 - Blue tint yellow */
-				6,	/*  5 - Low intensity brown */
-				35,	/*  6 - Cyan tint red */
-				36,	/*  7 - Full intensity red*/
-				33,	/*  8 - Blue tint red */
-				27,	/*  9 - Full intensity cyan */
-				14,	/* 10 - Brown tint blue */
-				9,	/* 11 - Full intensity blue */
-				1,	/* 12 - Low intensity blue */
-				10,	/* 13 - Green tint blue */
-				3,	/* 14 - Low intensity cyan */
-				28,	/* 15 - Red tint cyan */
-				7,	/* 16 - Low intensity white */
-				17,	/* 17 - Blue tint green */
-				18,	/* 18 - Full intensity green */
-				22,	/* 19 - Brown tint green */
-				48,	/* 20 - Medium intensity yellow */
-				34,	/* 21 - Light Orange */
-				34,	/* 22 - Light Orange */
-				32,	/* 23 - Medium intensity red */
-				37,	/* 24 - Magenta tint red */
-				40,	/* 25 - Medium intensity magenta */
-				42,	/* 26 - Green tint magenta */
-				13,	/* 27 - Magenta tint blue */
-				8,	/* 28 - Medium intensity blue */
-				11,	/* 29 - Cyan tint blue */
-				24,	/* 30 - Medium intensity cyan */
-				45,	/* 31 - Full intensity magenta */
-				56,	/* 32 - Medium intensity white */
-				19,	/* 33 - Cyan tint green */
-				16,	/* 34 - Medium intensity green */
-				50,	/* 35 - Green tint yellow */
-				54,	/* 36 - Full intensity yellow */
-				52,	/* 37 - Red tint yellow */
-				38,	/* 38 - Brown tint red */
-				36,	/* 39 - Full intensity red */
-				46,	/* 40 - Brown tint magenta */
-				45,	/* 41 - Full intensity magenta */
-				41,	/* 42 - Blue tint magenta */
-				15,	/* 43 - Faded blue */
-				9,	/* 44 - Full intensity blue */
-				25,	/* 45 - Blue tint cyan  */
-				27,	/* 46 - Full intensity cyan */
-				30,	/* 47 - Brown tint cyan */
-				63,	/* 48 - White */
-				58,	/* 49 - Light green */
-				58,	/* 50 - Light green */
-				51,	/* 51 - Cyan tint yellow */
-				55,	/* 52 - Faded yellow */
-				53,	/* 53 - Magenta tint yellow */
-				39,	/* 54 - Faded red */
-				60,	/* 55 - Light red */
-				47,	/* 56 - Faded magenta */
-				61,	/* 57 - Light magenta */
-				43,	/* 58 - Cyan tint magenta */
-				57,	/* 59 - Light blue */
-				29,	/* 60 - Magenta tint cyan */
-				31,	/* 61 - Faded cyan */
-				59,	/* 62 - Light cyan */
-				63,	/* 63 - White */
+				0x00, 0x00, 0x00,	/* 0 */
+				0x00, 0x4E, 0x00,	/* 1 */
+				0x00, 0x47, 0x00,	/* 2 */
+				0x04, 0x37, 0x00,	/* 3 */
+				0x33, 0x22, 0x00,	/* 4 */
+				0x5D, 0x0A, 0x00,	/* 5 */
+				0x7B, 0x00, 0x00,	/* 6 */
+				0x85, 0x00, 0x20,	/* 7 */
+				0x7C, 0x00, 0x72,	/* 8 */
+				0x60, 0x00, 0xB4,	/* 9 */
+				0x37, 0x00, 0xD8,	/* 10 */
+				0x08, 0x07, 0xD9,	/* 11 */
+				0x00, 0x1F, 0xB7,	/* 12 */
+				0x00, 0x35, 0x77,	/* 13 */
+				0x00, 0x46, 0x26,	/* 14 */
+				0x00, 0x4E, 0x00,	/* 15 */
+				0x2F, 0x2F, 0x2F,	/* 16 */
+				0x00, 0x83, 0x00,	/* 17 */
+				0x18, 0x7D, 0x00,	/* 18 */
+				0x40, 0x6E, 0x00,	/* 19 */
+				0x6B, 0x5B, 0x00,	/* 20 */
+				0x91, 0x45, 0x00,	/* 21 */
+				0xAC, 0x32, 0x0E,	/* 22 */
+				0xB5, 0x25, 0x5A,	/* 23 */
+				0xAD, 0x20, 0xA4,	/* 24 */
+				0x94, 0x24, 0xE0,	/* 25 */
+				0x6E, 0x30, 0xFF,	/* 26 */
+				0x43, 0x43, 0xFF,	/* 27 */
+				0x1B, 0x58, 0xE2,	/* 28 */
+				0x00, 0x6C, 0xA8,	/* 29 */
+				0x00, 0x7B, 0x5E,	/* 30 */
+				0x00, 0x83, 0x12,	/* 31 */
+				0x78, 0x78, 0x78,	/* 32 */
+				0x3E, 0xB8, 0x31,	/* 33 */
+				0x58, 0xB2, 0x01,	/* 34 */
+				0x7C, 0xA5, 0x00,	/* 35 */
+				0xA2, 0x94, 0x00,	/* 36 */
+				0xC5, 0x80, 0x15,	/* 37 */
+				0xDD, 0x6F, 0x4E,	/* 38 */
+				0xE5, 0x63, 0x93,	/* 39 */
+				0xDE, 0x5F, 0xD6,	/* 40 */
+				0xC7, 0x62, 0xFF,	/* 41 */
+				0xA5, 0x6D, 0xFF,	/* 42 */
+				0x7F, 0x7E, 0xFF,	/* 43 */
+				0x5B, 0x91, 0xFF,	/* 44 */
+				0x40, 0xA4, 0xDA,	/* 45 */
+				0x32, 0xB1, 0x97,	/* 46 */
+				0x35, 0xB8, 0x52,	/* 47 */
+				0xFF, 0xFF, 0xFF,	/* 48 */
+				0x81, 0xED, 0x75,	/* 49 */
+				0x98, 0xE8, 0x4A,	/* 50 */
+				0xB8, 0xDD, 0x36,	/* 51 */
+				0xDA, 0xCD, 0x3D,	/* 52 */
+				0xF8, 0xBC, 0x5C,	/* 53 */
+				0xFF, 0xAC, 0x8F,	/* 54 */
+				0xFF, 0xA2, 0xCC,	/* 55 */
+				0xFF, 0x9E, 0xFF,	/* 56 */
+				0xFA, 0xA1, 0xFF,	/* 57 */
+				0xDD, 0xAB, 0xFF,	/* 58 */
+				0xBA, 0xBA, 0xFF,	/* 59 */
+				0x9A, 0xCB, 0xFF,	/* 60 */
+				0x82, 0xDB, 0xFF,	/* 61 */
+				0x76, 0xE7, 0xD0,	/* 62 */
+				0xFF, 0xFF, 0xFF	/* 63 */
 			};
-			color = cmp2rgb[color & 63];
+			color &= 0x3f;
+			r = cmp2rgb[color * 3 + 0];
+			g = cmp2rgb[color * 3 + 1];
+			b = cmp2rgb[color * 3 + 2];
+	
+			if (coco3_gimevhreg[0] & 0x10) {
+				/* We are on a composite monitor/TV and the monochrome phase invert
+				 * flag is on in the GIME.  This means we have to average out all
+				 * colors
+				 */
+				r = g = b = (r + g + b) / 3;
+			}
 		}
-	
-		/* RGB colors
-		 *
-		 * These colors are of the format RGBRGB, where the first 3 bits
-		 * are more significant than the last three bits
-		 */
-		*red = (((color >> 4) & 2) | ((color >> 2) & 1)) * 0x55;
-		*green = (((color >> 3) & 2) | ((color >> 1) & 1)) * 0x55;
-		*blue = (((color >> 2) & 2) | ((color >> 0) & 1)) * 0x55;
-	
-		if (!input_port_11_r(0) && (coco3_gimevhreg[0] & 0x10)) {
-			/* We are on a composite monitor/TV and the monochrome phase invert
-			 * flag is on in the GIME.  This means we have to average out all
-			 * colors
+		else {
+			/* RGB colors
+			 *
+			 * These colors are of the format RGBRGB, where the first 3 bits
+			 * are more significant than the last three bits
 			 */
-			*red = *green = *blue = (*red + *green + *blue) / 3;
+			r = (((color >> 4) & 2) | ((color >> 2) & 1)) * 0x55;
+			g = (((color >> 3) & 2) | ((color >> 1) & 1)) * 0x55;
+			b = (((color >> 2) & 2) | ((color >> 0) & 1)) * 0x55;
 		}
+		*red = r;
+		*green = g;
+		*blue = b;
 	}
 	
-	static void coco3_vh_palette_change_color(int color, int data)
+	static int coco3_palette_recalc(int force)
 	{
-		int red, green, blue;
-		coco3_compute_color(data, &red, &green, &blue);
-		palette_change_color(color, red, green, blue);
-	}
+		int flag;
+		int i, r, g, b;   
+		static int lastflag;
 	
-	static void coco3_vh_palette_recompute(void)
-	{
-		int i;
-		for (i = 0; i < 16; i++)
-			coco3_vh_palette_change_color(i, paletteram.read(i));
-	}
+		flag = readinputport(COCO3_DIP_MONITORTYPE) & (COCO3_DIP_MONITORTYPE_MASK | ((coco3_gimevhreg[0] & 0x10) << 16));
+		if (force || (flag != lastflag)) {
+			lastflag = flag;
 	
-	static void coco3_vh_drawborder(struct osd_bitmap *bitmap, int screenx, int screeny)
-	{
-		internal_m6847_drawborder(bitmap, screenx, screeny, 16);
-	}
-	
-	static int coco3_vh_setborder(int red, int green, int blue)
-	{
-		int full_refresh = 0;
-	
-		if ((coco3_borderred != red) || (coco3_bordergreen != green) || (coco3_borderblue != blue)) {
-			coco3_borderred = red;
-			coco3_bordergreen = green;
-			coco3_borderblue = blue;
-			palette_change_color(16, red, green, blue);
-	
-			full_refresh = palette_recalc() ? 1 : 0;
+			for (i = 0; i < 64; i++) {   
+				coco3_compute_color(i, &r, &g, &b);   
+				palette_set_color(i, r, g, b);   
+			}   
+			return 1;
 		}
-		return full_refresh;
+		return 0;
 	}
 	
 	void coco3_vh_blink(void)
 	{
 		coco3_blinkstatus = !coco3_blinkstatus;
-		coco3_somethingdirty = 1;
 	}
 	
 	WRITE_HANDLER(coco3_palette_w)
 	{
+		rastertrack_touchvideomode();
+	
+		data &= 0x3f;
+	
 		paletteram.write(offset,data);
-		coco3_vh_palette_change_color(offset, data);
 	
 	#if LOG_PALETTE
 		logerror("CoCo3 Palette: %i <== $%02x\n", offset, data);
 	#endif
 	}
 	
-	static void coco3_artifact(int *artifactcolors)
+	static int coco3_calculate_rows(int *bordertop, int *borderbottom)
 	{
-		int c1, c2, r1, r2, g1, g2, b1, b2;
-		static int oldc1, oldc2;
+		int rows = 0;
+		int t = 0;
+		int b = 0;
 	
-		c1 = paletteram.read(artifactcolors[0)];
-		c2 = paletteram.read(artifactcolors[3)];
+		/* The bordertop and borderbottom return values are used for calculating
+		 * field sync timing.  Unfortunately, I cannot seem to find an agreement
+		 * about how exactly field sync works..
+		 *
+		 * What I do know is that FS goes high at the top of the screen, and goes
+		 * low (forcing an VBORD interrupt) at the bottom of the visual area.
+		 *
+		 * Unfortunately, I cannot get a straight answer about how many rows each
+		 * of the three regions (leading edge -. visible top; visible top -.
+		 * visible bottom/trailing edge; visible bottom/trailing edge -. leading
+		 * edge) takes up.  Adding the fact that each of the different LPR
+		 * settings most likely has a different set of values.  Here is a summary
+		 * of what I know from different sources:
+		 *
+		 * In the January 1987 issue of Rainbow Magazine, there is a program called
+		 * COLOR3 that uses midframe palette rotation to show all 64 colors on the
+		 * screen at once.  The first box is at line 32, but it waits for 70 HSYNC
+		 * transitions before changing
+		 *
+		 * SockMaster email: 43/192/28, 41/199/23, 132/0/131, 26/225/12
+		 * m6847 reference:  38/192/32
+		 * COLOR3            38/192/32
+		 */
 	
-		/* Have the colors actually changed? */
-		if ((oldc1 != c1) || (oldc2 != c2)) {
-			coco3_compute_color(c1, &r1, &g1, &b1);
-			coco3_compute_color(c2, &r2, &g2, &b2);
-			palette_change_color(17, r2, (g1+g2)/2, b1);
-			palette_change_color(18, r1, (g1+g2)/2, b2);
-		}
-	}
-	
-	static void coco3_artifact_red(int *artifactcolors)
-	{
-		coco3_artifact(artifactcolors);
-		artifactcolors[2] = 18;
-		artifactcolors[1] = 17;
-	}
-	
-	static void coco3_artifact_blue(int *artifactcolors)
-	{
-		coco3_artifact(artifactcolors);
-		artifactcolors[1] = 18;
-		artifactcolors[2] = 17;
-	}
-	
-	static int coco3_calculate_rows(void)
-	{
-		int rows=0;
-		switch((coco3_gimevhreg[1] & 0x60) >>5) {
+		switch((coco3_gimevhreg[1] & 0x60) >> 5) {
 		case 0:
 			rows = 192;
+			t = 38;
+			b = 33;
 			break;
 		case 1:
-			rows = 200;
+			rows = 199;
+			t = 33;
+			b = 31;
 			break;
 		case 2:
-			rows = 210;
+			rows = 0;	/* NYI - This is "zero/infinite" lines, according to Sock Master */
+			t = 132;
+			b = 131;
 			break;
 		case 3:
 			rows = 225;
+			t = 26;
+			b = 12;
 			break;
 		}
+	
+		if (bordertop != 0)
+			*bordertop = t;
+		if (borderbottom != 0)
+			*borderbottom = b;
 		return rows;
 	}
 	
@@ -482,16 +464,8 @@ public class dragon
 		int indexx;
 		indexx = coco3_gimevhreg[0] & 7;
 	
-		return (indexx == 7) ? coco3_calculate_rows() : hires_linesperrow[indexx];
+		return (indexx == 7) ? coco3_calculate_rows(NULL, NULL) : hires_linesperrow[indexx];
 	}
-	
-	static int coco3_hires_vidbase(void)
-	{
-		return (((coco3_gimevhreg[5] * 0x800) + (coco3_gimevhreg[6] * 8)) | ((coco3_gimevhreg[7] & 0x7f) * 2));
-	
-	}
-	
-	#define coco3_lores_vidbase	coco3_hires_vidbase
 	
 	#if LOG_VIDEO
 	static void log_video(void)
@@ -526,10 +500,10 @@ public class dragon
 				logerror("CoCo3 HiRes Video: ??? colors\n");
 				return;
 			}
-			rows = coco3_calculate_rows() / coco3_hires_linesperrow();
+			rows = coco3_calculate_rows(NULL, NULL) / coco3_hires_linesperrow();
 			logerror(" @ %dx%d\n", cols, rows);
 	
-			vidbase = coco3_hires_vidbase();
+			vidbase = coco3_vidbase;
 			bytesperrow = (coco3_gimevhreg[7] & 0x80) ? 256 : visualbytesperrow;
 			logerror("CoCo3 HiRes Video: Occupies memory %05x-%05x\n", vidbase, (vidbase + (rows * bytesperrow) - 1) & 0x7ffff);
 			break;
@@ -537,259 +511,214 @@ public class dragon
 	}
 	#endif
 	
+	static UINT8 *coco3_textmapper_noattr(UINT8 *mem, int param, int *fg, int *bg, int *attr)
+	{
+		/* This mapper uses the character map in the CoCo 3 ROM to display text */
+		UINT8 *result;
+		UINT8 *RAM;
+		int b;
+	
+		RAM = (UINT8 *) param;
+		b = (*mem) & 0x7f;
+		if (b < 32) {
+			/* Characters 0-31 are at $FA10 - $FB0F */
+			result = &RAM[0x80000 + 0xfa10 - 0x8000 + (b * 8)];
+		}
+		else {
+			/* Characters 32-127 are at $F09D - $F39C */
+			result = &RAM[0x80000 + 0xf09d - 0x8000 + ((b - 32) * 8)];
+		}
+		return result;
+	}
+	
+	static UINT8 *coco3_textmapper_attr(UINT8 *mem, int param, int *fg, int *bg, int *attr)
+	{
+		int b;
+		int a;
+	
+		b = mem[1];
+		*bg = b & 0x07;
+		*fg = 8 + ((b & 0x38) >> 3);
+	
+		a = 0;
+		if ((b & 0x80) != 0)
+			a |= RASTERBITS_CHARATTR_BLINKING;
+		if ((b & 0x40) != 0)
+			a |= RASTERBITS_CHARATTR_UNDERLINE;
+		*attr = a;
+	
+		return coco3_textmapper_noattr(mem, param, NULL, NULL, NULL);
+	}
+	
+	static void coco3_getcolorrgb(int color, UINT8 *red, UINT8 *green, UINT8 *blue)
+	{
+		int r, g, b;
+		coco3_compute_color(color, &r, &g, &b);
+		*red = (UINT8) r;
+		*green = (UINT8) g;
+		*blue = (UINT8) b;
+	}
+	
 	/*
-	 * All models of the CoCo has 262 scan lines.  However, we pretend that it has
+	 * All models of the CoCo has 262.5 scan lines.  However, we pretend that it has
 	 * 240 so that the emulation fits on a 640x480 screen
 	 */
-	public static VhUpdatePtr coco3_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void coco3_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
-		UINT8 *RAM = memory_region(REGION_CPU1);
-		static int coco3_metapalette[] = {
+		if (coco3_palette_recalc(0))
+			full_refresh = 1;
+		rastertrack_refresh(bitmap, full_refresh);
+	}
+	
+	static void coco3_rastertrack_getvideomode(struct rastertrack_hvars *hvars)
+	{
+		static UINT32 coco3_pens[] = {
 			0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 		};
-		static artifactproc artifacts[] = {
-			NULL,
-			coco3_artifact_red,
-			coco3_artifact_blue
-		};
-		static int old_cmprgb;
-		int cmprgb, i;
-		int use_mark_dirty;
+		int i;
+		UINT8 *temp;
 	
-		/* Did the user change between CMP and RGB? */
-		cmprgb = readinputport(12) & 0x08;
-		if (cmprgb != old_cmprgb) {
-			old_cmprgb = cmprgb;
-	
-			/* Reset all colors and border */
-			coco3_borderred = -1;	/* force border to redraw */
-			for (i = 0; i < 16; i++)
-				coco3_vh_palette_change_color(i, paletteram.read(i));
-		}
-	
-		/* clear vblank */
-		coco3_vblank();
+		/* Initialize the pens array */
+		for (i = 0; i < (sizeof(hvars.mode.pens) / sizeof(hvars.mode.pens[0])); i++)
+			hvars.mode.pens[i] = i;
 	
 		if (coco3_hires != 0) {
 			static int last_blink;
-			int blink_switch=0;
-			int vidbase, bytesperrow, linesperrow, rows = 0, x, y, basex = 0, basey, wf = 0;
-			int use_attr, charsperrow = 0, underlined = 0;
+			int linesperrow, rows;
 			int visualbytesperrow;
-			int borderred, bordergreen, borderblue;
-			UINT8 *vram, *db;
-			UINT8 b;
 	
-			vidbase = coco3_hires_vidbase();
-			if (coco3_gimevhreg[7] & 0x80) {
-				bytesperrow = 256;
-			}
-			else {
-				bytesperrow = 0;
-	
-			}
-	
-			rows = coco3_calculate_rows();
+			rows = coco3_calculate_rows(NULL, NULL);
 			linesperrow = coco3_hires_linesperrow();
 	
-			basey = (bitmap.height - rows) / 2;
-	
-			/* check border */
-			coco3_compute_color(coco3_gimevhreg[2] & 0x3f, &borderred, &bordergreen, &borderblue);
-			full_refresh += coco3_vh_setborder(borderred, bordergreen, borderblue);
-	
-			/* check palette recalc */
-			if (palette_recalc() || full_refresh) {
-				full_refresh = 1;
-				coco3_somethingdirty = 1;
-	
-	#if LOG_VIDEO
-				log_video();
-	#endif
+			hvars.mode.height = (rows + linesperrow - 1) / linesperrow;
+			hvars.mode.flags = (coco3_gimevhreg[0] & 0x80) ? RASTERBITS_FLAG_GRAPHICS : RASTERBITS_FLAG_TEXT;
+			if (coco3_gimevhreg[7]) {
+				hvars.mode.flags |= RASTERBITS_FLAG_WRAPINROW;
+				hvars.mode.offset = ((coco3_gimevhreg[7] & 0x7f) * 2);
+				hvars.mode.wrapbytesperrow = 256;
+			}
+			else {
+				hvars.mode.offset = 0;
 			}
 	
-			/* Draw border if appropriate */
-			if (full_refresh != 0)
-				coco3_vh_drawborder(bitmap, coco3_gimevhreg[1] & 0x04 ? 640 : 512, rows * linesperrow);
-	
-			use_mark_dirty = 1;
-	
-			switch(coco3_gimevhreg[0] & 0x80) {
-			case 0x00:	/* Text */
-				if (full_refresh != 0)
-					memset(dirtybuffer, 1, MAX_HIRES_VRAM);
-	
-				use_attr = coco3_gimevhreg[1] & 1;
-				if (use_attr != 0) {
-					/* Resolve blink */
-					blink_switch = coco3_blinkstatus == last_blink;
-					last_blink = coco3_blinkstatus;
-				}
-				else {
-					/* Set colortable to be default */
-					coco3font.colortable[0] = Machine.pens[0];
-					coco3font.colortable[1] = Machine.pens[1];
-					underlined = 0;
-				}
-	
-				if (coco3_somethingdirty != 0) {
-					rows /= 8;
-					switch(coco3_gimevhreg[1] & 0x14) {
-					case 0x14:
-						charsperrow = 80;
-						basex = (bitmap.width - 640) / 2;
-						wf = 1;
-						break;
-					case 0x10:
-						charsperrow = 64;
-						basex = (bitmap.width - 512) / 2;
-						wf = 1;
-						break;
-					case 0x04:
-						charsperrow = 40;
-						basex = (bitmap.width - 640) / 2;
-						wf = 2;
-						break;
-					case 0x00:
-						charsperrow = 32;
-						basex = (bitmap.width - 512) / 2;
-						wf = 2;
-						break;
-					}
-					if (!bytesperrow)
-						bytesperrow = charsperrow * (use_attr + 1);
-	
-					for (y = 0; y < rows; y++) {
-						i = y * bytesperrow;
-						vram = &RAM[(vidbase + i) & 0x7FFFF];
-						db = dirtybuffer + i;
-	
-						for (x = 0; x < charsperrow; x++) {
-							if (db[0] || (use_attr && (db[1] || (blink_switch && (vram[1] & 0x80))))) {
-								b = *vram & 0x7f;
-	
-								if (use_attr != 0) {
-									coco3font.colortable[0] = Machine.pens[vram[1] & 7];
-									coco3font.colortable[1] = Machine.pens[8 + ((vram[1] >> 3) & 7)];
-	
-									/* Are we blinking? */
-									if (coco3_blinkstatus && (vram[1] & 0x80)) {
-										b = 0x20;
-										underlined = 0;
-									}
-									else {
-										/* Are we underlined? */
-										underlined = vram[1] & 0x40;
-									}
-								}
-	
-								drawgfx_wf(bitmap, coco3font, b, x*8*wf+basex, y*8+basey, 0, TRANSPARENCY_NONE, 0, wf);
-								if (underlined != 0)
-									drawgfx_wf(bitmap, coco3font, 128, x*8*wf+basex, y*8+basey, 0, TRANSPARENCY_PEN, 0, wf);
-								if (use_mark_dirty != 0)
-									osd_mark_dirty(x*8*wf+basex, y*8+basey, (x+1)*8*wf-1+basex, y*8+7+basey, 0);
-	
-								db[0] = 0;
-								if (use_attr != 0)
-									db[1] = 0;
-							}
-							vram++;
-							db++;
-							vram += use_attr;
-							db += use_attr;
-	
-							if (vram > &RAM[0x80000])
-								vram -= 0x80000;
-						}
-					}
-					coco3_somethingdirty = 0;
-				}
-				break;
-	
-			case 0x80:	/* Graphics */
-				visualbytesperrow = 16 << ((coco3_gimevhreg[1] & 0x18) >> 3);
+			if (coco3_gimevhreg[0] & 0x80) {
+				/* Graphics */
 				switch(coco3_gimevhreg[1] & 3) {
 				case 0:
 					/* Two colors */
-					wf = 64 / visualbytesperrow;
+					hvars.mode.depth = 1;
 					break;
 				case 1:
 					/* Four colors */
-					wf = 128 / visualbytesperrow;
-					break;
-				case 2:
-				case 3:
-					/* Sixteen colors */
-					wf = 256 / visualbytesperrow;
-	
-					/* BUG - 'case 3' should actually show just a blank screen */
-					break;
-				}
-	
-				if (coco3_gimevhreg[1] & 0x04) {
-					visualbytesperrow |= (visualbytesperrow / 4);
-					basex = (bitmap.width - 640) / 2;
-				}
-				else {
-					basex = (bitmap.width - 512) / 2;
-				}
-	
-				if (!bytesperrow)
-					bytesperrow = visualbytesperrow;
-	
-				/*
-				 * TODO - We should support the case where there is a rounding
-				 * error when rows is divided by linesperrow
-				 */
-				switch(coco3_gimevhreg[1] & 3) {
-				case 0:
-					/* Two colors */
-					blitgraphics2(bitmap, RAM, vidbase, 0x80000,
-						full_refresh ? NULL : dirtybuffer, NULL,
-						visualbytesperrow, rows / linesperrow, basex, basey,
-						wf, linesperrow, bytesperrow - visualbytesperrow);
-					break;
-				case 1:
-					/* Four colors */
-					blitgraphics4(bitmap, RAM, vidbase, 0x80000,
-						full_refresh ? NULL : dirtybuffer, NULL,
-						visualbytesperrow, rows / linesperrow, basex, basey,
-						wf, linesperrow, bytesperrow - visualbytesperrow);
+					hvars.mode.depth = 2;
 					break;
 				case 2:
 					/* Sixteen colors */
-					blitgraphics16(bitmap, RAM, vidbase, 0x80000,
-						full_refresh ? NULL : dirtybuffer,
-						visualbytesperrow, rows / linesperrow, basex, basey, wf, linesperrow,
-						bytesperrow - visualbytesperrow);
+					hvars.mode.depth = 4;
 					break;
 				case 3:
 					/* Blank screen */
 					/* TODO - Draw a blank screen! */
+					hvars.mode.depth = 4;
 					break;
 				}
-	
-				if (full_refresh != 0)
-					memset(dirtybuffer, 0, ((rows + linesperrow - 1) / linesperrow) * bytesperrow);
-				break;
+				visualbytesperrow = 16 << ((coco3_gimevhreg[1] & 0x18) >> 3);
 			}
+			else {
+				/* Text */
+				visualbytesperrow = (coco3_gimevhreg[1] & 0x10) ? 64 : 32;
+	
+				if (coco3_gimevhreg[1] & 1) {
+					/* With attributes */
+					hvars.mode.depth = 16;
+					hvars.mode.u.text.mapper = coco3_textmapper_attr;
+					visualbytesperrow *= 2;
+	
+					if (coco3_blinkstatus != last_blink)
+						hvars.mode.flags |= RASTERBITS_FLAG_BLINKNOW;
+					if (coco3_blinkstatus != 0)
+						hvars.mode.flags |= RASTERBITS_FLAG_BLINKING;
+					last_blink = coco3_blinkstatus;
+				}
+				else {
+					/* Without attributes */
+					hvars.mode.depth = 8;
+					hvars.mode.u.text.mapper = coco3_textmapper_noattr;
+				}
+				temp = memory_region(REGION_CPU1);
+				hvars.mode.u.text.mapper_param = (int)temp;
+				hvars.mode.u.text.fontheight = 8;
+	
+				/* To quote SockMaster:
+				 *
+				 * The underline attribute will light up the bottom scan line of the character
+				 * if the lines are set to 8 or 9.  Not appear at all when less, or appear on
+				 * the 2nd to bottom scan line if set higher than 9.  Further exception being
+				 * the $x7 setting where the whole screen is filled with only one line of data
+				 * - but it's glitched - the line repeats over and over again every 16 scan
+				 * lines..  Nobody will use this mode, but that's what happens if you want to
+				 * make things really authentic :)
+				 *
+				 * NPW Note: The '$x7' mode is not yet implemented
+				 */
+				if (linesperrow < 8)
+					hvars.mode.u.text.underlinepos = -1;
+				else if (linesperrow < 10)
+					hvars.mode.u.text.underlinepos = linesperrow - 1;
+				else
+					hvars.mode.u.text.underlinepos = linesperrow - 2;
+			}
+	
+			if (coco3_gimevhreg[1] & 0x04)
+				visualbytesperrow |= (visualbytesperrow / 4);
+	
+			hvars.mode.width = visualbytesperrow * 8 / hvars.mode.depth;
+			hvars.mode.bytesperrow = (coco3_gimevhreg[7] & 0x80) ? 256 : visualbytesperrow;
+			hvars.border_pen = coco3_gimevhreg[2] & 0x3f;
+			hvars.frame_width = (coco3_gimevhreg[1] & 0x04) ? 640 : 512;
+			hvars.frame_height = rows;
 		}
 		else {
-			int borderred, bordergreen, borderblue;
+			int bordercolor = 0;
 	
-			m6847_get_bordercolor_rgb(&borderred, &bordergreen, &borderblue);
-			full_refresh += coco3_vh_setborder(borderred, bordergreen, borderblue);
-			if (palette_recalc())
-				full_refresh = 1;
-			if (full_refresh != 0)
-				coco3_vh_drawborder(bitmap, 512, 192);
+			switch(m6847_get_bordercolor()) {
+			case M6847_BORDERCOLOR_BLACK:
+				bordercolor = 0;
+				break;
 	
-			internal_m6847_vh_screenrefresh(bitmap, full_refresh, coco3_metapalette,
-				&RAM[coco3_lores_vidbase()], m6847_get_video_offset(), 0x10000,
-				TRUE, (bitmap.width - 512) / 2, (bitmap.height - 192) / 2, 2,
-				artifacts[readinputport(12) & 3]);
+			case M6847_BORDERCOLOR_GREEN:
+				bordercolor = 18;
+				break;
+	
+			case M6847_BORDERCOLOR_WHITE:
+				bordercolor = 63;
+				break;
+	
+			case M6847_BORDERCOLOR_ORANGE:
+				bordercolor = 38;
+				break;
+			}
+			internal_m6847_rastertrack_getvideomode(hvars, coco3_pens, 2, bordercolor, 2, readinputport(12) & 3, 64, coco3_getcolorrgb);
 		}
-	} };
+	
+		/* Now translate the pens */
+		for (i = 0; i < (sizeof(hvars.mode.pens) / sizeof(hvars.mode.pens[0])); i++)
+			hvars.mode.pens[i] = paletteram.read(hvars->mode.pens[i)];
+	}
+	
+	static void coco3_rastertrack_newscreen(struct rastertrack_vvars *vvars, struct rastertrack_hvars *hvars)
+	{
+		int rows, border_top;
+	
+	#if LOG_VIDEO
+		log_video();
+	#endif
+	
+		rows = coco3_calculate_rows(&border_top, NULL);
+		coco3_vidbase = (((coco3_gimevhreg[5] * 0x800) + (coco3_gimevhreg[6] * 8)));
+	
+		internal_m6847_rastertrack_newscreen(vvars, hvars, border_top, rows, coco3_vidbase, !coco3_hires, coco3_rastertrack_getvideomode);
+	}
 	
 	static void coco3_ram_w(int offset, int data, int block)
 	{
@@ -801,60 +730,56 @@ public class dragon
 	
 		if (RAM[offset] != data) {
 			if (coco3_hires != 0) {
-				vidbase = coco3_hires_vidbase();
+				vidbase = coco3_vidbase;
 				vidbasediff = (unsigned int) (offset - vidbase) & 0x7ffff;
 				if (vidbasediff < MAX_HIRES_VRAM) {
 					dirtybuffer[vidbasediff] = 1;
-					coco3_somethingdirty = 1;
 				}
 			}
 			else {
 				/* Apparently, lores video
 				 */
-	
-				vidbase = coco3_lores_vidbase();
-	
-				if (offset >= vidbase)
-					m6847_touch_vram(offset - vidbase);
+				if (offset >= coco3_vidbase)
+					m6847_touch_vram(offset - coco3_vidbase);
 			}
 	
 			RAM[offset] = data;
 		}
 	}
 	
-	WRITE_HANDLER(coco3_ram_b1_w)
+	void coco3_ram_b1_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 0);
 	}
-	WRITE_HANDLER(coco3_ram_b2_w)
+	void coco3_ram_b2_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 1);
 	}
-	WRITE_HANDLER(coco3_ram_b3_w)
+	void coco3_ram_b3_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 2);
 	}
-	WRITE_HANDLER(coco3_ram_b4_w)
+	void coco3_ram_b4_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 3);
 	}
-	WRITE_HANDLER(coco3_ram_b5_w)
+	void coco3_ram_b5_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 4);
 	}
-	WRITE_HANDLER(coco3_ram_b6_w)
+	void coco3_ram_b6_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 5);
 	}
-	WRITE_HANDLER(coco3_ram_b7_w)
+	void coco3_ram_b7_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 6);
 	}
-	WRITE_HANDLER(coco3_ram_b8_w)
+	void coco3_ram_b8_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 7);
 	}
-	WRITE_HANDLER(coco3_ram_b9_w)
+	void coco3_ram_b9_w (offs_t offset, data8_t data)
 	{
 		coco3_ram_w(offset, data, 8);
 	}
@@ -869,11 +794,23 @@ public class dragon
 		int xorval;
 	
 	#if LOG_GIME
-		logerror("CoCo3 GIME: $%04x <== $%02x pc=$%04x\n", offset + 0xff98, data, cpu_get_pc());
+		logerror("CoCo3 GIME: $%04x <== $%02x pc=$%04x scanline=%i\n", offset + 0xff98, data, cpu_get_pc(), rastertrack_scanline());
 	#endif
 		/* Features marked with '!' are not yet implemented */
 	
 		xorval = coco3_gimevhreg[offset] ^ data;
+		if (!xorval)
+			return;
+	
+		switch(offset) {
+		case 0:
+		case 1:
+		case 4:
+		case 7:
+			rastertrack_touchvideomode();
+			break;
+		};
+	
 		coco3_gimevhreg[offset] = data;
 	
 		switch(offset) {
@@ -887,14 +824,10 @@ public class dragon
 			 *		  Bits 0-2 LPR Lines per row
 			 */
 			if ((xorval & 0xB7) != 0) {
-				coco3_borderred = -1;	/* force border to redraw */
 				schedule_full_refresh();
 	#if LOG_GIME
 				logerror("CoCo3 GIME: $ff98 forcing refresh\n");
 	#endif
-			}
-			if ((xorval & 0x10) != 0) {
-				coco3_vh_palette_recompute();
 			}
 			break;
 	
@@ -905,10 +838,7 @@ public class dragon
 			 *		  Bits 2-4 HRES Horizontal Resolution
 			 *		  Bits 0-1 CRES Color Resolution
 			 */
-			if (xorval != 0) {
-				coco3_borderred = -1;	/* force border to redraw */
-				schedule_full_refresh();
-			}
+			rastertrack_touchvideomode();
 			break;
 	
 		case 2:
@@ -916,6 +846,9 @@ public class dragon
 			 *		  Bits 6,7 Unused
 			 *		  Bits 0-5 BRDR Border color
 			 */
+	#if LOG_BORDER
+			logerror("CoCo3 GIME: Writing $%02x into border; scanline=%i\n", data, rastertrack_scanline());
+	#endif
 			break;
 	
 		case 4:
@@ -923,13 +856,11 @@ public class dragon
 			 *		  Bits 4-7 Reserved
 			 *		! Bits 0-3 VSC Vertical Scroll bits
 			 */
-			if (xorval != 0)
-				schedule_full_refresh();
+			rastertrack_touchvideomode();
 			break;
 	
 		case 5:
 		case 6:
-		case 7:
 			/*	$FF9D,$FF9E Vertical Offset Registers
 			 *
 			 *	$FF9F Horizontal Offset Register
@@ -938,13 +869,22 @@ public class dragon
 			 *
 			 *	According to JK, if an odd value is placed in $FF9E on the 1986
 			 *	GIME, the GIME crashes
+			 *
+			 *  Also, $FF9D and $FF9E are latched at the top of each screen, so
+			 *  we schedule a refresh, not touch the video mode
 			 */
-			if (xorval != 0) {
-				schedule_full_refresh();
-	#if LOG_GIME
-				logerror("CoCo3 GIME: HiRes Video at $%05x\n", coco3_hires_vidbase());
-	#endif
-			}
+			schedule_full_refresh();
+			break;
+	
+		case 7:
+			/*
+			 *	$FF9F Horizontal Offset Register
+			 *		  Bit 7 HVEN Horizontal Virtual Enable
+			 *		  Bits 0-6 X0-X6 Horizontal Offset Address
+			 *
+			 *  Unline $FF9D-E, this value can be modified mid frame
+			 */
+			rastertrack_touchvideomode();
 			break;
 		}
 	}
@@ -956,7 +896,7 @@ public class dragon
 	#if LOG_GIME
 			logerror("CoCo3 GIME: %s hires graphics/text\n", hires ? "Enabling" : "Disabling");
 	#endif
-			schedule_full_refresh();
+			rastertrack_touchvideomode();
 		}
 	}
 	

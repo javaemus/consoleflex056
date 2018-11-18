@@ -35,7 +35,7 @@ public class vc20tape
 	
 		int data;
 		int motor;
-		void (*read_callback) (UINT32, UINT32);
+		void (*read_callback) (UINT32, UINT8);
 	
 	#define TAPE_WAV 1
 	#define TAPE_PRG 2
@@ -208,7 +208,7 @@ public class vc20tape
 	
 			/* convert 8-bit data to signed samples */
 			for (temp32 = 0; temp32 < length; temp32++)
-				result.data[temp32] ^= 0x80;
+				result.data[temp32] -= 0x80;
 		}
 		else
 		{
@@ -296,7 +296,7 @@ public class vc20tape
 	{
 		FILE *fp;
 	
-		fp = (FILE*)osd_fopen (Machine.gamedrv.name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine.gamedrv.name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE, 0);
 		if (!fp)
 		{
 			logerror("tape %s file not found\n", device_filename(image_type,image_id));
@@ -433,7 +433,7 @@ public class vc20tape
 	    FILE *fp;
 		int i;
 	
-		fp = (FILE*)osd_fopen (Machine.gamedrv.name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine.gamedrv.name, device_filename(image_type,image_id), OSD_FILETYPE_IMAGE, 0);
 		if (!fp)
 		{
 			logerror("tape %s file not found\n", device_filename(image_type,image_id));
@@ -1100,7 +1100,7 @@ public class vc20tape
 		vc20_prg_state ();
 	}
 	
-	void vc20_tape_open (void (*read_callback) (UINT32, UINT32))
+	void vc20_tape_open (void (*read_callback) (UINT32, UINT8))
 	{
 		tape.read_callback = read_callback;
 	#ifndef NEW_GAMEDRIVER
@@ -1134,10 +1134,10 @@ public class vc20tape
 		tape.data = 0;
 	
 		if (device_filename(IO_CASSETTE,id) == NULL)
-			return INIT_OK;
+			return INIT_PASS;
 	
 		if ((cp = strrchr (device_filename(IO_CASSETTE,id), '.')) == NULL)
-			return INIT_FAILED;
+			return INIT_FAIL;
 		if (stricmp (cp, ".wav") == 0)
 		{
 			vc20_wav_open (IO_CASSETTE,id);
@@ -1151,8 +1151,8 @@ public class vc20tape
 			vc20_zip_open (IO_CASSETTE,id);
 		}
 		else
-			return INIT_FAILED;
-		return INIT_OK;
+			return INIT_FAIL;
+		return INIT_PASS;
 	}
 	
 	void vc20_tape_detach_image (int id)
@@ -1223,7 +1223,7 @@ public class vc20tape
 				return tape.data;
 			break;
 		case TAPE_PRG:
-			if (zip.state == 3)
+			if (prg.state == 3)
 				return tape.data;
 			break;
 		case TAPE_ZIP:

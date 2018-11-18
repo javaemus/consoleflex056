@@ -18,7 +18,7 @@ public class uart8250
 	if (M != 0)logerror("%11.6f: %-24s",timer_get_time(),(char*)M ); logerror A;
 	
 	
-	#define VERBOSE_COM
+	//#define VERBOSE_COM 0
 	#ifdef VERBOSE_COM
 	#define COM_LOG(n,m,a) LOG(VERBOSE_COM,n,m,a)
 	#else
@@ -268,6 +268,8 @@ public class uart8250
 	{
 		int data = 0x0ff;
 	
+	        COM_LOG(1,"COM_r",("COM%d $%02x:\n",
+	                                        n+1));
 	
 		switch (idx)
 		{

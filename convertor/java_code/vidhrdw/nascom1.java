@@ -28,12 +28,12 @@ public class nascom1
 		generic_vh_stop();
 	} };
 	
-	public static VhUpdatePtr nascom1_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void nascom1_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	int	sy, sx;
 	
-	if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size[0]);
+	if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size);
 	
 	for (sx = 0; sx < 48; sx++) {
 	  if (dirtybuffer[sx + 0x03ca]) {
@@ -56,14 +56,14 @@ public class nascom1
 	}
 	
 	
-	} };
+	}
 	
-	public static VhUpdatePtr nascom2_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void nascom2_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	int	sy, sx;
 	
-	if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size[0]);
+	if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size);
 	
 	for (sx = 0; sx < 48; sx++) {
 	  if (dirtybuffer[sx + 0x03ca]) {
@@ -86,6 +86,6 @@ public class nascom1
 	}
 	
 	
-	} };
+	}
 	
 }

@@ -156,7 +156,8 @@ extern UINT8 *apple2_hires1_ram;
 extern UINT8 *apple2_hires2_ram;
 
 
-extern extern extern 
+extern extern extern void apple2_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+
 
 extern void apple2_lores_text1_w(int offset, int data);
 extern void apple2_lores_text2_w(int offset, int data);

@@ -130,8 +130,8 @@ public class newgenes
 	unsigned short *Pen;
 	UBytePtr scroll_a;
 	UBytePtr scroll_b;
-	//struct osd_bitmap *bitmap_vram;
-	//struct osd_bitmap *bitmap_sprite;
+	//struct mame_bitmap *bitmap_vram;
+	//struct mame_bitmap *bitmap_sprite;
 	
 	
 	UBytePtr spritelayer;
@@ -152,7 +152,7 @@ public class newgenes
 	
 	typedef struct
 	{
-		struct osd_bitmap *bitmap;
+		struct mame_bitmap *bitmap;
 		int x;
 		int y;
 		int attribute;
@@ -272,8 +272,8 @@ public class newgenes
 	   	if ((spritelayer = malloc(512*512)) == 0)
 		{
 			generic_vh_stop();
-	   //		osd_free_bitmap(scroll_a);
-	   //		osd_free_bitmap(scroll_b);
+	   //		bitmap_free(scroll_a);
+	   //		bitmap_free(scroll_b);
 			return 1;
 		}
 	
@@ -282,9 +282,9 @@ public class newgenes
 	   /*	if ((bitmap_vram = osd_create_bitmap(8,18000)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-	    	osd_free_bitmap(spritelayer);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+	    	bitmap_free(spritelayer);
 	
 	
 		   	return 1;
@@ -293,10 +293,10 @@ public class newgenes
 	   /*	if ((bitmap_sprite = osd_create_bitmap(64,64)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//   	osd_free_bitmap(bitmap_vram);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//   	bitmap_free(bitmap_vram);
 			return 1;
 		}*/
 	
@@ -304,22 +304,22 @@ public class newgenes
 		if ((tile_changed_1 = malloc(0x800)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
 			free(spritelayer);
-		//	osd_free_bitmap(bitmap_vram);
-		//	osd_free_bitmap(bitmap_sprite);
+		//	bitmap_free(bitmap_vram);
+		//	bitmap_free(bitmap_sprite);
 			return 1;
 		}
 	
 		if ((tile_changed_2 = malloc(0x800)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
 			free(spritelayer);
-		//	osd_free_bitmap(bitmap_vram);
-		//	osd_free_bitmap(bitmap_sprite);
+		//	bitmap_free(bitmap_vram);
+		//	bitmap_free(bitmap_sprite);
 			free(tile_changed_1);
 			return 1;
 		}
@@ -393,11 +393,11 @@ public class newgenes
 	public static VhStopPtr genesis_vh_stop = new VhStopPtr() { public void handler() 
 	{
 		/* Free everything */
-	 //	osd_free_bitmap(scroll_a);
-	 //	osd_free_bitmap(scroll_b);
+	 //	bitmap_free(scroll_a);
+	 //	bitmap_free(scroll_b);
 		free(spritelayer);
-	 //	osd_free_bitmap(bitmap_vram);
-	 //	osd_free_bitmap(bitmap_sprite);
+	 //	bitmap_free(bitmap_vram);
+	 //	bitmap_free(bitmap_sprite);
 		free(tile_changed_1);
 		free(tile_changed_2);
 	
@@ -1102,7 +1102,7 @@ public class newgenes
 	
 	
 	/* Oh lordy, another combinelayers */
-	void combinelayers3(struct osd_bitmap *dest, int startline, int endline)
+	void combinelayers3(struct mame_bitmap *dest, int startline, int endline)
 	{
 		int x;
 		unsigned char y;
@@ -1605,20 +1605,20 @@ public class newgenes
 	 void genesis_modify_display(int);
 	/***************************************************************************
 	
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function, it will be called by
 	  the main emulation engine.
 	
 	***************************************************************************/
-	//public static VhUpdatePtr genesis_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	//void genesis_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	//{
 	//
 	//genesis_modify_display(0);
 	////copybitmap(bitmap, bitmap2, 0, 0, 0, 0, 0, 0, 0);
 	//copybitmap(bitmap, bitmap2, 0, 0, 0, 0, 0, 0, 0);
 	//
-	//} };
-	public static VhUpdatePtr genesis_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	//}
+	void genesis_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	//void genesis_modify_display(int inter)
 	{
 	
@@ -1722,6 +1722,6 @@ public class newgenes
 		combinelayers3(bitmap,0,vdp_display_height);
 	
 	
-	} };
+	}
 	
 }

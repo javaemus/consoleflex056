@@ -82,31 +82,27 @@ public class kim1
 	#define LOG(x)	/* x */
 	#endif
 	
-	static MemoryReadAddress readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x03ff, MRA_RAM ),
-		new MemoryReadAddress( 0x1700, 0x173f, m6530_003_r ),
-		new MemoryReadAddress( 0x1740, 0x177f, m6530_002_r ),
-		new MemoryReadAddress( 0x1780, 0x17bf, MRA_RAM ),
-		new MemoryReadAddress( 0x17c0, 0x17ff, MRA_RAM ),
-		new MemoryReadAddress( 0x1800, 0x1bff, MRA_ROM ),
-		new MemoryReadAddress( 0x1c00, 0x1fff, MRA_ROM ),
-		new MemoryReadAddress( 0x2000, 0xffff, kim1_mirror_r ),
-	    new MemoryReadAddress(-1)
-	};
+	static MEMORY_READ_START ( readmem )
+		{ 0x0000, 0x03ff, MRA_RAM },
+		{ 0x1700, 0x173f, m6530_003_r },
+		{ 0x1740, 0x177f, m6530_002_r },
+		{ 0x1780, 0x17bf, MRA_RAM },
+		{ 0x17c0, 0x17ff, MRA_RAM },
+		{ 0x1800, 0x1bff, MRA_ROM },
+		{ 0x1c00, 0x1fff, MRA_ROM },
+		{ 0x2000, 0xffff, kim1_mirror_r },
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x03ff, MWA_RAM ),
-		new MemoryWriteAddress( 0x1700, 0x173f, m6530_003_w ),
-		new MemoryWriteAddress( 0x1740, 0x177f, m6530_002_w ),
-		new MemoryWriteAddress( 0x1780, 0x17bf, MWA_RAM ),
-		new MemoryWriteAddress( 0x17c0, 0x17ff, MWA_RAM ),
-		new MemoryWriteAddress( 0x1800, 0x1bff, MWA_ROM ),
-		new MemoryWriteAddress( 0x1c00, 0x1fff, MWA_ROM ),
-		new MemoryWriteAddress( 0x2000, 0xffff, kim1_mirror_w ),
-	    new MemoryWriteAddress(-1)
-	};
+	static MEMORY_WRITE_START( writemem )
+		{ 0x0000, 0x03ff, MWA_RAM },
+		{ 0x1700, 0x173f, m6530_003_w },
+		{ 0x1740, 0x177f, m6530_002_w },
+		{ 0x1780, 0x17bf, MWA_RAM },
+		{ 0x17c0, 0x17ff, MWA_RAM },
+		{ 0x1800, 0x1bff, MWA_ROM },
+		{ 0x1c00, 0x1fff, MWA_ROM },
+		{ 0x2000, 0xffff, kim1_mirror_w },
+	MEMORY_END
 	
 	static InputPortPtr input_ports_kim1 = new InputPortPtr(){ public void handler() { 
 		PORT_START(); 			/* IN0 keys row 0 */
@@ -188,8 +184,7 @@ public class kim1
 	{
 		new GfxDecodeInfo( 1, 0, led_layout, 0, 16 ),
 		new GfxDecodeInfo( 2, 0, key_layout, 16*2, 2 ),
-		new GfxDecodeInfo( -1 ) /* end of array */
-	};
+	MEMORY_END	 /* end of array */
 	
 	static DACinterface dac_interface = new DACinterface
 	(
@@ -217,7 +212,7 @@ public class kim1
 		/* video hardware (well, actually there was no video ;) */
 		600, 768, { 0, 600 - 1, 0, 768 - 1},
 		gfxdecodeinfo,
-		256*3,
+		32768+21,				/* leave extra colors for the overlay */
 		256,
 		kim1_init_colors,		/* convert color prom */
 	
@@ -238,12 +233,12 @@ public class kim1
 	);
 	
 	static RomLoadPtr rom_kim1 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000,REGION_CPU1);
+		ROM_REGION(0x10000,REGION_CPU1,0);
 			ROM_LOAD("6530-003.bin",    0x1800, 0x0400, 0xa2a56502);
 			ROM_LOAD("6530-002.bin",    0x1c00, 0x0400, 0x2b08e923);
-		ROM_REGION(128 * 24 * 3,REGION_GFX1);
+		ROM_REGION(128 * 24 * 3,REGION_GFX1,0);
 			/* space filled with 7segement graphics by kim1_init_driver */
-		ROM_REGION( 24 * 18 * 3 * 2,REGION_GFX2);
+		ROM_REGION( 24 * 18 * 3 * 2,REGION_GFX2,0);
 			/* space filled with key icons by kim1_init_driver */
 	ROM_END(); }}; 
 	
@@ -255,7 +250,7 @@ public class kim1
 	        1,                  /* count */
 			"kim\0",            /* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-	        kim1_cassette_id,   /* id */
+	        0,
 			kim1_cassette_init, /* init */
 			kim1_cassette_exit, /* exit */
 	        NULL,               /* info */
@@ -273,6 +268,6 @@ public class kim1
 	};
 	
 	/*    YEAR  NAME      PARENT    MACHINE   INPUT     INIT      COMPANY   FULLNAME */
-	COMP( 1975, kim1,	  0, 		kim1,	  kim1, 	kim1,	  "Commodore Business Machines Co.",  "KIM-1" )
+	COMP( 1975, kim1,	  0, 		kim1,	  kim1, 	kim1,	  "MOS Technologies",  "KIM-1" )
 	
 }

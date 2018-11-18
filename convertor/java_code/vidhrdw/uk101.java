@@ -33,12 +33,12 @@ public class uk101
 	
 	/* || */
 	
-	public static VhUpdatePtr uk101_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void	uk101_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int sx, sy;
 	
 		if (full_refresh != 0)
-			memset (dirtybuffer, 1, videoram_size[0]);
+			memset (dirtybuffer, 1, videoram_size);
 	
 		for (sy = 0; sy < 25; sy++) {
 			for (sx = 0; sx < 32; sx++) {
@@ -50,14 +50,14 @@ public class uk101
 				}
 			}
 		}
-	} };
+	}
 	
-	public static VhUpdatePtr superbrd_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void	superbrd_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int sx, sy;
 	
 		if (full_refresh != 0)
-			memset (dirtybuffer, 1, videoram_size[0]);
+			memset (dirtybuffer, 1, videoram_size);
 	
 		for (sy = 0; sy < 16; sy++) {
 			for (sx = 0; sx < 64; sx++) {
@@ -69,5 +69,5 @@ public class uk101
 				}
 			}
 		}
-	} };
+	}
 }

@@ -1,7 +1,8 @@
 /***************************************************************************
 	commodore c64 home computer
 
-    peter.trauner@jk.uni-linz.ac.at
+	PeT mess@utanet.at
+
     documentation
      www.funet.fi
 ***************************************************************************/
@@ -199,87 +200,70 @@ public class c64
 	#define VERBOSE_DBG 0
 	
 	
-	static MemoryReadAddress ultimax_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x0001, c64_m6510_port_r),
-		new MemoryReadAddress(0x0002, 0x0fff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0x9fff, MRA_ROM),
-		new MemoryReadAddress(0xd000, 0xd3ff, vic2_port_r),
-		new MemoryReadAddress(0xd400, 0xd7ff, sid6581_0_port_r),
-		new MemoryReadAddress(0xd800, 0xdbff, MRA_RAM),		   /* colorram  */
-		new MemoryReadAddress(0xdc00, 0xdcff, cia6526_0_port_r),
-		new MemoryReadAddress(0xe000, 0xffff, MRA_ROM),		   /* ram or kernel rom */
-		MEMORY_TABLE_END
-	};
+	static MEMORY_READ_START( ultimax_readmem )
+		{0x0000, 0x0001, c64_m6510_port_r},
+		{0x0002, 0x0fff, MRA_RAM},
+		{0x8000, 0x9fff, MRA_ROM},
+		{0xd000, 0xd3ff, vic2_port_r},
+		{0xd400, 0xd7ff, sid6581_0_port_r},
+		{0xd800, 0xdbff, MRA_RAM},		   /* colorram  */
+		{0xdc00, 0xdcff, cia6526_0_port_r},
+		{0xe000, 0xffff, MRA_ROM},		   /* ram or kernel rom */
+	MEMORY_END
 	
-	static MemoryWriteAddress ultimax_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x0001, c64_m6510_port_w, c64_memory),
-		new MemoryWriteAddress(0x0002, 0x0fff, MWA_RAM),
-		new MemoryWriteAddress(0x8000, 0x9fff, MWA_ROM, c64_roml),
-		new MemoryWriteAddress(0xd000, 0xd3ff, vic2_port_w),
-		new MemoryWriteAddress(0xd400, 0xd7ff, sid6581_0_port_w),
-		new MemoryWriteAddress(0xd800, 0xdbff, c64_colorram_write, c64_colorram),
-		new MemoryWriteAddress(0xdc00, 0xdcff, cia6526_0_port_w),
-		new MemoryWriteAddress(0xe000, 0xffff, MWA_ROM, c64_romh),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( ultimax_writemem )
+		{0x0000, 0x0001, c64_m6510_port_w, &c64_memory},
+		{0x0002, 0x0fff, MWA_RAM},
+		{0x8000, 0x9fff, MWA_ROM, &c64_roml},
+		{0xd000, 0xd3ff, vic2_port_w},
+		{0xd400, 0xd7ff, sid6581_0_port_w},
+		{0xd800, 0xdbff, c64_colorram_write, &c64_colorram},
+		{0xdc00, 0xdcff, cia6526_0_port_w},
+		{0xe000, 0xffff, MWA_ROM, &c64_romh},
+	MEMORY_END
 	
-	static MemoryReadAddress c64_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x0001, c64_m6510_port_r),
-		new MemoryReadAddress(0x0002, 0x7fff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0x9fff, MRA_BANK1),	   /* ram or external roml */
-		new MemoryReadAddress(0xa000, 0xbfff, MRA_BANK3),	   /* ram or basic rom or external romh */
-		new MemoryReadAddress(0xc000, 0xcfff, MRA_RAM),
+	static MEMORY_READ_START( c64_readmem )
+		{0x0000, 0x0001, c64_m6510_port_r},
+		{0x0002, 0x7fff, MRA_RAM},
+		{0x8000, 0x9fff, MRA_BANK1},	   /* ram or external roml */
+		{0xa000, 0xbfff, MRA_BANK3},	   /* ram or basic rom or external romh */
+		{0xc000, 0xcfff, MRA_RAM},
 	#if 1
-		new MemoryReadAddress(0xd000, 0xdfff, MRA_BANK5),
+		{0xd000, 0xdfff, MRA_BANK5},
 	#else
 	/* dram */
 	/* or character rom */
-		new MemoryReadAddress(0xd000, 0xd3ff, MRA_BANK9),
-		new MemoryReadAddress(0xd400, 0xd7ff, MRA_BANK10),
-		new MemoryReadAddress(0xd800, 0xdbff, MRA_BANK11),		   /* colorram  */
-		new MemoryReadAddress(0xdc00, 0xdcff, MRA_BANK12),
-		new MemoryReadAddress(0xdd00, 0xddff, MRA_BANK13),
-		new MemoryReadAddress(0xde00, 0xdeff, MRA_BANK14),		   /* csline expansion port */
-		new MemoryReadAddress(0xdf00, 0xdfff, MRA_BANK15),		   /* csline expansion port */
+		{0xd000, 0xd3ff, MRA_BANK9},
+		{0xd400, 0xd7ff, MRA_BANK10},
+		{0xd800, 0xdbff, MRA_BANK11},		   /* colorram  */
+		{0xdc00, 0xdcff, MRA_BANK12},
+		{0xdd00, 0xddff, MRA_BANK13},
+		{0xde00, 0xdeff, MRA_BANK14},		   /* csline expansion port */
+		{0xdf00, 0xdfff, MRA_BANK15},		   /* csline expansion port */
 	#endif
-		new MemoryReadAddress(0xe000, 0xffff, MRA_BANK7),	   /* ram or kernel rom or external romh */
-		new MemoryReadAddress(0x10000, 0x11fff, MRA_ROM),	   /* basic at 0xa000 */
-		new MemoryReadAddress(0x12000, 0x13fff, MRA_ROM),	   /* kernal at 0xe000 */
-		new MemoryReadAddress(0x14000, 0x14fff, MRA_ROM),	   /* charrom at 0xd000 */
-		new MemoryReadAddress(0x15000, 0x153ff, MRA_RAM),	   /* colorram at 0xd800 */
-		MEMORY_TABLE_END
-	};
+		{0xe000, 0xffff, MRA_BANK7},	   /* ram or kernel rom or external romh */
+	MEMORY_END
 	
-	static MemoryWriteAddress c64_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x0001, c64_m6510_port_w, c64_memory),
-		new MemoryWriteAddress(0x0002, 0x7fff, MWA_RAM),
-		new MemoryWriteAddress(0x8000, 0x9fff, MWA_BANK2),
-		new MemoryWriteAddress(0xa000, 0xcfff, MWA_RAM),
+	static MEMORY_WRITE_START( c64_writemem )
+		{0x0000, 0x0001, c64_m6510_port_w, &c64_memory},
+		{0x0002, 0x7fff, MWA_RAM},
+		{0x8000, 0x9fff, MWA_BANK2},
+		{0xa000, 0xcfff, MWA_RAM},
+	//	{0xa000, 0xcfff, MWA_BANK16},
 	#if 1
-		new MemoryWriteAddress(0xd000, 0xdfff, MWA_BANK6),
+		{0xd000, 0xdfff, MWA_BANK6},
 	#else
 		/* or dram memory */
-		new MemoryWriteAddress(0xd000, 0xd3ff, vic2_port_w),
-		new MemoryWriteAddress(0xd400, 0xd7ff, sid6581_0_port_w),
-		new MemoryWriteAddress(0xd800, 0xdbff, c64_colorram_write),
-		new MemoryWriteAddress(0xdc00, 0xdcff, cia6526_0_port_w),
-		new MemoryWriteAddress(0xdd00, 0xddff, cia6526_1_port_w),
-		new MemoryWriteAddress(0xde00, 0xdeff, MWA_NOP),		   /* csline expansion port */
-		new MemoryWriteAddress(0xdf00, 0xdfff, MWA_NOP),		   /* csline expansion port */
+		{0xd000, 0xd3ff, vic2_port_w},
+		{0xd400, 0xd7ff, sid6581_0_port_w},
+		{0xd800, 0xdbff, c64_colorram_write},
+		{0xdc00, 0xdcff, cia6526_0_port_w},
+		{0xdd00, 0xddff, cia6526_1_port_w},
+		{0xde00, 0xdeff, MWA_NOP},		   /* csline expansion port */
+		{0xdf00, 0xdfff, MWA_NOP},		   /* csline expansion port */
 	#endif
-		new MemoryWriteAddress(0xe000, 0xffff, MWA_BANK8),
-		new MemoryWriteAddress(0x10000, 0x11fff, MWA_ROM, c64_basic),	/* basic at 0xa000 */
-		new MemoryWriteAddress(0x12000, 0x13fff, MWA_ROM, c64_kernal),	/* kernal at 0xe000 */
-		new MemoryWriteAddress(0x14000, 0x14fff, MWA_ROM, c64_chargen),	/* charrom at 0xd000 */
-		new MemoryWriteAddress(0x15000, 0x153ff, MWA_RAM, c64_colorram),		/* colorram at 0xd800 */
-		new MemoryWriteAddress(0x15400, 0x173ff, MWA_ROM, c64_roml),	/* basic at 0xa000 */
-		new MemoryWriteAddress(0x17400, 0x193ff, MWA_ROM, c64_romh),	/* kernal at 0xe000 */
-		MEMORY_TABLE_END
-	};
+		{0xe000, 0xffff, MWA_BANK8},
+	MEMORY_END
 	
 	#define DIPS_HELPER(bit, name, keycode) \
 	   PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, IP_JOY_NONE);
@@ -627,59 +611,83 @@ public class c64
 	}
 	
 	ROM_START (ultimax)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c64gs)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		/* standard basic, modified kernel */
 		ROM_LOAD ("390852.01", 0x10000, 0x4000, 0xb0a9c2da);
 		ROM_LOAD ("901225.01", 0x14000, 0x1000, 0xec4272ee);
 	ROM_END(); }}; 
 	
 	ROM_START (c64)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
 		ROM_LOAD( "901227.03",   0x12000, 0x2000, 0xdbe3e7c7 );
 		ROM_LOAD ("901225.01", 0x14000, 0x1000, 0xec4272ee);
 	ROM_END(); }}; 
 	
 	ROM_START (c64pal)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
 		ROM_LOAD( "901227.03",   0x12000, 0x2000, 0xdbe3e7c7 );
 		ROM_LOAD ("901225.01", 0x14000, 0x1000, 0xec4272ee);
 	ROM_END(); }}; 
 	
 	ROM_START (vic64s)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
 		ROM_LOAD( "kernel.swe",   0x12000, 0x2000, 0xf10c2c25 );
 		ROM_LOAD ("charswe.bin", 0x14000, 0x1000, 0xbee9b3fd);
 	ROM_END(); }}; 
 	
 	ROM_START (sx64)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
 		ROM_LOAD( "251104.04",     0x12000, 0x2000, 0x2c5965d4 );
 		ROM_LOAD ("901225.01", 0x14000, 0x1000, 0xec4272ee);
 		VC1541_ROM (REGION_CPU2)
 	ROM_END(); }}; 
 	
+	ROM_START (dx64)
+		ROM_REGION (0x19400, REGION_CPU1, 0);
+	    ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
+	    ROM_LOAD( "dx64kern.bin",     0x12000, 0x2000, 0x58065128 );
+	    // vc1541 roms were not included in submission
+	    VC1541_ROM (REGION_CPU2)
+	//    VC1541_ROM (REGION_CPU3)
+	ROM_END(); }}; 
+	
 	ROM_START (vip64)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
-		ROM_LOAD( "kernel.swe",   0x12000, 0x2000, 0x7858d3d7 );
+		ROM_LOAD( "kernelsx.swe",   0x12000, 0x2000, 0x7858d3d7 );
 		ROM_LOAD ("charswe.bin", 0x14000, 0x1000, 0xbee9b3fd);
 		VC1541_ROM (REGION_CPU2)
 	ROM_END(); }}; 
 	
 	ROM_START (pet64)
-		ROM_REGION (0x19400, REGION_CPU1);
+		ROM_REGION (0x19400, REGION_CPU1, 0);
 		ROM_LOAD ("901226.01", 0x10000, 0x2000, 0xf833d117);
 		ROM_LOAD( "901246.01", 0x12000, 0x2000, 0x789c8cc5);
 		ROM_LOAD ("901225.01", 0x14000, 0x1000, 0xec4272ee);
 	ROM_END(); }}; 
+	
+	#if 0
+	ROM_START (flash8)
+		ROM_REGION (0x1009400, REGION_CPU1, 0);
+	#if 1
+	    ROM_LOAD ("flash8", 0x010000, 0x002000, 0x3c4fb703);// basic
+	    ROM_CONTINUE( 0x014000, 0x001000);// empty
+	    ROM_CONTINUE( 0x014000, 0x001000);// characterset
+	    ROM_CONTINUE( 0x012000, 0x002000);// c64 mode kernel
+	    ROM_CONTINUE( 0x015000, 0x002000);// kernel
+	#else
+		ROM_LOAD ("flash8", 0x012000-0x6000, 0x008000, 0x3c4fb703);
+	#endif
+	ROM_END(); }}; 
+	#endif
 	
 	#if 0
 	     /* character rom */
@@ -756,6 +764,102 @@ public class c64
 		 ROM_LOAD( "rom80.e0",    0x12000, 0x2000, 0xe801dadc );
 	#endif
 	
+	static SID6581_interface ultimax_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		1,
+		{
+			{
+				MIXER(50, MIXER_PAN_CENTER),
+				MOS6581,
+				1000000,
+				c64_paddle_read
+			}
+		}
+	};
+	
+	static SID6581_interface pal_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		1,
+		{
+			{
+				MIXER(50, MIXER_PAN_CENTER),
+				MOS6581,
+				VIC6569_CLOCK,
+				c64_paddle_read
+			}
+		}
+	};
+	
+	static SID6581_interface ntsc_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		1,
+		{
+			{
+				MIXER(50, MIXER_PAN_CENTER),
+				MOS6581,
+				VIC6567_CLOCK,
+				c64_paddle_read
+			}
+		}
+	};
+	
+	
+	static MachineDriver machine_driver_ultimax = new MachineDriver
+	(
+	  /* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M6510,
+				1000000, /*! */
+				ultimax_readmem, ultimax_writemem,
+				null, null,
+				c64_frame_interrupt, 1,
+				vic2_raster_irq, VIC2_HRETRACERATE,
+			)
+		},
+		VIC6567_VRETRACERATE, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
+		null,
+		c64_init_machine,
+		c64_shutdown_machine,
+	
+	  /* video hardware */
+		336,							   /* screen width */
+		216,							   /* screen height */
+		new rectangle(0, 336 - 1, 0, 216 - 1),		   /* visible_area */
+		null,								   /* graphics decode info */
+		sizeof (vic2_palette) / sizeof (vic2_palette[null]) / 3,
+		null,
+		c64_init_palette,				   /* convert color prom */
+		VIDEO_TYPE_RASTER,
+		null,
+		vic2_vh_start,
+		vic2_vh_stop,
+		vic2_vh_screenrefresh,
+	
+	  /* sound hardware */
+		0, 0, 0, 0,
+		new MachineSound[] {
+			new MachineSound( SOUND_CUSTOM, ultimax_sound_interface ),
+			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
+		}
+	);
+	
+	
 	static MachineDriver machine_driver_c64 = new MachineDriver
 	(
 	  /* basic machine hardware */
@@ -791,7 +895,7 @@ public class c64
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, ntsc_sound_interface ),
 			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
@@ -831,7 +935,7 @@ public class c64
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, ntsc_sound_interface ),
 			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
@@ -872,7 +976,7 @@ public class c64
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, pal_sound_interface ),
 			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
@@ -912,7 +1016,7 @@ public class c64
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, pal_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -958,58 +1062,16 @@ public class c64
 	  /* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, pal_sound_interface ),
 			new MachineSound( 0 )
-		}
-	);
-	
-	static MachineDriver machine_driver_ultimax = new MachineDriver
-	(
-	  /* basic machine hardware */
-		new MachineCPU[] {
-			new MachineCPU(
-				CPU_M6510,
-				1000000, /*! */
-				ultimax_readmem, ultimax_writemem,
-				null, null,
-				c64_frame_interrupt, 1,
-				vic2_raster_irq, VIC2_HRETRACERATE,
-			)
-		},
-		VIC6567_VRETRACERATE, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
-		null,
-		c64_init_machine,
-		c64_shutdown_machine,
-	
-	  /* video hardware */
-		336,							   /* screen width */
-		216,							   /* screen height */
-		new rectangle(0, 336 - 1, 0, 216 - 1),		   /* visible_area */
-		null,								   /* graphics decode info */
-		sizeof (vic2_palette) / sizeof (vic2_palette[null]) / 3,
-		null,
-		c64_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER,
-		null,
-		vic2_vh_start,
-		vic2_vh_stop,
-		vic2_vh_screenrefresh,
-	
-	  /* sound hardware */
-		0, 0, 0, 0,
-		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
-			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
 	
 	static const struct IODevice io_c64[] =
 	{
 		IODEVICE_CBM_QUICK,
-		IODEVICE_CBM_ROM("crt\080\0", c64_rom_id),
-	#ifdef PET_TEST_CODE
+		IODEVICE_CBM_ROM("crt\080\0"),
 		IODEVICE_VC20TAPE,
-	#endif
 		IODEVICE_CBM_DRIVE,
 		{IO_END}
 	};
@@ -1017,7 +1079,7 @@ public class c64
 	static const struct IODevice io_sx64[] =
 	{
 		IODEVICE_CBM_QUICK,
-		IODEVICE_CBM_ROM("crt\080\0", c64_rom_id),
+		IODEVICE_CBM_ROM("crt\080\0"),
 		IODEVICE_VC1541,
 		{IO_END}
 	};
@@ -1025,16 +1087,14 @@ public class c64
 	static const struct IODevice io_ultimax[] =
 	{
 		IODEVICE_CBM_QUICK,
-		IODEVICE_CBM_ROM("crt\0e0\0f0\0", c64_rom_id),
-	#ifdef PET_TEST_CODE
+		IODEVICE_CBM_ROM("crt\0e0\0f0\0"),
 		IODEVICE_VC20TAPE,
-	#endif
 		{IO_END}
 	};
 	
 	static const struct IODevice io_c64gs[] =
 	{
-		IODEVICE_CBM_ROM("crt\080\0", c64_rom_id),
+		IODEVICE_CBM_ROM("crt\080\0"),
 		{IO_END}
 	};
 	
@@ -1049,23 +1109,44 @@ public class c64
 	#define io_max io_ultimax
 	#define io_cbm4064 io_c64
 	#define io_vip64 io_sx64
+	#define io_dx64 io_sx64
 	
 	#define rom_max rom_ultimax
 	#define rom_cbm4064 rom_pet64
 	
 	/*	  YEAR	NAME		PARENT	MACHINE 		INPUT	INIT	COMPANY 						   FULLNAME */
-	COMPX(1982, max,		0,		ultimax,		ultimax,ultimax,"Commodore Business Machines Co.", "Commodore Max (Ultimax/VC10)",      GAME_IMPERFECT_SOUND)
-	COMPX(1982, c64,		0,		c64,			c64,	c64,	"Commodore Business Machines Co.", "Commodore 64 (NTSC)",                      GAME_IMPERFECT_SOUND)
-	COMPX(1982, cbm4064,	c64,	pet64,			c64,	c64,	"Commodore Business Machines Co.", "CBM4064/PET64/Educator64 (NTSC)", GAME_IMPERFECT_SOUND)
-	COMPX(1982, c64pal, 	c64,	c64pal, 		c64,	c64pal, "Commodore Business Machines Co.", "Commodore 64/VC64/VIC64 (PAL)",            GAME_IMPERFECT_SOUND)
-	COMPX(1982, vic64s, 	c64,	c64pal, 		vic64s,	c64pal, "Commodore Business Machines Co.", "Commodore 64 Swedish (PAL)",           GAME_IMPERFECT_SOUND)
-	CONSX(1987, c64gs,		c64,	c64gs,			c64gs,	c64gs,	"Commodore Business Machines Co.", "C64GS (PAL)",                    GAME_IMPERFECT_SOUND)
+	COMP(1982, max,		0,		ultimax,		ultimax,ultimax,"Commodore Business Machines Co.", "Commodore Max (Ultimax/VC10)")
+	COMP(1982, c64,		0,		c64,			c64,	c64,	"Commodore Business Machines Co.", "Commodore 64 (NTSC)")
+	COMP(1982, cbm4064,	c64,	pet64,			c64,	c64,	"Commodore Business Machines Co.", "CBM4064/PET64/Educator64 (NTSC)")
+	COMP(1982, c64pal, 	c64,	c64pal, 		c64,	c64pal, "Commodore Business Machines Co.", "Commodore 64/VC64/VIC64 (PAL)")
+	COMP(1982, vic64s, 	c64,	c64pal, 		vic64s,	c64pal, "Commodore Business Machines Co.", "Commodore 64 Swedish (PAL)")
+	CONS(1987, c64gs,		c64,	c64gs,			c64gs,	c64gs,	"Commodore Business Machines Co.", "C64GS (PAL)")
 	/* please leave the following as testdriver, */
 	/* or better don't include them in system.c */
-	COMPX(1983, sx64,		c64,	sx64,			sx64,	sx64,	"Commodore Business Machines Co.", "SX64 (PAL)",                      GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-	COMPX(1983, vip64,		c64,	sx64,			vip64,	sx64,	"Commodore Business Machines Co.", "VIP64 (SX64 PAL), Swedish Expansion Kit", GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
+	COMPX(1983, sx64,		c64,	sx64,			sx64,	sx64,	"Commodore Business Machines Co.", "SX64 (PAL)",                      GAME_NOT_WORKING)
+	COMPX(1983, vip64,		c64,	sx64,			vip64,	sx64,	"Commodore Business Machines Co.", "VIP64 (SX64 PAL), Swedish Expansion Kit", GAME_NOT_WORKING)
+	// sx64 with second disk drive
+	COMPX(198?, dx64,		c64,	sx64,			sx64,	sx64,	"Commodore Business Machines Co.", "DX64 (Prototype, PAL)",                      GAME_NOT_WORKING)
 	/*c64 II (cbm named it still c64) */
 	/*c64c (bios in 1 chip) */
 	/*c64g late 8500/8580 based c64, sold at aldi/germany */
 	/*c64cgs late c64, sold in ireland, gs bios?, but with keyboard */
+	
+	#ifdef RUNTIME_LOADER
+	extern void c64_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"max")==0) drivers[i]=&driver_max;
+			if ( strcmp(drivers[i].name,"c64")==0) drivers[i]=&driver_c64;
+			if ( strcmp(drivers[i].name,"cbm4064")==0) drivers[i]=&driver_cbm4064;
+			if ( strcmp(drivers[i].name,"c64pal")==0) drivers[i]=&driver_c64pal;
+			if ( strcmp(drivers[i].name,"vic64s")==0) drivers[i]=&driver_vic64s;
+			if ( strcmp(drivers[i].name,"c64gs")==0) drivers[i]=&driver_c64gs;
+			if ( strcmp(drivers[i].name,"sx64")==0) drivers[i]=&driver_sx64;
+			if ( strcmp(drivers[i].name,"vip64")==0) drivers[i]=&driver_vip64;
+			if ( strcmp(drivers[i].name,"dx64")==0) drivers[i]=&driver_sx64;
+		}
+	}
+	#endif
 }

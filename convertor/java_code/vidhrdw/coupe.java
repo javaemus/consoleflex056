@@ -38,7 +38,7 @@ public class coupe
 	
 	//#define MONO
 	
-	void drawMode4_line(struct osd_bitmap *bitmap,int y)
+	void drawMode4_line(struct mame_bitmap *bitmap,int y)
 	{
 		int x;
 		unsigned char tmp=0;
@@ -80,7 +80,7 @@ public class coupe
 		}
 	}
 	
-	void drawMode3_line(struct osd_bitmap *bitmap,int y)
+	void drawMode3_line(struct mame_bitmap *bitmap,int y)
 	{
 		int x;
 		unsigned char tmp=0;
@@ -122,7 +122,7 @@ public class coupe
 		}
 	}
 	
-	void drawMode2_line(struct osd_bitmap *bitmap,int y)
+	void drawMode2_line(struct mame_bitmap *bitmap,int y)
 	{
 		int x,b,scrx;
 		unsigned char tmp=0;
@@ -160,7 +160,7 @@ public class coupe
 		}
 	}
 	
-	void drawMode1_line(struct osd_bitmap *bitmap,int y)
+	void drawMode1_line(struct mame_bitmap *bitmap,int y)
 	{
 		int x,b,scrx,scry;
 		unsigned char tmp=0;
@@ -199,13 +199,13 @@ public class coupe
 	}
 	
 	/***************************************************************************
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function,
 	  it will be called by the main emulation engine.
 	***************************************************************************/
-	public static VhUpdatePtr coupe_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh)  
+	void coupe_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh) 
 	{
-	} };
+	}
 	
 	
 	

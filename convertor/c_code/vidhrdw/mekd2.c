@@ -11,6 +11,8 @@
 #include "artwork.h"
 #include "vidhrdw/generic.h"
 
+#include "includes/mekd2.h"
+
 #ifndef VERBOSE
 #define VERBOSE 1
 #endif
@@ -21,15 +23,9 @@
 #define LOG(x)	/* x */
 #endif
 
-static struct artwork *mekd2_backdrop;
-
 void mekd2_init_colors (unsigned char *palette, unsigned short *colortable, const unsigned char *color_prom)
 {
-	char backdrop_name[200];
-    int i, nextfree;
-
-    /* try to load a backdrop for the machine */
-    sprintf (backdrop_name, "%s.png", Machine->gamedrv->name);
+    int i;
 
 	/* initialize 16 colors with shades of red (orange) */
     for (i = 0; i < 16; i++)
@@ -71,29 +67,23 @@ void mekd2_init_colors (unsigned char *palette, unsigned short *colortable, cons
     colortable[2 * 16 + 1 * 4 + 1] = 17;
     colortable[2 * 16 + 1 * 4 + 2] = 19;
     colortable[2 * 16 + 1 * 4 + 3] = 15;
-
-    nextfree = 21;
-
-	if ((mekd2_backdrop = artwork_load (backdrop_name, nextfree, Machine->drv->total_colors - nextfree)) != NULL)
-    {
-        LOG (("backdrop %s successfully loaded\n", backdrop_name));
-		memcpy (&palette[nextfree * 3], mekd2_backdrop->orig_palette, mekd2_backdrop->num_pens_used * 3 * sizeof (unsigned char));
-    }
-    else
-    {
-        LOG (( "no backdrop loaded\n"));
-    }
 }
 
 int mekd2_vh_start (void)
 {
     videoram_size = 6 * 2 + 24;
-    videoram = malloc (videoram_size);
+    videoram = (UINT8*)auto_malloc (videoram_size);
 	if (!videoram)
         return 1;
-	if (mekd2_backdrop)
-		backdrop_refresh (mekd2_backdrop);
-    if (generic_vh_start () != 0)
+
+	{
+		char backdrop_name[200];
+	    /* try to load a backdrop for the machine */
+		sprintf(backdrop_name, "%s.png", Machine->gamedrv->name);
+		backdrop_load(backdrop_name, 2);
+	}
+
+	if (generic_vh_start () != 0)
         return 1;
 
     return 0;
@@ -101,28 +91,13 @@ int mekd2_vh_start (void)
 
 void mekd2_vh_stop (void)
 {
-	if (mekd2_backdrop)
-		artwork_free (mekd2_backdrop);
-	mekd2_backdrop = NULL;
-    if (videoram)
-        free (videoram);
     videoram = NULL;
     generic_vh_stop ();
 }
 
-void mekd2_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
+void mekd2_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 {
     int x, y;
-
-    if (full_refresh)
-    {
-        osd_mark_dirty (0, 0, bitmap->width, bitmap->height, 0);
-        memset (videoram, 0x0f, videoram_size);
-    }
-	if (mekd2_backdrop)
-		copybitmap (bitmap, mekd2_backdrop->artwork, 0, 0, 0, 0, NULL, TRANSPARENCY_NONE, 0);
-	else
-		fillbitmap (bitmap, Machine->pens[0], &Machine->drv->visible_area);
 
     for (x = 0; x < 6; x++)
     {
@@ -132,7 +107,7 @@ void mekd2_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
         drawgfx (bitmap, Machine->gfx[0],
                  videoram[2 * x + 0], videoram[2 * x + 1],
                  0, 0, sx, sy, NULL, TRANSPARENCY_PEN, 0);
-        osd_mark_dirty (sx, sy, sx + 15, sy + 31, 1);
+        osd_mark_dirty (sx, sy, sx + 15, sy + 31);
     }
 
     for (y = 0; y < 6; y++)
@@ -160,7 +135,7 @@ void mekd2_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
                      layout[y][x], color,
                      0, 0, sx, sy, NULL,
                      TRANSPARENCY_NONE, 0);
-            osd_mark_dirty (sx, sy, sx + 23, sy + 17, 1);
+            osd_mark_dirty (sx, sy, sx + 23, sy + 17);
         }
     }
 

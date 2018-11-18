@@ -18,9 +18,8 @@ int port_b_io = 0;
 
 #define HALT		0
 #define RESUME		1
-void genesis_modify_display(int);
-int genesis_isfunkySMD(unsigned char *);
-int genesis_isSMD(unsigned char *);
+static int genesis_isSMD(unsigned char *,unsigned int);
+static int genesis_isBIN(unsigned char *,unsigned int);
 int genesis_sharedram_size = 0x10000;
 int genesis_soundram_size = 0x10000;
 
@@ -52,8 +51,29 @@ void genesis_init_machine(void)
 	logerror("Machine init\n");
 }
 
+static int genesis_verify_cart(unsigned char *temp,unsigned int len)
+{
+	int retval = IMAGE_VERIFY_FAIL;
 
-int genesis_load_rom(int id)
+	/* is this an SMD file..? */
+	if (genesis_isSMD(&temp[0x200],len))
+		retval = IMAGE_VERIFY_PASS;
+
+	/* How about a BIN file..? */
+	if ((retval == IMAGE_VERIFY_FAIL) && genesis_isBIN(&temp[0],len))
+		retval = IMAGE_VERIFY_PASS;
+
+	/* maybe a .md file? (rare) */
+	if ((retval == IMAGE_VERIFY_FAIL) && (temp[0x080] == 'E') && (temp[0x081] == 'A') && (temp[0x082] == 'M' || temp[0x082] == 'G'))
+		retval = IMAGE_VERIFY_PASS;
+
+	if (retval == IMAGE_VERIFY_FAIL)
+		logerror("Invalid Image!\n");
+
+	return retval;
+}
+
+int genesis_init_cart (int id)
 {
 	FILE *romfile = NULL;
 	unsigned char *tmpROMnew, *tmpROM;
@@ -66,26 +86,26 @@ int genesis_load_rom(int id)
 	logerror("ROM load/init regions\n");
 
     /* Allocate memory and set up memory regions */
-	if (new_memory_region(REGION_CPU1, 0x405000))
+	if (new_memory_region(REGION_CPU1, 0x405000,0))
 	{
 		logerror("new_memory_region failed!\n");
-		return INIT_FAILED;
+		return INIT_FAIL;
 	}
 	rawROM = memory_region(REGION_CPU1);
     ROM = rawROM /*+ 512 */;
 
-    if (new_memory_region(REGION_CPU2, 0x10000))    /* Z80 region */
+    if (new_memory_region(REGION_CPU2, 0x10000,0))    /* Z80 region */
     {
         logerror("Memory allocation failed creating Z80 RAM region!\n");
         goto bad;
     }
 	genesis_soundram = memory_region(REGION_CPU2);
 
-	romfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
+	romfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 	if (!romfile)
     {
         printf("Genesis Requires Cartridge!\n");
-        return INIT_FAILED;
+        return INIT_FAIL;
     }
 
     length = osd_fread(romfile, rawROM + 0x2000, 0x400200);
@@ -93,7 +113,10 @@ int genesis_load_rom(int id)
 	if (length < 1024 + 512)
 		goto bad;						/* smallest known rom is 1.7K */
 
-	if (genesis_isSMD(&rawROM[0x2200]))	/* is this a SMD file..? */
+	if (genesis_verify_cart(&rawROM[0x2000],(unsigned)length) == IMAGE_VERIFY_FAIL)
+		goto bad;
+
+	if (genesis_isSMD(&rawROM[0x2200],(unsigned)length))	/* is this a SMD file..? */
 	{
 
 		tmpROMnew = ROM;
@@ -162,17 +185,17 @@ int genesis_load_rom(int id)
 
 
 	osd_fclose(romfile);
-	return INIT_OK;
+	return INIT_PASS;
 
 bad:
 	if (romfile)
 		osd_fclose(romfile);
-	return INIT_FAILED;
+	return INIT_FAIL;
 }
 
 /* code taken directly from GoodGEN by Cowering */
 
-int genesis_isfunkySMD(unsigned char *buf)
+static int genesis_isfunkySMD(unsigned char *buf,unsigned int len)
 {
 
 	/* aq quiz */
@@ -202,7 +225,7 @@ int genesis_isfunkySMD(unsigned char *buf)
 		return 1;
 
     /* budokan beta */
-	if (!strncmp(" NTEBDKN", (const char *) &buf[0x6708], 8))
+	if ((len >= 0x6708+8) && !strncmp(" NTEBDKN", (const char *) &buf[0x6708], 8))
 		return 1;
 
     /* cdx pro 1.8 bios */
@@ -218,7 +241,7 @@ int genesis_isfunkySMD(unsigned char *buf)
 		return 1;
 
     /* tram terror pirate */
-	if (!strncmp("SG NEPIE", (const char *) &buf[0x3648], 8))
+	if ((len >= 0x3648 + 8) && !strncmp("SG NEPIE", (const char *) &buf[0x3648], 8))
 		return 1;
 
     /* breath of fire 3 chinese */
@@ -226,21 +249,21 @@ int genesis_isfunkySMD(unsigned char *buf)
 		return 1;
 
     /*tetris pirate */
-	if (!strncmp("@TTI>", (const char *) &buf[0x1cbe], 5))
+	if ((len >= 0x1cbe + 5) && !strncmp("@TTI>", (const char *) &buf[0x1cbe], 5))
 		return 1;
 
 	return 0;
 }
 
 /* code taken directly from GoodGEN by Cowering */
-int genesis_isSMD(unsigned char *buf)
+int genesis_isSMD(unsigned char *buf,unsigned int len)
 {
 	if (buf[0x2080] == 'S' && buf[0x80] == 'E' && buf[0x2081] == 'G' && buf[0x81] == 'A')
 		return 1;
-	return genesis_isfunkySMD(buf);
+	return genesis_isfunkySMD(buf,len);
 }
 
-int genesis_isfunkyBIN(unsigned char *buf)
+static int genesis_isfunkyBIN(unsigned char *buf,unsigned int len)
 {
 	/* all the special cases for crappy headered roms */
 	/* aq quiz */
@@ -262,7 +285,7 @@ int genesis_isfunkyBIN(unsigned char *buf)
 		return 1;
 
     /* golden axe 2 beta */
-	if (!strncmp("SEGA", (const char *) &buf[0xe40a], 4))
+	if ((len >= 0xe40a+4) && !strncmp("SEGA", (const char *) &buf[0xe40a], 4))
 		return 1;
 
     /* omega race */
@@ -270,11 +293,11 @@ int genesis_isfunkyBIN(unsigned char *buf)
 		return 1;
 
     /* budokan beta */
-	if (!strncmp("BUDOKAN.", (const char *) &buf[0x4e18], 8))
+	if ((len >= 0x4e18+8) && !strncmp("BUDOKAN.", (const char *) &buf[0x4e18], 8))
 		return 1;
 
     /* cdx 1.8 bios */
-	if (!strncmp(" CDX PRO", (const char *) &buf[0x588], 8))
+	if ((len >= 0x588+8) && !strncmp(" CDX PRO", (const char *) &buf[0x588], 8))
 		return 1;
 
     /* ishido (hacked) */
@@ -285,8 +308,8 @@ int genesis_isfunkyBIN(unsigned char *buf)
 	if (!strncmp("(C)ACLD 1991", (const char *) &buf[0x118], 12))
 		return 1;
 
-    /* tram terror pirate */
-	if (!strncmp("DREAMWORK", (const char *) &buf[0x2c70], 9))
+    /* trampoline terror pirate */
+	if ((len >= 0x2c70+9) && !strncmp("DREAMWORK", (const char *) &buf[0x2c70], 9))
 		return 1;
 
     /* breath of fire 3 chinese */
@@ -294,17 +317,17 @@ int genesis_isfunkyBIN(unsigned char *buf)
 		return 1;
 
     /* tetris pirate */
-	if (!strncmp("TETRIS", (const char *) &buf[0x397f], 6))
+	if ((len >= 0x397f+6) && !strncmp("TETRIS", (const char *) &buf[0x397f], 6))
 		return 1;
 
     return 0;
 }
 
-int genesis_isBIN(unsigned char *buf)
+static int genesis_isBIN(unsigned char *buf,unsigned int len)
 {
 	if (buf[0x0100] == 'S' && buf[0x0101] == 'E' && buf[0x0102] == 'G' && buf[0x0103] == 'A')
 		return 1;
-	return genesis_isfunkyBIN(buf);
+	return genesis_isfunkyBIN(buf,len);
 }
 
 /* code taken directly from GoodGEN by Cowering
@@ -312,10 +335,10 @@ int genesis_isBIN(unsigned char *buf)
  * where (size % 16384) != 0
  */
 
-int genesis_smd2bin(unsigned char *inbuf, unsigned int len)
+static int genesis_smd2bin(unsigned char *inbuf, unsigned int len)
 {
 	unsigned long i, j, offset = 0;
-	unsigned char *tbuf = NULL;
+	unsigned char *tbuf;
 
 	if (len < 16384)
 		return 0;
@@ -344,10 +367,10 @@ int genesis_smd2bin(unsigned char *inbuf, unsigned int len)
 	}
 }
 
-int genesis_md2bin(unsigned char *inbuf, unsigned long len)
+static int genesis_md2bin(unsigned char *inbuf, unsigned int len)
 {
 	unsigned long i, j, offset = 0;
-	unsigned char *tbuf = NULL;
+	unsigned char *tbuf;
 
 	if (len < 16384)
 		return 0;
@@ -377,14 +400,14 @@ UINT32 genesis_partialcrc(const unsigned char *buf, unsigned int len)
 
 	if (len < 1700)
 		return 0;						/* smallest known working ROM */
-	if (genesis_isSMD((unsigned char *) &buf[0x200]))
+	if ((len >= 0x2081 + 1700) && genesis_isSMD((unsigned char *) &buf[0x200],len))
 	{
 		if (genesis_smd2bin((unsigned char *) &buf[0x200], len - 0x200))
 		{
 			crc = (UINT32) crc32(0L, &buf[0x200], len - 0x200);
 		}
 	}
-	else if (genesis_isBIN((unsigned char *) buf))
+	else if (genesis_isBIN((unsigned char *) buf,len))
 	{
 		crc = (UINT32) crc32(0L, buf, len);
 	}
@@ -397,41 +420,6 @@ UINT32 genesis_partialcrc(const unsigned char *buf, unsigned int len)
 	}
 	logerror("Genesis Partial CRC: %08lx %d\n", crc, len);
 	return crc;
-}
-
-int genesis_id_rom(int id)
-{
-	FILE *romfile;
-	unsigned char *temp;
-	int retval = ID_FAILED;
-
-	if (!(romfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0)))
-		return ID_FAILED;
-	temp = (unsigned char *) malloc(0x8000 + 0x200);
-	if (temp)
-	{
-
-		osd_fread(romfile, temp, 0x8000 + 0x200);
-
-		/* is this an SMD file..? */
-		if (genesis_isSMD(&temp[0x200]))
-			retval = ID_OK;
-
-		/* How about a BIN file..? */
-		if ((retval == ID_FAILED) && genesis_isBIN(&temp[0]))
-			retval = ID_OK;
-
-		/* maybe a .md file? (rare) */
-		if ((retval == ID_FAILED) && (temp[0x080] == 'E') && (temp[0x081] == 'A') && (temp[0x082] == 'M' || temp[0x082] == 'G'))
-			retval = ID_OK;
-	}
-	else
-	{
-		logerror("genesis_id_rom(): Out of Memory\n");
-	}
-
-	osd_fclose(romfile);
-	return retval;
 }
 
 int genesis_interrupt(void)
@@ -468,27 +456,27 @@ int genesis_interrupt(void)
 	return 0;
 }
 
-WRITE_HANDLER(genesis_io_w)
+WRITE16_HANDLER(genesis_io_w)
 {
-	data = COMBINE_WORD(0, data);
+	data &= ~mem_mask;
 /*	logerror("genesis_io_w %x, %x\n", offset, data); */
 	switch (offset)
 	{
-	case 2:							/* joystick port a IO bit set */
+	case 1:							/* joystick port a IO bit set */
 		/* logerror("port a set to %x\n", port_a_io); */
 		port_a_io = data & 0xff;
 		break;
-	case 4:							/* joystick port b IO bit set */
+	case 2:							/* joystick port b IO bit set */
 		port_b_io = data & 0xff;
 		break;
-	case 8:
+	case 4:
 		/* logerror("port a dir set to %x\n", data & 0xff); */
 		break;
-	case 0x0a:
+	case 5:
 		break;
 	}
 }
-READ_HANDLER(genesis_io_r)
+READ16_HANDLER(genesis_io_r)
 {
 
 	int returnval = 0x80;
@@ -543,13 +531,13 @@ READ_HANDLER(genesis_io_r)
 /*		logerror("coo!\n"); */
 		return returnval;				/* was just NTSC, overseas (USA) no FDD, now auto */
 		break;
-	case 2:							/* joystick port a */
+	case 1:							/* joystick port a */
 		if (port_a_io == 0x00)
 			return readinputport(1);
 		else
 			return readinputport(0);
 		break;
-	case 4:							/* joystick port b */
+	case 2:							/* joystick port b */
 		if (port_b_io == 0x00)
 			return readinputport(3);
 		else
@@ -559,7 +547,7 @@ READ_HANDLER(genesis_io_r)
 	return 0x00;
 }
 
-READ_HANDLER(genesis_ctrl_r)
+READ16_HANDLER(genesis_ctrl_r)
 {
 /*	int returnval; */
 
@@ -569,13 +557,13 @@ READ_HANDLER(genesis_ctrl_r)
 	case 0:							/* DRAM mode is write only */
 		return 0xffff;
 		break;
-	case 0x100:						/* return Z80 CPU Function Stop Accessible or not */
+	case 0x80:						/* return Z80 CPU Function Stop Accessible or not */
 		/* logerror("Returning z80 state\n"); */
 		return (z80running ? 0x0100 : 0x0);
 		/* docs comflict here, page 91 says 0 == z80 has access */
 		/* page 76 says 0 means you can access the space */
 		break;
-	case 0x200:						/* Z80 CPU Reset - write only */
+	case 0x100:						/* Z80 CPU Reset - write only */
 		return 0xffff;
 		break;
 	}
@@ -583,9 +571,9 @@ READ_HANDLER(genesis_ctrl_r)
 
 }
 
-WRITE_HANDLER(genesis_ctrl_w)
+WRITE16_HANDLER(genesis_ctrl_w)
 {
-	data = COMBINE_WORD(0, data);
+	data &= ~mem_mask;
 
 /*	logerror("genesis_ctrl_w %x, %x\n", offset, data); */
 
@@ -594,7 +582,7 @@ WRITE_HANDLER(genesis_ctrl_w)
 	case 0:							/* set DRAM mode... we have to ignore this for production cartridges */
 		return;
 		break;
-	case 0x100:						/* Z80 BusReq */
+	case 0x80:						/* Z80 BusReq */
 		if (data == 0x100)
 		{
 			z80running = 0;
@@ -611,7 +599,7 @@ WRITE_HANDLER(genesis_ctrl_w)
 		}
 		return;
 		break;
-	case 0x200:						/* Z80 CPU Reset */
+	case 0x100:						/* Z80 CPU Reset */
 		if (data == 0x00)
 		{
 			cpu_set_halt_line(1, ASSERT_LINE);
@@ -631,16 +619,3 @@ WRITE_HANDLER(genesis_ctrl_w)
 		break;
 	}
 }
-
-#if 0
-READ_HANDLER(cartridge_ram_r)
-{
-/*	logerror("cartridge ram read.. %x\n", offset); */
-	return cartridge_ram[offset];
-}
-WRITE_HANDLER(cartridge_ram_w)
-{
-/*	logerror("cartridge ram write.. %x to %x\n", data, offset); */
-	cartridge_ram[offset] = data;
-}
-#endif

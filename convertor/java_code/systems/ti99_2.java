@@ -207,7 +207,7 @@ public class ti99_2
 	#define ti99_2_vh_stop generic_vh_stop
 	#define ti99_2_video_w videoram_w
 	
-	static void ti99_2_vh_refresh(struct osd_bitmap *bitmap, int full_refresh)
+	static void ti99_2_vh_refresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int i, sx, sy;
 	
@@ -225,7 +225,7 @@ public class ti99_2
 				/* Is the char code masked or not ??? */
 				drawgfx(bitmap, Machine.gfx[0], videoram.read(i)& 0x7F, 0,
 				          0, 0, sx, sy, &Machine.visible_area, TRANSPARENCY_NONE, 0);
-				osd_mark_dirty(sx, sy, sx+7, sy+7, 1);
+				osd_mark_dirty(sx, sy, sx+7, sy+7);
 			}
 	
 			sx += 8;
@@ -261,27 +261,27 @@ public class ti99_2
 	  Memory map - see description above
 	*/
 	
-	static MemoryReadAddress ti99_2_readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x3fff, MRA_ROM ),            /*system ROM*/
-		new MemoryReadAddress( 0x4000, 0x5fff, /*MRA_ROM*/MRA_BANK1 ),   /*system ROM, banked on 32kb ROMs protos*/
-		new MemoryReadAddress( 0x6000, 0xdfff, MRA_NOP ),            /*free for expansion*/
-		new MemoryReadAddress( 0xe000, 0xefff, MRA_RAM ),            /*system RAM*/
-		new MemoryReadAddress( 0xf000, 0xffff, MRA_NOP ),            /*processor RAM or free*/
-		new MemoryReadAddress( -1 )    /* end of table */
-	};
+	static MEMORY_READ_START (ti99_2_readmem )
 	
-	static MemoryWriteAddress ti99_2_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x3fff, MWA_ROM ),            /*system ROM*/
-		new MemoryWriteAddress( 0x4000, 0x5fff, /*MWA_ROM*/MWA_BANK1 ),       /*system ROM, banked on 32kb ROMs protos*/
-		new MemoryWriteAddress( 0x6000, 0xdfff, MWA_NOP ),            /*free for expansion*/
-		new MemoryWriteAddress( 0xe000, 0xebff, MWA_RAM ),            /*system RAM*/
-		new MemoryWriteAddress( 0xec00, 0xeeff, ti99_2_video_w,  videoram ), /*system RAM : used for video*/
-		new MemoryWriteAddress( 0xef00, 0xefff, MWA_RAM ),            /*system RAM*/
-		new MemoryWriteAddress( 0xf000, 0xffff, MWA_NOP ),            /*processor RAM or free*/
-		new MemoryWriteAddress( -1 )    /* end of table */
-	};
+		{ 0x0000, 0x3fff, MRA_ROM },            /*system ROM*/
+		{ 0x4000, 0x5fff, /*MRA_ROM*/MRA_BANK1 },   /*system ROM, banked on 32kb ROMs protos*/
+		{ 0x6000, 0xdfff, MRA_NOP },            /*free for expansion*/
+		{ 0xe000, 0xefff, MRA_RAM },            /*system RAM*/
+		{ 0xf000, 0xffff, MRA_NOP },            /*processor RAM or free*/
+	
+	MEMORY_END
+	
+	static MEMORY_WRITE_START ( ti99_2_writemem )
+	
+		{ 0x0000, 0x3fff, MWA_ROM },            /*system ROM*/
+		{ 0x4000, 0x5fff, /*MWA_ROM*/MWA_BANK1 },       /*system ROM, banked on 32kb ROMs protos*/
+		{ 0x6000, 0xdfff, MWA_NOP },            /*free for expansion*/
+		{ 0xe000, 0xebff, MWA_RAM },            /*system RAM*/
+		{ 0xec00, 0xeeff, ti99_2_video_w, & videoram }, /*system RAM : used for video*/
+		{ 0xef00, 0xefff, MWA_RAM },            /*system RAM*/
+		{ 0xf000, 0xffff, MWA_NOP },            /*processor RAM or free*/
+	
+	MEMORY_END
 	
 	
 	/*
@@ -338,12 +338,12 @@ public class ti99_2
 		}
 	} };
 	
-	static IOWritePort ti99_2_writeport[] =
-	{
-		new IOWritePort(0x7000, 0x73ff, ti99_2_write_kbd),
-		new IOWritePort(0x7400, 0x77ff, ti99_2_write_misc_cru),
-		new IOWritePort( -1 )    /* end of table */
-	};
+	static PORT_WRITE_START ( ti99_2_writeport )
+	
+		{0x7000, 0x73ff, ti99_2_write_kbd},
+		{0x7400, 0x77ff, ti99_2_write_misc_cru},
+	
+	PORT_END
 	
 	/* read keys in the current row */
 	public static ReadHandlerPtr ti99_2_read_kbd  = new ReadHandlerPtr() { public int handler(int offset)
@@ -356,12 +356,12 @@ public class ti99_2
 		return 0;
 	} };
 	
-	static IOReadPort ti99_2_readport[] =
-	{
-		new IOReadPort(0x0E00, 0x0E7f, ti99_2_read_kbd),
-		new IOReadPort(0x0E80, 0x0Eff, ti99_2_read_misc_cru),
-		new IOReadPort( -1 )    /* end of table */
-	};
+	static PORT_READ_START ( ti99_2_readport )
+	
+		{0x0E00, 0x0E7f, ti99_2_read_kbd},
+		{0x0E80, 0x0Eff, ti99_2_read_misc_cru},
+	
+	PORT_END
 	
 	
 	/* ti99/2 : 54-key keyboard */
@@ -497,13 +497,13 @@ public class ti99_2
 	*/
 	static RomLoadPtr rom_ti99_224 = new RomLoadPtr(){ public void handler(){ 
 		/*CPU memory space*/
-		ROM_REGION(0x10000,REGION_CPU1);
+		ROM_REGION(0x10000,REGION_CPU1,0);
 		ROM_LOAD("992rom.bin", 0x0000, 0x6000, 0x00000000);     /* system ROMs */
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_ti99_232 = new RomLoadPtr(){ public void handler(){ 
 		/*64kb CPU memory space + 8kb to read the extra ROM page*/
-		ROM_REGION(0x12000,REGION_CPU1);
+		ROM_REGION(0x12000,REGION_CPU1,0);
 		ROM_LOAD("992rom32.bin", 0x0000, 0x6000, 0x00000000);   /* system ROM - 32kb */
 		ROM_CONTINUE(0x10000,0x2000);
 	ROM_END(); }}; 

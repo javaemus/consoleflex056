@@ -11,7 +11,8 @@ extern READ_HANDLER ( pow3000_io_r );
 extern WRITE_HANDLER ( pow3000_io_w );
 
 /* from vidhrdw/zx80.c */
-extern extern 
+extern extern void zx_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+
 
 
 extern char zx_frame_message[128];

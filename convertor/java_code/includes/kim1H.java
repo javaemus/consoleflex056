@@ -1,6 +1,5 @@
 /* from src/mess/machine/kim1.c */
 extern extern 
-extern int kim1_cassette_id(int id);
 extern int kim1_cassette_init(int id);
 extern void kim1_cassette_exit(int id);
 
@@ -14,4 +13,5 @@ extern WRITE_HANDLER ( m6530_002_w );
 extern WRITE_HANDLER ( kim1_mirror_w );
 
 /* from src/mess/vidhrdw/kim1.c */
-extern extern extern extern 
+extern extern extern extern void kim1_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);
+

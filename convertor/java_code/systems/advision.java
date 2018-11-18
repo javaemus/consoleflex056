@@ -29,39 +29,30 @@ package systems;
 public class advision
 {
 	
-	static MemoryReadAddress readmem[] =
-	{
-	    new MemoryReadAddress( 0x0000, 0x03FF,  MRA_BANK1 ),
-	    new MemoryReadAddress( 0x0400, 0x0fff,  MRA_ROM ),
-		new MemoryReadAddress( 0x2000, 0x23ff,  MRA_RAM ),	/* MAINRAM four banks */
-		new MemoryReadAddress( -1 )  /* end of table */
-	};
+	static MEMORY_READ_START( readmem )
+	    { 0x0000, 0x03FF,  MRA_BANK1 },
+	    { 0x0400, 0x0fff,  MRA_ROM },
+		{ 0x2000, 0x23ff,  MRA_RAM },	/* MAINRAM four banks */
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem[] =
-	{
-	    new MemoryWriteAddress( 0x0000, 0x0fff, MWA_ROM ),
-		new MemoryWriteAddress( 0x2000, 0x23ff, MWA_RAM ),	/* MAINRAM four banks */
-	    new MemoryWriteAddress( -1 )  /* end of table */
-	};
+	static MEMORY_WRITE_START( writemem )
+	    { 0x0000, 0x0fff, MWA_ROM },
+		{ 0x2000, 0x23ff, MWA_RAM },	/* MAINRAM four banks */
+	MEMORY_END
 	
-	static IOReadPort readport[] =
-	{
-	    new IOReadPort( 0x00,     0xff,     advision_MAINRAM_r),
-	    new IOReadPort( I8039_p1, I8039_p1, advision_getp1 ),
-	    new IOReadPort( I8039_p2, I8039_p2, advision_getp2 ),
-	    new IOReadPort( I8039_t0, I8039_t0, advision_gett0 ),
-	    new IOReadPort( I8039_t1, I8039_t1, advision_gett1 ),
-		new IOReadPort( -1 )	/* end of table */
-	};
+	static PORT_READ_START( readport )
+	    { 0x00,     0xff,     advision_MAINRAM_r},
+	    { I8039_p1, I8039_p1, advision_getp1 },
+	    { I8039_p2, I8039_p2, advision_getp2 },
+	    { I8039_t0, I8039_t0, advision_gett0 },
+	    { I8039_t1, I8039_t1, advision_gett1 },
+	PORT_END
 	
-	static IOWritePort writeport[] =
-	{
-	    new IOWritePort( 0x00,     0xff,     advision_MAINRAM_w ),
-	    new IOWritePort( I8039_p1, I8039_p1, advision_putp1 ),
-	    new IOWritePort( I8039_p2, I8039_p2, advision_putp2 ),
-		new IOWritePort( -1 )	/* end of table */
-	};
-	
+	static PORT_WRITE_START( writeport )
+	    { 0x00,     0xff,     advision_MAINRAM_w },
+	    { I8039_p1, I8039_p1, advision_putp1 },
+	    { I8039_p2, I8039_p2, advision_putp2 },
+	PORT_END
 	
 	static InputPortPtr input_ports_advision = new InputPortPtr(){ public void handler() { 
 		PORT_START();       /* IN0 */
@@ -110,7 +101,7 @@ public class advision
 	
 	
 	ROM_START (advision)
-		ROM_REGION(0x2800,REGION_CPU1);
+		ROM_REGION(0x2800,REGION_CPU1, 0);
 	    ROM_LOAD ("avbios.rom", 0x1000, 0x400, 0x279e33d1);
 	ROM_END(); }}; 
 	
@@ -120,7 +111,7 @@ public class advision
 			1,					/* count */
 			"bin\0",            /* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-			advision_id_rom,	/* id */
+			0,					/* id */
 			advision_load_rom, 	/* init */
 			NULL,				/* exit */
 			NULL,				/* info */

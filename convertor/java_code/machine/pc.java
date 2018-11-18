@@ -9,15 +9,6 @@
 	'Ralph Browns Interrupt List'
 	Release 52, Last Change 20oct96
 
-	TODO:
-	clean up (maybe split) the different pieces of hardware
-	PIC, PIT, DMA... add support for LPT, COM (almost done)
-	emulation of a serial mouse on a COM port (almost done)
-	support for Game Controller port at 0x0201
-	support for XT harddisk (under the way, see machine/pc_hdc.c)
-	whatever 'hardware' comes to mind,
-	maybe SoundBlaster? EGA? VGA?
-
 ***************************************************************************/
 /*
  * ported to v0.37b7
@@ -31,569 +22,228 @@ public class pc
 	
 	
 	
-	UINT8 pc_port[0x400];
-	
-	#define FDC_DMA 2
 	
 	
+	static DMA8237_CONFIG dma= { DMA8237_PC };
 	
-	/* called when a interrupt is set/cleared from com hardware */
-	static void pc_com_interrupt(int nr, int state)
+	public static InitDriverPtr init_pccga = new InitDriverPtr() { public void handler() 
 	{
-		static const int irq[4]={4,3,4,3};
-		/* issue COM1/3 IRQ4, COM2/4 IRQ3 */
-		if (state != 0)
-		{
-			pic8259_0_issue_irq(irq[nr]);
-		}
-	}
-	
-	/* called when com registers read/written - used to update peripherals that
-	are connected */
-	static void pc_com_refresh_connected(int n, int data)
-	{
-		/* mouse connected to this port? */
-		if (readinputport(3) & (0x80>>n))
-			pc_mouse_handshake_in(n,data);
-	}
-	
-	/* PC interface to PC-com hardware. Done this way because PCW16 also
-	uses PC-com hardware and doesn't have the same setup! */
-	static uart8250_interface com_interface[4]=
-	{
-		{
-			TYPE8250,
-			1843200,
-			pc_com_interrupt,
-			NULL,
-			pc_com_refresh_connected
-		},
-		{
-			TYPE8250,
-			1843200,
-			pc_com_interrupt,
-			NULL,
-			pc_com_refresh_connected
-		},
-		{
-			TYPE8250,
-			1843200,
-			pc_com_interrupt,
-			NULL,
-			pc_com_refresh_connected
-		},
-		{
-			TYPE8250,
-			1843200,
-			pc_com_interrupt,
-			NULL,
-			pc_com_refresh_connected
-		}
-	};
-	
-	/* /* /* 
-	
-	/* PC-XT has a 8255 which is connected to keyboard and other
-	status information */
-	static ppi8255_interface pc_ppi8255_interface =
-	{
-		1,
-		pc_ppi_porta_r,
-		pc_ppi_portb_r,
-		pc_ppi_portc_r,
-		pc_ppi_porta_w,
-		pc_ppi_portb_w,
-		pc_ppi_portc_w
-	};
-	
-	static void pc_sh_speaker_change_clock(double clock)
-	{
-		switch( pc_port[0x61] & 3 )
-		{
-			case 0: pc_sh_speaker(0); break;
-			case 1: pc_sh_speaker(1); break;
-			case 2: pc_sh_speaker(1); break;
-			case 3: pc_sh_speaker(2); break;
-	    }
-	}
-	
-	/*
-	 * timer0	heartbeat IRQ
-	 * timer1	DRAM refresh (ignored)
-	 * timer2	PIO port C pin 4 and speaker polling
-	 */
-	static PIT8253_CONFIG pc_pit8253_config={
-		TYPE8253,
-		{
-			{
-				4770000/4,				/* heartbeat IRQ */
-				pic8259_0_issue_irq,
-				NULL
-			}, {
-				4770000/4,				/* dram refresh */
-				NULL,
-				NULL
-			}, {
-				4770000/4,				/* pio port c pin 4, and speaker polling enough */
-				NULL,
-				pc_sh_speaker_change_clock
-			}
-		}
-	};
-	
-	public static InitDriverPtr init_pc_common = new InitDriverPtr() { public void handler() 
-	{
-		pit8253_config(0,&pc_pit8253_config);
-		/* FDC hardware */
-		pc_fdc_setup();
-	
-		/* com hardware */
-		uart8250_init(0,com_interface);
-		uart8250_reset(0);
-		uart8250_init(1,com_interface+1);
-		uart8250_reset(1);
-		uart8250_init(2,com_interface+2);
-		uart8250_reset(2);
-		uart8250_init(3,com_interface+3);
-		uart8250_reset(3);
-	
-		/* serial mouse */
-		pc_mouse_set_protocol(TYPE_MICROSOFT_MOUSE);
-		pc_mouse_set_input_base(12);
-		pc_mouse_set_serial_port(0);
-		pc_mouse_initialise();
-	
-		/* PC-XT keyboard */
+		pc_cga_init();
+		init_pc_common();
 		ppi8255_init(&pc_ppi8255_interface);
-		at_keyboard_init();
-		at_keyboard_set_scan_code_set(1);
-		at_keyboard_set_input_port_base(4);
-	
-		/* should be in init for DMA controller? */
-		pc_DMA_status &= ~(0x10 << FDC_DMA);	/* reset DMA running flag */
-		pc_DMA_status |= 0x01 << FDC_DMA;		/* set DMA terminal count flag */
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
+		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
+		pc_rtc_init();
 	} };
 	
-	public static InitDriverPtr init_pc = new InitDriverPtr() { public void handler() 
+	public static InitDriverPtr init_bondwell = new InitDriverPtr() { public void handler() 
+	{
+		pc_init_setup(pc_setup);
+		pc_cga_init();
+		init_pc_common();
+		ppi8255_init(&pc_ppi8255_interface);
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
+		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
+	//	at_keyboard_set_type(AT_KEYBOARD_TYPE_MF2);
+	} };
+	
+	public static InitDriverPtr init_pcmda = new InitDriverPtr() { public void handler() 
+	{
+		pc_init_setup(pc_setup);
+		pc_mda_init();
+		init_pc_common();
+		ppi8255_init(&pc_ppi8255_interface);
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
+		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
+	} };
+	
+	public static InitDriverPtr init_europc = new InitDriverPtr() { public void handler() 
+	{
+		UINT8 *gfx = &memory_region(REGION_GFX1)[0x2000];
+		UINT8 *rom = &memory_region(REGION_CPU1)[0];
+		int i;
+	
+	    /* just a plain bit pattern for graphics data generation */
+	    for (i = 0; i < 256; i++)
+			gfx[i] = i;
+	
+		/*
+		  fix century rom bios bug !
+		  if year <79 month (and not CENTURY) is loaded with 0x20
+		*/
+		if (rom[0xff93e]==0xb6){ // mov dh,
+			UINT8 a;
+			rom[0xff93e]=0xb5; // mov ch,
+			for (i=0xf8000, a=0; i<0xfffff; i++ ) a+=rom[i];
+			rom[0xfffff]=256-a;
+		}
+	
+		pc_init_setup(pc_setup_europc);
+		init_pc_common();
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
+	
+		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
+		europc_rtc_init();
+		pc_aga_set_mode(AGA_COLOR);
+	//	europc_rtc_set_time();
+	} };
+	
+	extern public static InitDriverPtr init_t1000hx = new InitDriverPtr() { public void handler() 
 	{
 		UINT8 *gfx = &memory_region(REGION_GFX1)[0x1000];
 		int i;
 	    /* just a plain bit pattern for graphics data generation */
 	    for (i = 0; i < 256; i++)
 			gfx[i] = i;
+		pc_init_setup(pc_setup_t1000hx);
+		init_pc_common();
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
+		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
+	} };
+	
+	public static InitDriverPtr init_pc200 = new InitDriverPtr() { public void handler() 
+	{
+		UINT8 *gfx = &memory_region(REGION_GFX1)[0x2000];
+		int i;
+	
+	//	pc_init_setup(pc_setup_pc1512);
+	    /* just a plain bit pattern for graphics data generation */
+	    for (i = 0; i < 256; i++)
+			gfx[i] = i;
+	
+		install_mem_read_handler(0, 0xb0000, 0xbffff, pc200_videoram_r );
+		install_mem_write_handler(0, 0xb0000, 0xbffff, pc200_videoram_w );
+		videoram_size=0x10000;
+		videoram=memory_region(REGION_CPU1)+0xb0000;
+	
+		// 0x3dd, 0x3d8, 0x3d4, 0x3de are also in mda mode present!?
+		install_port_read_handler(0, 0x3d0, 0x3df, pc200_cga_r );
+		install_port_write_handler(0, 0x3d0, 0x3df, pc200_cga_w );
+	
+		install_port_read_handler(0, 0x3b0, 0x3bf, pc_MDA_r );
+		install_port_write_handler(0, 0x3b0, 0x3bf, pc_MDA_w );
+	
+		install_port_read_handler(0, 0x278, 0x27b, pc200_port378_r );
 	
 		init_pc_common();
-		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
+		pc_aga_set_mode(AGA_COLOR);
+		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC); //?
 	} };
 	
 	public static InitDriverPtr init_pc1512 = new InitDriverPtr() { public void handler() 
 	{
-		init_pc();
+		UINT8 *gfx = &memory_region(REGION_GFX1)[0x1000];
+		int i;
 	
+		pc_init_setup(pc_setup_pc1512);
+	    /* just a plain bit pattern for graphics data generation */
+	    for (i = 0; i < 256; i++)
+			gfx[i] = i;
+	
+		install_mem_read_handler(0, 0xb8000, 0xbbfff, MRA_BANK1 );
+		install_mem_write_handler(0, 0xb8000, 0xbbfff, pc1512_videoram_w );
+	
+		install_port_read_handler(0, 0x3d0, 0x3df, pc1512_r );
+		install_port_write_handler(0, 0x3d0, 0x3df, pc1512_w );
+	
+		install_port_read_handler(0, 0x278, 0x27b, pc_parallelport2_r );
+	
+	
+		init_pc_common();
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
 		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
 		mc146818_init(MC146818_IGNORE_CENTURY);
 	} };
 	
 	extern public static InitDriverPtr init_pc1640 = new InitDriverPtr() { public void handler() 
 	{
+		pc_init_setup(pc_setup_pc1640);
+		vga_init(input_port_0_r);
+		install_mem_read_handler(0, 0xa0000, 0xaffff, MRA_BANK1 );
+		install_mem_read_handler(0, 0xb0000, 0xb7fff, MRA_BANK2 );
+		install_mem_read_handler(0, 0xb8000, 0xbffff, MRA_BANK3 );
+	
+		install_mem_write_handler(0, 0xa0000, 0xaffff, MWA_BANK1 );
+		install_mem_write_handler(0, 0xb0000, 0xb7fff, MWA_BANK2 );
+		install_mem_write_handler(0, 0xb8000, 0xbffff, MWA_BANK3 );
+	
+		install_port_read_handler(0, 0x3b0, 0x3bf, vga_port_03b0_r );
+		install_port_read_handler(0, 0x3c0, 0x3cf, paradise_ega_03c0_r );
+		install_port_read_handler(0, 0x3d0, 0x3df, pc1640_port3d0_r );
+	
+		install_port_write_handler(0, 0x3b0, 0x3bf, vga_port_03b0_w );
+		install_port_write_handler(0, 0x3c0, 0x3cf, vga_port_03c0_w );
+		install_port_write_handler(0, 0x3d0, 0x3df, vga_port_03d0_w );
+	
+		install_port_read_handler(0, 0x278, 0x27b, pc1640_port278_r );
+		install_port_read_handler(0, 0x4278, 0x427b, pc1640_port4278_r );
+	
 		init_pc_common();
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
 		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
 	
 		mc146818_init(MC146818_IGNORE_CENTURY);
-	
-		vga_init(input_port_0_r);
 	} };
 	
 	public static InitDriverPtr init_pc_vga = new InitDriverPtr() { public void handler() 
 	{
-	#if 0
-	        int i;
-	        UINT8 *memory=memory_region(REGION_CPU1)+0xc0000;
-	        UINT8 chksum;
-	
-			/* oak vga */
-	        /* plausibility check of retrace signals goes wrong */
-	        memory[0x00f5]=memory[0x00f6]=memory[0x00f7]=0x90;
-	        memory[0x00f8]=memory[0x00f9]=memory[0x00fa]=0x90;
-	        for (chksum=0, i=0;i<0x7fff;i++) {
-	                chksum+=memory[i];
-	        }
-	        memory[i]=0x100-chksum;
-	#endif
-	
-	#if 0
-	        for (chksum=0, i=0;i<0x8000;i++) {
-	                chksum+=memory[i];
-	        }
-	        printf("checksum %.2x\n",chksum);
-	#endif
-	
+		pc_init_setup(pc_setup);
 		init_pc_common();
+		ppi8255_init(&pc_ppi8255_interface);
+		dma8237_config(dma8237,&dma);
+		dma8237_reset(dma8237);
 		at_keyboard_set_type(AT_KEYBOARD_TYPE_PC);
 	
 		vga_init(input_port_0_r);
+		pc_vga_init();
 	} };
-	
-	extern void pc1512_close_machine(void)
-	{
-		mc146818_close();
-	}
-	
-	extern void pc1640_close_machine(void)
-	{
-		vga_reset();
-		mc146818_close();
-	}
 	
 	public static InitMachinePtr pc_mda_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		int i;
-	
-		pc_keyboard_init();
-	
-	    /* remove pixel column 9 for character codes 0 - 175 and 224 - 255 */
-		for( i = 0; i < 256; i++)
-		{
-			if( i < 176 || i > 223 )
-			{
-				int y;
-				for( y = 0; y < Machine.gfx[0].height; y++ )
-					Machine.gfx[0].gfxdata[(i * Machine.gfx[0].height + y) * Machine.gfx[0].width + 8] = 0;
-			}
-		}
+	//	pc_keyboard_init();
+		dma8237_reset(dma8237);
 	} };
 	
 	public static InitMachinePtr pc_cga_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		pc_keyboard_init();
+	//	pc_keyboard_init();
+		dma8237_reset(dma8237);
+	} };
+	
+	public static InitMachinePtr pc_t1t_init_machine = new InitMachinePtr() { public void handler() 
+	{
+	//	pc_keyboard_init();
+		pc_t1t_reset();
+		dma8237_reset(dma8237);
+	} };
+	
+	public static InitMachinePtr pc_aga_init_machine = new InitMachinePtr() { public void handler() 
+	{
+	//	pc_keyboard_init();
+		dma8237_reset(dma8237);
 	} };
 	
 	public static InitMachinePtr pc_vga_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		pc_keyboard_init();
+		vga_reset();
+	//	pc_keyboard_init();
+		dma8237_reset(dma8237);
 	} };
-	
-	/*************************************
-	 *
-	 *		Port handlers.
-	 *
-	 *************************************/
-	int pc_harddisk_init(int id)
-	{
-		pc_hdc_file[id] = image_fopen(IO_HARDDISK, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW);
-		return INIT_OK;
-	}
-	
-	void pc_harddisk_exit(int id)
-	{
-		if( pc_hdc_file[id] )
-			osd_fclose(pc_hdc_file[id]);
-	    pc_hdc_file[id] = NULL;
-	}
-	
-	/***********************************/
-	/* PC interface to PC COM hardware */
-	/* Done this way because PCW16 also has PC-com hardware but it
-	is connected in a different way */
-	
-	int pc_COM_r(int n, int offset)
-	{
-		/* enabled? */
-		if( !(input_port_2_r(0) & (0x80 >> n)) )
-		{
-			COM_LOG(1,"COM_r",("COM%d $%02x: disabled\n", n+1, 0x0ff));
-			return 0x0ff;
-	    }
-	
-		return uart8250_r(n, offset);
-	}
-	
-	void pc_COM_w(int n, int offset, int data)
-	{
-		/* enabled? */
-		if( !(input_port_2_r(0) & (0x80 >> n)) )
-		{
-			COM_LOG(1,"COM_w",("COM%d $%02x: disabled\n", n+1, data));
-			return;
-	    }
-	
-		uart8250_w(n,offset, data);
-	}
-	
-	READ_HANDLER(pc_COM1_r)
-	{
-		return pc_COM_r(0, offset);
-	}
-	
-	READ_HANDLER(pc_COM2_r)
-	{
-		return pc_COM_r(1, offset);
-	}
-	
-	READ_HANDLER(pc_COM3_r)
-	{
-		return pc_COM_r(2, offset);
-	}
-	
-	READ_HANDLER(pc_COM4_r)
-	{
-		return pc_COM_r(3, offset);
-	}
-	
-	
-	WRITE_HANDLER(pc_COM1_w)
-	{
-		uart8250_w(0, offset,data);
-	}
-	
-	WRITE_HANDLER(pc_COM2_w)
-	{
-		uart8250_w(1, offset,data);
-	}
-	
-	WRITE_HANDLER(pc_COM3_w)
-	{
-		uart8250_w(2, offset,data);
-	}
-	
-	WRITE_HANDLER(pc_COM4_w)
-	{
-		uart8250_w(3, offset,data);
-	}
-	
-	
-	/*************************************************************************
-	 *
-	 *		PIO
-	 *		parallel input output
-	 *
-	 *************************************************************************/
-	
-	public static ReadHandlerPtr pc_ppi_porta_r  = new ReadHandlerPtr() { public int handler(int offset)
-	{
-		int data;
-	
-		/* KB port A */
-	    data = pc_port[0x60];
-	    PIO_LOG(1,"PIO_A_r",("$%02x\n", data));
-	    return data;
-	} };
-	
-	public static ReadHandlerPtr pc_ppi_portb_r  = new ReadHandlerPtr() { public int handler(int offset)
-	{
-		int data;
-	
-		/* KB port B */
-		data = pc_port[0x61] /*& 0x03f*/;
-		PIO_LOG(1,"PIO_B_r",("$%02x\n", data));
-		return data;
-	} };
-	
-	/* tandy1000hx
-	   bit 4 input eeprom data in
-	   bit 3 output turbo mode */
-	public static ReadHandlerPtr pc_ppi_portc_r  = new ReadHandlerPtr() { public int handler(int offset)
-	{
-		int data=0xff;
-	
-		data&=~0x80; // no parity error
-		data&=~0x40; // no error on expansion board
-		/* KB port C: equipment flags */
-		if (pc_port[0x61] & 0x08)
-		{
-			/* read hi nibble of S2 */
-			data = (data&0xf0)|((input_port_1_r.handler(0) >> 4) & 0x0f);
-			PIO_LOG(1,"PIO_C_r (hi)",("$%02x\n", data));
-		}
-		else
-		{
-			/* read lo nibble of S2 */
-			data = (data&0xf0)|(input_port_1_r.handler(0) & 0x0f);
-			PIO_LOG(1,"PIO_C_r (lo)",("$%02x\n", data));
-		}
-	
-		return data;
-	} };
-	
-	public static WriteHandlerPtr pc_ppi_porta_w = new WriteHandlerPtr() {public void handler(int offset, int data)
-	{
-		/* KB controller port A */
-		PIO_LOG(1,"PIO_A_w",("$%02x\n", data));
-		pc_port[0x60] = data;
-	} };
-	
-	public static WriteHandlerPtr pc_ppi_portb_w = new WriteHandlerPtr() {public void handler(int offset, int data)
-	{
-		/* KB controller port B */
-		PIO_LOG(1,"PIO_B_w",("$%02x\n", data));
-		pc_port[0x61] = data;
-		switch( data & 3 )
-		{
-			case 0: pc_sh_speaker(0); break;
-			case 1: pc_sh_speaker(1); break;
-			case 2: pc_sh_speaker(1); break;
-			case 3: pc_sh_speaker(2); break;
-		}
-	} };
-	
-	public static WriteHandlerPtr pc_ppi_portc_w = new WriteHandlerPtr() {public void handler(int offset, int data)
-	{
-		/* KB controller port C */
-		PIO_LOG(1,"PIO_C_w",("$%02x\n", data));
-		pc_port[0x62] = data;
-	} };
-	
-	/*************************************************************************
-	 *
-	 *		JOY
-	 *		joystick port
-	 *
-	 *************************************************************************/
-	
-	static double JOY_time = 0.0;
-	
-	WRITE_HANDLER ( pc_JOY_w )
-	{
-		JOY_time = timer_get_time();
-	}
-	
-	#if 0
-	#define JOY_VALUE_TO_TIME(v) (24.2e-6+11e-9*(100000.0/256)*v)
-	READ_HANDLER ( pc_JOY_r )
-	{
-		int data, delta;
-		double new_time = timer_get_time();
-	
-		data=input_port_15_r(0)^0xf0;
-	#if 0
-	    /* timer overflow? */
-		if (new_time - JOY_time > 0.01)
-		{
-			//data &= ~0x0f;
-			JOY_LOG(2,"JOY_r",("$%02x, time > 0.01s\n", data));
-		}
-		else
-	#endif
-		{
-			delta=new_time-JOY_time;
-			if ( delta>JOY_VALUE_TO_TIME(input_port_16_r(0)) ) data &= ~0x01;
-			if ( delta>JOY_VALUE_TO_TIME(input_port_17_r(0)) ) data &= ~0x02;
-			if ( delta>JOY_VALUE_TO_TIME(input_port_18_r(0)) ) data &= ~0x04;
-			if ( delta>JOY_VALUE_TO_TIME(input_port_19_r(0)) ) data &= ~0x08;
-			JOY_LOG(1,"JOY_r",("$%02x: X:%d, Y:%d, time %8.5f, delta %d\n", data, input_port_16_r(0), input_port_17_r(0), new_time - JOY_time, delta));
-		}
-	
-		return data;
-	}
-	#else
-	READ_HANDLER ( pc_JOY_r )
-	{
-		int data, delta;
-		double new_time = timer_get_time();
-	
-		data=input_port_15_r(0)^0xf0;
-	    /* timer overflow? */
-		if (new_time - JOY_time > 0.01)
-		{
-			//data &= ~0x0f;
-			JOY_LOG(2,"JOY_r",("$%02x, time > 0.01s\n", data));
-		}
-		else
-		{
-			delta = 256 * 1000 * (new_time - JOY_time);
-			if (input_port_16_r(0) < delta) data &= ~0x01;
-			if (input_port_17_r(0) < delta) data &= ~0x02;
-			if (input_port_18_r(0) < delta) data &= ~0x04;
-			if (input_port_19_r(0) < delta) data &= ~0x08;
-			JOY_LOG(1,"JOY_r",("$%02x: X:%d, Y:%d, time %8.5f, delta %d\n", data, input
-							   _port_16_r(0), input_port_17_r(0), new_time - JOY_time, delta));
-		}
-	
-		return data;
-	}
-	#endif
-	
-	
-	
-	/*************************************************************************
-	 *
-	 *		HDC
-	 *		hard disk controller
-	 *
-	 *************************************************************************/
-	void pc_HDC_w(int chip, int offset, int data)
-	{
-		if( !(input_port_3_r(0) & (0x08>>chip)) || !pc_hdc_file[chip<<1] )
-			return;
-		switch( offset )
-		{
-			case 0: pc_hdc_data_w(chip,data);	 break;
-			case 1: pc_hdc_reset_w(chip,data);	 break;
-			case 2: pc_hdc_select_w(chip,data);  break;
-			case 3: pc_hdc_control_w(chip,data); break;
-		}
-	}
-	WRITE_HANDLER ( pc_HDC1_w ) { pc_HDC_w(0, offset, data); }
-	WRITE_HANDLER ( pc_HDC2_w ) { pc_HDC_w(1, offset, data); }
-	
-	int pc_HDC_r(int chip, int offset)
-	{
-		int data = 0xff;
-		if( !(input_port_3_r(0) & (0x08>>chip)) || !pc_hdc_file[chip<<1] )
-			return data;
-		switch( offset )
-		{
-			case 0: data = pc_hdc_data_r(chip); 	 break;
-			case 1: data = pc_hdc_status_r(chip);	 break;
-			case 2: data = pc_hdc_dipswitch_r(chip); break;
-			case 3: break;
-		}
-		return data;
-	}
-	READ_HANDLER ( pc_HDC1_r ) { return pc_HDC_r(0, offset); }
-	READ_HANDLER ( pc_HDC2_r ) { return pc_HDC_r(1, offset); }
-	
-	/*************************************************************************
-	 *
-	 *		EXP
-	 *		expansion port
-	 *
-	 *************************************************************************/
-	WRITE_HANDLER ( pc_EXP_w )
-	{
-		DBG_LOG(1,"EXP_unit_w",("$%02x\n", data));
-		pc_port[0x213] = data;
-	}
-	
-	READ_HANDLER ( pc_EXP_r )
-	{
-	    int data = pc_port[0x213];
-	    DBG_LOG(1,"EXP_unit_r",("$%02x\n", data));
-		return data;
-	}
 	
 	/**************************************************************************
 	 *
 	 *      Interrupt handlers.
 	 *
 	 **************************************************************************/
-	
-	void pc_keyboard(void)
-	{
-		int data;
-	
-		at_keyboard_polling();
-	
-		if( !pic8259_0_irq_pending(1) )
-		{
-			if ( (data=at_keyboard_read())!=-1) {
-				pc_port[0x60] = data;
-				DBG_LOG(1,"KB_scancode",("$%02x\n", pc_port[0x60]));
-				pic8259_0_issue_irq(1);
-			}
-		}
-	}
-	
 	public static InterruptPtr pc_mda_frame_interrupt = new InterruptPtr() { public int handler() 
 	{
 		static int turboswitch=-1;
@@ -634,6 +284,36 @@ public class pc
 	    return ignore_interrupt ();
 	} };
 	
+	public static InterruptPtr tandy1000_frame_interrupt = new InterruptPtr() { public int handler() 
+	{
+		static int turboswitch=-1;
+	
+		if (turboswitch !=(input_port_3_r(0)&2)) {
+			if (input_port_3_r(0)&2)
+				timer_set_overclock(0, 1);
+			else
+				timer_set_overclock(0, 4.77/12);
+			turboswitch=input_port_3_r(0)&2;
+		}
+	
+		pc_t1t_timer();
+	
+	    if( !onscrd_active() && !setup_active() )
+			pc_keyboard();
+	
+	    return ignore_interrupt ();
+	} };
+	
+	public static InterruptPtr pc_aga_frame_interrupt = new InterruptPtr() { public int handler() 
+	{
+		pc_aga_timer();
+	
+	    if( !onscrd_active() && !setup_active() )
+			pc_keyboard();
+	
+	    return ignore_interrupt ();
+	} };
+	
 	public static InterruptPtr pc_vga_frame_interrupt = new InterruptPtr() { public int handler() 
 	{
 		static int turboswitch=-1;
@@ -652,4 +332,5 @@ public class pc
 	
 	    return ignore_interrupt ();
 	} };
+	
 }

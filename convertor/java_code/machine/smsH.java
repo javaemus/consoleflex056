@@ -23,8 +23,6 @@ WRITE_HANDLER ( gg_sio_w );
 READ_HANDLER  ( gg_sio_r );
 WRITE_HANDLER ( gg_psg_w );
 
-int sms_load_rom(int id);
-int sms_id_rom (int id);
-int gamegear_id_rom (int id);
+int sms_init_cart(int id);
 
 #endif /* _SMS_H_ */

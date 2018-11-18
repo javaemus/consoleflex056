@@ -623,7 +623,7 @@ public class cia6526
 			if ((data & 0x80) != 0)
 			{
 				This.ier |= data;
-				cia_set_interrupt (This, data & 0x1f);
+				cia_set_interrupt (This, 0);
 			}
 			else
 			{

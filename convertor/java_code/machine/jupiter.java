@@ -45,7 +45,7 @@ public class jupiter
 	
 		if (address == 0x059d)
 		{
-			cpu_setOPbaseoverride(0, 0);
+			memory_set_bankhandler_w(0, 0,0);
 			if (jupiter_data_type == JUPITER_ACE)
 			{
 				for (loop = 0; loop < 0x6000; loop++)
@@ -125,7 +125,7 @@ public class jupiter
 		{
 			logerror("data: %08X. type: %d.\n", jupiter_data,
 												jupiter_data_type);
-			cpu_setOPbaseoverride(0, jupiter_opbaseoverride);
+			memory_set_opbase_handler(0, jupiter_opbaseoverride);
 		}
 	} };
 	
@@ -176,7 +176,7 @@ public class jupiter
 	
 		done = 0;
 		jupiter_index = 0;
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, 0);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 		if (file != 0)
 		{
 			if ((jupiter_data = malloc(0x6000)))
@@ -250,7 +250,7 @@ public class jupiter
 		if (jupiter_data_type != JUPITER_NONE)
 			return (0);
 		jupiter_exit_tap(id);
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, 0);
+		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, 0);
 		if (file != 0)
 		{
 			logerror("Loading file %s.\r\n", device_filename(IO_CASSETTE,id));

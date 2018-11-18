@@ -1,7 +1,8 @@
 /***************************************************************************
     commodore c128 home computer
 
-	peter.trauner@jk.uni-linz.ac.at
+	PeT mess@utanet.at
+
     documentation:
  	 iDOC (http://www.softwolves.pp.se/idoc)
            Christian Janoff  mepk@c64.org
@@ -317,132 +318,123 @@ public class c128
 	 * 0x0000-0xedff ram (dram bank 1?)
 	 * 0xe000-0xffff ram as bank 0
 	 */
-	static MemoryReadAddress c128_z80_readmem[] =
-	{
+	static MEMORY_READ_START( c128_z80_readmem )
 	#if 1
-		new MemoryReadAddress(0x0000, 0x0fff, MRA_BANK10),
-		new MemoryReadAddress(0x1000, 0xbfff, MRA_BANK11),
-		new MemoryReadAddress(0xc000, 0xffff, MRA_RAM),
+		{0x0000, 0x0fff, MRA_BANK10},
+		{0x1000, 0xbfff, MRA_BANK11},
+		{0xc000, 0xffff, MRA_RAM},
 	#else
 		/* best to do reuse bankswitching numbers */
-		new MemoryReadAddress(0x0000, 0x03ff, MRA_BANK10),
-		new MemoryReadAddress(0x0400, 0x0fff, MRA_BANK11),
-		new MemoryReadAddress(0x1000, 0x1fff, MRA_BANK3),
-		new MemoryReadAddress(0x2000, 0x3fff, MRA_BANK4),
+		{0x0000, 0x03ff, MRA_BANK10},
+		{0x0400, 0x0fff, MRA_BANK11},
+		{0x1000, 0x1fff, MRA_BANK3},
+		{0x2000, 0x3fff, MRA_BANK4},
 	
-		new MemoryReadAddress(0x4000, 0xbfff, MRA_BANK5),
-		new MemoryReadAddress(0xc000, 0xdfff, MRA_BANK6),
-		new MemoryReadAddress(0xe000, 0xefff, MRA_BANK7),
-		new MemoryReadAddress(0xf000, 0xfeff, MRA_BANK8),
-		new MemoryReadAddress(0xff00, 0xff04, c128_mmu8722_ff00_r),
-		new MemoryReadAddress(0xff05, 0xffff, MRA_BANK9),
+		{0x4000, 0xbfff, MRA_BANK5},
+		{0xc000, 0xdfff, MRA_BANK6},
+		{0xe000, 0xefff, MRA_BANK7},
+		{0xf000, 0xfeff, MRA_BANK8},
+		{0xff00, 0xff04, c128_mmu8722_ff00_r},
+		{0xff05, 0xffff, MRA_BANK9},
 	#endif
-		MEMORY_TABLE_END
-	};
+	MEMORY_END
 	
-	static MemoryWriteAddress c128_z80_writemem[] =
-	{
+	static MEMORY_WRITE_START( c128_z80_writemem )
 	#if 1
-		new MemoryWriteAddress(0x0000, 0x0fff, c128_write_0000, c64_memory),
-		new MemoryWriteAddress(0x1000, 0xbfff, c128_write_1000 ),
-		new MemoryWriteAddress(0xc000, 0xffff, MWA_RAM ),
+		{0x0000, 0x0fff, c128_write_0000, &c64_memory},
+		{0x1000, 0xbfff, c128_write_1000 },
+		{0xc000, 0xffff, MWA_RAM },
 	#else
-		new MemoryWriteAddress(0x0000, 0x03ff, MWA_BANK1, c64_memory),
-		new MemoryWriteAddress(0x0400, 0x0fff, MWA_BANK2),
-		new MemoryWriteAddress(0x1000, 0x1fff, MWA_BANK3),
-		new MemoryWriteAddress(0x2000, 0x3fff, MWA_BANK4),
-		new MemoryWriteAddress(0x4000, 0xbfff, MWA_BANK5),
-		new MemoryWriteAddress(0xc000, 0xdfff, MWA_BANK6),
-		new MemoryWriteAddress(0xe000, 0xefff, MWA_BANK7),
-		new MemoryWriteAddress(0xf000, 0xfeff, MWA_BANK8),
-		new MemoryWriteAddress(0xff00, 0xff04, c128_mmu8722_ff00_w),
-		new MemoryWriteAddress(0xff05, 0xffff, MWA_BANK9),
+		{0x0000, 0x03ff, MWA_BANK1, &c64_memory},
+		{0x0400, 0x0fff, MWA_BANK2},
+		{0x1000, 0x1fff, MWA_BANK3},
+		{0x2000, 0x3fff, MWA_BANK4},
+		{0x4000, 0xbfff, MWA_BANK5},
+		{0xc000, 0xdfff, MWA_BANK6},
+		{0xe000, 0xefff, MWA_BANK7},
+		{0xf000, 0xfeff, MWA_BANK8},
+		{0xff00, 0xff04, c128_mmu8722_ff00_w},
+		{0xff05, 0xffff, MWA_BANK9},
 	#endif
-		new MemoryWriteAddress(0x10000, 0x1ffff, MWA_RAM),
-		new MemoryWriteAddress(0x20000, 0xfffff, MWA_RAM),	   /* or nothing */
-		new MemoryWriteAddress(0x100000, 0x107fff, MWA_ROM, c128_basic),	/* maps to 0x4000 */
-		new MemoryWriteAddress(0x108000, 0x109fff, MWA_ROM, c64_basic),	/* maps to 0xa000 */
-		new MemoryWriteAddress(0x10a000, 0x10bfff, MWA_ROM, c64_kernal),	/* maps to 0xe000 */
-		new MemoryWriteAddress(0x10c000, 0x10cfff, MWA_ROM, c128_editor),
-		new MemoryWriteAddress(0x10d000, 0x10dfff, MWA_ROM, c128_z80),		/* maps to z80 0 */
-		new MemoryWriteAddress(0x10e000, 0x10ffff, MWA_ROM, c128_kernal),
-		new MemoryWriteAddress(0x110000, 0x117fff, MWA_ROM, c128_internal_function),
-		new MemoryWriteAddress(0x118000, 0x11ffff, MWA_ROM, c128_external_function),
-		new MemoryWriteAddress(0x120000, 0x120fff, MWA_ROM, c64_chargen),
-		new MemoryWriteAddress(0x121000, 0x121fff, MWA_ROM, c128_chargen),
-		new MemoryWriteAddress(0x122000, 0x1227ff, MWA_RAM, c64_colorram),
-		new MemoryWriteAddress(0x122800, 0x1327ff, MWA_RAM, c128_vdcram),
+	
+	#if 0
+		{0x10000, 0x1ffff, MWA_RAM},
+		{0x20000, 0xfffff, MWA_RAM},	   /* or nothing */
+		{0x100000, 0x107fff, MWA_ROM, &c128_basic},	/* maps to 0x4000 */
+		{0x108000, 0x109fff, MWA_ROM, &c64_basic},	/* maps to 0xa000 */
+		{0x10a000, 0x10bfff, MWA_ROM, &c64_kernal},	/* maps to 0xe000 */
+		{0x10c000, 0x10cfff, MWA_ROM, &c128_editor},
+		{0x10d000, 0x10dfff, MWA_ROM, &c128_z80},		/* maps to z80 0 */
+		{0x10e000, 0x10ffff, MWA_ROM, &c128_kernal},
+		{0x110000, 0x117fff, MWA_ROM, &c128_internal_function},
+		{0x118000, 0x11ffff, MWA_ROM, &c128_external_function},
+		{0x120000, 0x120fff, MWA_ROM, &c64_chargen},
+		{0x121000, 0x121fff, MWA_ROM, &c128_chargen},
+		{0x122000, 0x1227ff, MWA_RAM, &c64_colorram},
+		{0x122800, 0x1327ff, MWA_RAM, &c128_vdcram},
 		/* 2 kbyte by 8 bits, only 1 kbyte by 4 bits used) */
-		MEMORY_TABLE_END
-	};
+	#endif
+	MEMORY_END
 	
-	static IOReadPort c128_z80_readio[] =
-	{
-		new IOReadPort(0x1000, 0x13ff, c64_colorram_read),
-		new IOReadPort(0xd000, 0xd3ff, vic2_port_r),
-		new IOReadPort(0xd400, 0xd4ff, sid6581_0_port_r),
-		new IOReadPort(0xd500, 0xd5ff, c128_mmu8722_port_r),
-		new IOReadPort(0xd600, 0xd7ff, vdc8563_port_r),
-		new IOReadPort(0xdc00, 0xdcff, cia6526_0_port_r),
-		new IOReadPort(0xdd00, 0xddff, cia6526_1_port_r),
-		/*new IOReadPort( 0xdf00, 0xdfff, dma_port_r ), */
-		MEMORY_TABLE_END
-	};
+	static PORT_READ_START( c128_z80_readio )
+		{0x1000, 0x13ff, c64_colorram_read},
+		{0xd000, 0xd3ff, vic2_port_r},
+		{0xd400, 0xd4ff, sid6581_0_port_r},
+		{0xd500, 0xd5ff, c128_mmu8722_port_r},
+		{0xd600, 0xd7ff, vdc8563_port_r},
+		{0xdc00, 0xdcff, cia6526_0_port_r},
+		{0xdd00, 0xddff, cia6526_1_port_r},
+		/*{ 0xdf00, 0xdfff, dma_port_r }, */
+	PORT_END
 	
-	static IOWritePort c128_z80_writeio[] =
-	{
-		new IOWritePort(0x1000, 0x13ff, c64_colorram_write),
-		new IOWritePort(0xd000, 0xd3ff, vic2_port_w),
-		new IOWritePort(0xd400, 0xd4ff, sid6581_0_port_w),
-		new IOWritePort(0xd500, 0xd5ff, c128_mmu8722_port_w),
-		new IOWritePort(0xd600, 0xd7ff, vdc8563_port_w),
-		new IOWritePort(0xdc00, 0xdcff, cia6526_0_port_w),
-		new IOWritePort(0xdd00, 0xddff, cia6526_1_port_w),
-		/*new IOWritePort( 0xdf00, 0xdfff, dma_port_w ), */
-		MEMORY_TABLE_END
-	};
+	static PORT_WRITE_START( c128_z80_writeio )
+		{0x1000, 0x13ff, c64_colorram_write},
+		{0xd000, 0xd3ff, vic2_port_w},
+		{0xd400, 0xd4ff, sid6581_0_port_w},
+		{0xd500, 0xd5ff, c128_mmu8722_port_w},
+		{0xd600, 0xd7ff, vdc8563_port_w},
+		{0xdc00, 0xdcff, cia6526_0_port_w},
+		{0xdd00, 0xddff, cia6526_1_port_w},
+		/*{ 0xdf00, 0xdfff, dma_port_w }, */
+	PORT_END
 	
-	static MemoryReadAddress c128_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x0001, c64_m6510_port_r),
-		new MemoryReadAddress(0x0002, 0x00ff, MRA_BANK1),
-		new MemoryReadAddress(0x0100, 0x01ff, MRA_BANK2),
-		new MemoryReadAddress(0x0200, 0x03ff, MRA_BANK3),
-		new MemoryReadAddress(0x0400, 0x0fff, MRA_BANK4),
-		new MemoryReadAddress(0x1000, 0x1fff, MRA_BANK5),
-		new MemoryReadAddress(0x2000, 0x3fff, MRA_BANK6),
+	static MEMORY_READ_START( c128_readmem )
+		{0x0000, 0x0001, c64_m6510_port_r},
+		{0x0002, 0x00ff, MRA_BANK1},
+		{0x0100, 0x01ff, MRA_BANK2},
+		{0x0200, 0x03ff, MRA_BANK3},
+		{0x0400, 0x0fff, MRA_BANK4},
+		{0x1000, 0x1fff, MRA_BANK5},
+		{0x2000, 0x3fff, MRA_BANK6},
 	
-		new MemoryReadAddress(0x4000, 0x7fff, MRA_BANK7),
-		new MemoryReadAddress(0x8000, 0x9fff, MRA_BANK8),
-		new MemoryReadAddress(0xa000, 0xbfff, MRA_BANK9),
+		{0x4000, 0x7fff, MRA_BANK7},
+		{0x8000, 0x9fff, MRA_BANK8},
+		{0xa000, 0xbfff, MRA_BANK9},
 	
-		new MemoryReadAddress(0xc000, 0xcfff, MRA_BANK12),
-		new MemoryReadAddress(0xd000, 0xdfff, MRA_BANK13),
-		new MemoryReadAddress(0xe000, 0xfeff, MRA_BANK14),
-		new MemoryReadAddress(0xff00, 0xff04, MRA_BANK15),	   /* mmu c128 modus */
-		new MemoryReadAddress(0xff05, 0xffff, MRA_BANK16),
-		MEMORY_TABLE_END
-	};
+		{0xc000, 0xcfff, MRA_BANK12},
+		{0xd000, 0xdfff, MRA_BANK13},
+		{0xe000, 0xfeff, MRA_BANK14},
+		{0xff00, 0xff04, MRA_BANK15},	   /* mmu c128 modus */
+		{0xff05, 0xffff, MRA_BANK16},
+	MEMORY_END
 	
-	static MemoryWriteAddress c128_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x0001, c64_m6510_port_w),
-		new MemoryWriteAddress(0x0002, 0x00ff, MWA_BANK1),
-		new MemoryWriteAddress(0x0100, 0x01ff, MWA_BANK2),
-		new MemoryWriteAddress(0x0200, 0x03ff, MWA_BANK3),
-		new MemoryWriteAddress(0x0400, 0x0fff, MWA_BANK4),
-		new MemoryWriteAddress(0x1000, 0x1fff, MWA_BANK5),
-		new MemoryWriteAddress(0x2000, 0x3fff, MWA_BANK6),
+	static MEMORY_WRITE_START( c128_writemem )
+		{0x0000, 0x0001, c64_m6510_port_w},
+		{0x0002, 0x00ff, MWA_BANK1},
+		{0x0100, 0x01ff, MWA_BANK2},
+		{0x0200, 0x03ff, MWA_BANK3},
+		{0x0400, 0x0fff, MWA_BANK4},
+		{0x1000, 0x1fff, MWA_BANK5},
+		{0x2000, 0x3fff, MWA_BANK6},
 	
-		new MemoryWriteAddress(0x4000, 0x7fff, c128_write_4000),
-		new MemoryWriteAddress(0x8000, 0x9fff, c128_write_8000),
-		new MemoryWriteAddress(0xa000, 0xcfff, c128_write_a000),
-		new MemoryWriteAddress(0xd000, 0xdfff, c128_write_d000),
-		new MemoryWriteAddress(0xe000, 0xfeff, c128_write_e000),
-		new MemoryWriteAddress(0xff00, 0xff04, c128_write_ff00),
-		new MemoryWriteAddress(0xff05, 0xffff, c128_write_ff05),
-		MEMORY_TABLE_END
-	};
+		{0x4000, 0x7fff, c128_write_4000},
+		{0x8000, 0x9fff, c128_write_8000},
+		{0xa000, 0xcfff, c128_write_a000},
+		{0xd000, 0xdfff, c128_write_d000},
+		{0xe000, 0xfeff, c128_write_e000},
+		{0xff00, 0xff04, c128_write_ff00},
+		{0xff05, 0xffff, c128_write_ff05},
+	MEMORY_END
 	
 	#define DIPS_HELPER(bit, name, keycode) \
 	    PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, CODE_NONE);
@@ -948,11 +940,163 @@ public class c128
 		 DIPS_KEYS_BOTH
 	INPUT_PORTS_END(); }}; 
 	
+	INPUT_PORTS_START (c128swe)
+		 C64_DIPS
+		 C128_DIPS
+		 PORT_START(); 
+		 DIPS_HELPER (0x8000, "(64)_                    < >", KEYCODE_TILDE)
+		 DIPS_HELPER (0x4000, "(64)1 !  BLK   ORNG", KEYCODE_1)
+		 DIPS_HELPER (0x2000, "(64)2 \"  WHT   BRN", KEYCODE_2)
+		 DIPS_HELPER (0x1000, "(64)3 #  RED   L RED       Paragraph", KEYCODE_3)
+		 DIPS_HELPER (0x0800, "(64)4 $  CYN   D GREY", KEYCODE_4)
+		 DIPS_HELPER (0x0400, "(64)5 %  PUR   GREY", KEYCODE_5)
+		 DIPS_HELPER (0x0200, "(64)6 &  GRN   L GRN", KEYCODE_6)
+		 DIPS_HELPER (0x0100, "(64)7 '  BLU   L BLU	      /", KEYCODE_7)
+		 DIPS_HELPER (0x0080, "(64)8 (  YEL   L GREY", KEYCODE_8)
+		 DIPS_HELPER (0x0040, "(64)9 )  RVS-ON", KEYCODE_9)
+		 DIPS_HELPER (0x0020, "(64)0    RVS-OFF", KEYCODE_0)
+		 DIPS_HELPER (0x0010, "(64)-",
+					  KEYCODE_PLUS_PAD)
+		 DIPS_HELPER (0x0008, "(64)=",
+					  KEYCODE_MINUS_PAD)
+		 DIPS_HELPER (0x0004, "(64): *",
+					  KEYCODE_MINUS)
+		 DIPS_HELPER (0x0002, "(64)HOME CLR", KEYCODE_EQUALS)
+		 DIPS_HELPER (0x0001, "(64)DEL INST", KEYCODE_BACKSPACE)
+		 PORT_START(); 
+	     DIPS_HELPER (0x8000, "(64)CONTROL", KEYCODE_RCONTROL)
+		 DIPS_HELPER (0x4000, "(64)Q", KEYCODE_Q)
+		 DIPS_HELPER (0x2000, "(64)W", KEYCODE_W)
+		 DIPS_HELPER (0x1000, "(64)E", KEYCODE_E)
+		 DIPS_HELPER (0x0800, "(64)R", KEYCODE_R)
+		 DIPS_HELPER (0x0400, "(64)T", KEYCODE_T)
+		 DIPS_HELPER (0x0200, "(64)Y", KEYCODE_Y)
+		 DIPS_HELPER (0x0100, "(64)U", KEYCODE_U)
+		 DIPS_HELPER (0x0080, "(64)I", KEYCODE_I)
+		 DIPS_HELPER (0x0040, "(64)O", KEYCODE_O)
+		 DIPS_HELPER (0x0020, "(64)P", KEYCODE_P)
+		 DIPS_HELPER (0x0010, "(64)]                    Circumflex-A",
+					  KEYCODE_OPENBRACE)
+		 DIPS_HELPER (0x0008, "(64)@",
+					  KEYCODE_ASTERISK)
+		 DIPS_HELPER (0x0004, "(64)Arrow-Up Pi",
+					  KEYCODE_CLOSEBRACE)
+		 DIPS_HELPER (0x0002, "(64)RESTORE", KEYCODE_PRTSCR)
+		 DIPS_HELPER (0x0001, "(64)STOP RUN", KEYCODE_TAB)
+		 PORT_START(); 
+	     PORT_BITX (0x8000, 0, IPT_DIPSWITCH_NAME|IPF_TOGGLE,
+					"(64);Left-Shift)SHIFT-LOCK (switch)",
+					KEYCODE_CAPSLOCK, IP_JOY_NONE)
+		 PORT_DIPSETTING(  0, DEF_STR( "Off") );
+		 PORT_DIPSETTING(0x8000, DEF_STR( "On") );
+		 DIPS_HELPER (0x4000, "(64)A", KEYCODE_A)
+		 DIPS_HELPER (0x2000, "(64)S", KEYCODE_S)
+		 DIPS_HELPER (0x1000, "(64)D", KEYCODE_D)
+		 DIPS_HELPER (0x0800, "(64)F", KEYCODE_F)
+		 DIPS_HELPER (0x0400, "(64)G", KEYCODE_G)
+		 DIPS_HELPER (0x0200, "(64)H", KEYCODE_H)
+		 DIPS_HELPER (0x0100, "(64)J", KEYCODE_J)
+		 DIPS_HELPER (0x0080, "(64)K", KEYCODE_K)
+		 DIPS_HELPER (0x0040, "(64)L", KEYCODE_L)
+		 DIPS_HELPER (0x0020, "(64)Pound                Diaresis-O",
+					  KEYCODE_COLON)
+		 DIPS_HELPER (0x0010, "(64)[                    Diaresis-A",
+					  KEYCODE_QUOTE)
+		 DIPS_HELPER (0x0008, "(64); +",
+					  KEYCODE_BACKSLASH)
+		 DIPS_HELPER (0x0004, "(64)RETURN", KEYCODE_ENTER)
+		 DIPS_HELPER (0x0002, "(64)CBM", KEYCODE_RALT)
+		 DIPS_HELPER (0x0001, "(64)Left-Shift", KEYCODE_LSHIFT)
+		 PORT_START(); 
+		 DIPS_HELPER (0x8000, "(64)Z", KEYCODE_Z)
+		 DIPS_HELPER (0x4000, "(64)X", KEYCODE_X)
+		 DIPS_HELPER (0x2000, "(64)C", KEYCODE_C)
+		 DIPS_HELPER (0x1000, "(64)V", KEYCODE_V)
+		 DIPS_HELPER (0x0800, "(64)B", KEYCODE_B)
+		 DIPS_HELPER (0x0400, "(64)N", KEYCODE_N)
+		 DIPS_HELPER (0x0200, "(64)M", KEYCODE_M)
+		 DIPS_HELPER (0x0100, "(64), <", KEYCODE_COMMA)
+		 DIPS_HELPER (0x0080, "(64). >", KEYCODE_STOP)
+		 DIPS_HELPER (0x0040, "(64)/ ?", KEYCODE_SLASH)
+		 DIPS_HELPER (0x0020, "(64)Right-Shift", KEYCODE_RSHIFT)
+		 DIPS_HELPER (0x0010, "(64)CRSR-DOWN", KEYCODE_2_PAD)
+		 DIPS_HELPER (0x0008, "(64)CRSR-RIGHT", KEYCODE_6_PAD)
+		 DIPS_HELPER (0x0004, "(64)Space", KEYCODE_SPACE)
+	     PORT_START(); 
+		 DIPS_HELPER (0x8000, "ESC", KEYCODE_ESC)
+		 DIPS_HELPER (0x4000, "TAB", KEYCODE_F5)
+		 DIPS_HELPER (0x2000, "ALT", KEYCODE_F6)
+		 PORT_BITX (0x1000, 0, IPT_DIPSWITCH_NAME|IPF_TOGGLE,
+					"ASCII Swedish/Finnish (switch);, CODE_DEFAULT, IP_JOY_NONE)
+		 PORT_DIPSETTING (0, "ASCII");
+		 PORT_DIPSETTING (0x1000, "Swedish/Finnish");
+		 DIPS_HELPER (0x0800, "HELP", KEYCODE_F7)
+		 DIPS_HELPER (0x0400, "LINE FEED", KEYCODE_F8)
+		 PORT_BITX (0x0200, 0, IPT_DIPSWITCH_NAME|IPF_TOGGLE,
+					"40 80 Display (switch);booting)",
+					CODE_DEFAULT, IP_JOY_NONE)
+		 PORT_DIPSETTING (0, "40 Columns (DIN/TV);
+		 PORT_DIPSETTING (0x0200, "80 Columns (RGBI);
+		 PORT_BITX (0x0100, IP_ACTIVE_HIGH, IPF_TOGGLE,
+					"NO SCROLL (switch);, KEYCODE_F9, IP_JOY_NONE)
+		 PORT_DIPSETTING(  0, DEF_STR( "Off") );
+		 PORT_DIPSETTING(0x100, DEF_STR( "On") );
+		 DIPS_HELPER (0x0080, "Up", CODE_DEFAULT)
+		 DIPS_HELPER (0x0040, "Down", CODE_DEFAULT)
+		 DIPS_HELPER (0x0020, "Left", CODE_DEFAULT)
+		 DIPS_HELPER (0x0010, "Right", CODE_DEFAULT)
+		 DIPS_HELPER (0x0008, "(64)f1 f2", KEYCODE_F1)
+		 DIPS_HELPER (0x0004, "(64)f3 f4", KEYCODE_F2)
+		 DIPS_HELPER (0x0002, "(64)f5 f6", KEYCODE_F3)
+		 DIPS_HELPER (0x0001, "(64)f7 f8", KEYCODE_F4)
+		 DIPS_KEYS_BOTH
+	INPUT_PORTS_END(); }}; 
+	
 	static void c128_init_palette (UBytePtr sys_palette, unsigned short *sys_colortable, const UBytePtr color_prom)
 	{
+		int i;
 		memcpy (sys_palette, vic2_palette, sizeof (vic2_palette));
 		memcpy (sys_palette+sizeof(vic2_palette), vdc8563_palette, sizeof (vdc8563_palette));
+	
+		for (i=0; i<0x100; i++) {
+			sys_colortable[i*2]=0x10+((i&0xf0)>>4);
+			sys_colortable[i*2+1]=0x10+(i&0xf);
+		}
 	}
+	
+	static GfxLayout c128_charlayout = new GfxLayout
+	(
+		8,16,
+		512,                                    /* 256 characters */
+		1,                      /* 1 bits per pixel */
+		new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
+		/* x offsets */
+		new int[] { 0,1,2,3,4,5,6,7 },
+		/* y offsets */
+		new int[] { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+		  8*8, 9*8, 10*8, 11*8, 12*8, 13*8, 14*8, 15*8
+		},
+		8*16
+	);
+	
+	static GfxLayout c128graphic_charlayout = new GfxLayout
+	(
+		8,1,
+		256,                                    /* 256 characters */
+		1,                      /* 1 bits per pixel */
+		new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
+		/* x offsets */
+		new int[] { 0,1,2,3,4,5,6,7 },
+		/* y offsets */
+		new int[] { 0 },
+		8
+	);
+	
+	static GfxDecodeInfo c128_gfxdecodeinfo[] ={
+		new GfxDecodeInfo( 1, 0x0000, c128_charlayout, 0, 0x100 ),
+		new GfxDecodeInfo( 2, 0x0000, c128graphic_charlayout, 0, 0x100 ),
+	    new GfxDecodeInfo( -1 ) /* end of array */
+	};
 	
 	#if 0
 	/* usa first 318018-02 318019-02 318020-03 rev 0*/
@@ -1033,35 +1177,60 @@ public class c128
 	#endif
 	
 	ROM_START (c128)
-		ROM_REGION (0x132800, REGION_CPU1);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
 		ROM_LOAD ("318018.04", 0x100000, 0x4000, 0x9f9c355b);
 		ROM_LOAD ("318019.04", 0x104000, 0x4000, 0x6e2c91a7);
 		ROM_LOAD ("251913.01", 0x108000, 0x4000, 0x0010ec31);
 		ROM_LOAD ("318020.05", 0x10c000, 0x4000, 0xba456b8e);
 		ROM_LOAD ("390059.01", 0x120000, 0x2000, 0x6aaaafe6);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c128d)
-		ROM_REGION (0x132800, REGION_CPU1);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
 		ROM_LOAD ("318022.02", 0x100000, 0x8000, 0xaf1ae1e8);
-		ROM_LOAD ("318023.02", 0x100000, 0x8000, 0xeedc120a);
+		ROM_LOAD ("318023.02", 0x108000, 0x8000, 0xeedc120a);
 		ROM_LOAD ("390059.01", 0x120000, 0x2000, 0x6aaaafe6);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
 		C1571_ROM(REGION_CPU3)
+		ROM_REGION (0x100, REGION_GFX1, 0);
+	ROM_END(); }}; 
+	
+	// submitted as cost reduced set!
+	ROM_START (c128dita)
+		ROM_REGION (0x132800, REGION_CPU1, 0);
+		ROM_LOAD ("318022.02", 0x100000, 0x8000, 0xaf1ae1e8);
+	
+	    // in a cost reduced set this should be 1 rom
+		ROM_LOAD ("251913.01", 0x108000, 0x4000, 0x0010ec31);
+	//	ROM_LOAD ("901226.01", 0x108000, 0x2000, 0xf833d117);
+	//	ROM_LOAD( "kern128d.ita", 0x10a000, 0x2000, 0xf1098d37 );
+		ROM_LOAD ("318079.01", 0x10c000, 0x4000, 0x66673e8b);
+	
+	    ROM_LOAD ("325167.01", 0x120000, 0x2000, 0xbad36b88);// taken from funet
+	    // normally 1 rom
+	//    ROM_LOAD ("325167.01b", 0x120000, 0x1000, 0xec4272ee);//standard c64 901226.01
+	//    ROM_LOAD ("325167.01b", 0x121000, 0x1000, 0x2bc73556);// bad dump
+	
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+	    // not included in submission
+	//	C1571_ROM(REGION_CPU3)
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c128ger)
 		 /* c128d german */
-		ROM_REGION (0x132800, REGION_CPU1);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
 		ROM_LOAD ("318022.02", 0x100000, 0x8000, 0xaf1ae1e8);
 		ROM_LOAD ("318077.01", 0x108000, 0x8000, 0xeb6e2c8f);
 		ROM_LOAD ("315079.01", 0x120000, 0x2000, 0xfe5a2db1);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c128fra)
-		ROM_REGION (0x132800, REGION_CPU1);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
 		ROM_LOAD ("318018.04", 0x100000, 0x4000, 0x9f9c355b);
 		ROM_LOAD ("318019.04", 0x104000, 0x4000, 0x6e2c91a7);
 		ROM_LOAD ("251913.01", 0x108000, 0x4000, 0x0010ec31);
@@ -1073,39 +1242,78 @@ public class c128
 		ROM_LOAD ("kernalpart.french.bin", 0x10e000, 0x2000, 0xca5e1179);
 	#endif
 		ROM_LOAD ("325167.01", 0x120000, 0x2000, 0xbad36b88);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c128ita)
-		ROM_REGION (0x132800, REGION_CPU1);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
 		/* original 318022-01 */
 		ROM_LOAD ("318018.04", 0x100000, 0x4000, 0x9f9c355b);
 		ROM_LOAD ("318019.04", 0x104000, 0x4000, 0x6e2c91a7);
 		ROM_LOAD ("251913.01", 0x108000, 0x4000, 0x0010ec31);
 		ROM_LOAD ("italian.bin", 0x10c000, 0x4000, 0x74d6b084);
 		ROM_LOAD ("325167.01", 0x120000, 0x2000, 0xbad36b88);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c128swe)
-		ROM_REGION (0x132800, REGION_CPU1);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
 		ROM_LOAD ("318022.02", 0x100000, 0x8000, 0xaf1ae1e8);
 		ROM_LOAD ("318034.01", 0x108000, 0x8000, 0xcb4e1719);
-		/* vic64s doubled */
-		ROM_LOAD ("char.swe", 0x120000, 0x2000, 0x22d4d095);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_LOAD ("325181.01", 0x120000, 0x2000, 0x7a70d9b8);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
 	
 	ROM_START (c128nor)
-		ROM_REGION (0x132800, REGION_CPU1);
-		ROM_LOAD ("318018.04", 0x100000, 0x4000, 0x9f9c355b);
-		ROM_LOAD ("318019.04", 0x104000, 0x4000, 0x6e2c91a7);
-		ROM_LOAD ("251913.01", 0x108000, 0x4000, 0x0010ec31);
-		ROM_LOAD ("nor.bin", 0x10c000, 0x4000, 0xa5406848);
+		ROM_REGION (0x132800, REGION_CPU1, 0);
+		ROM_LOAD ("318018.04", 0x100000, 0x4000, BADCRC(0x9f9c355b);
+		ROM_LOAD ("318019.04", 0x104000, 0x4000, BADCRC(0x6e2c91a7);
+		ROM_LOAD ("251913.01", 0x108000, 0x4000, BADCRC(0x0010ec31);
+		ROM_LOAD ("nor.bin", 0x10c000, 0x4000, BADCRC(0xa5406848);
 		/* standard c64, vic20 based norwegian */
-		ROM_LOAD ("char.nor", 0x120000, 0x2000, 0xba95c625);
-		ROM_REGION (0x10000, REGION_CPU2);
+		ROM_LOAD ("char.nor", 0x120000, 0x2000, BADCRC(0xba95c625);
+		ROM_REGION (0x10000, REGION_CPU2, 0);
+		ROM_REGION (0x100, REGION_GFX1, 0);
 	ROM_END(); }}; 
+	
+	static SID6581_interface pal_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		1,
+		{
+			{
+				MIXER(50, MIXER_PAN_CENTER),
+				MOS6581,
+				VIC6569_CLOCK,
+				c64_paddle_read
+			}
+		}
+	};
+	
+	static SID6581_interface ntsc_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		1,
+		{
+			{
+				MIXER(50, MIXER_PAN_CENTER),
+				MOS6581,
+				VIC6567_CLOCK,
+				c64_paddle_read
+			}
+		}
+	};
 	
 	static MachineDriver machine_driver_c128 = new MachineDriver
 	(
@@ -1117,7 +1325,7 @@ public class c128
 				c128_z80_readmem, c128_z80_writemem,
 				c128_z80_readio, c128_z80_writeio,
 				c64_frame_interrupt, 1,
-				c128_raster_irq, VIC2_HRETRACERATE,
+				vic2_raster_irq, VIC2_HRETRACERATE,
 			),
 			new MachineCPU(
 				CPU_M8502,
@@ -1125,7 +1333,7 @@ public class c128
 				c128_readmem, c128_writemem,
 				null, null,
 				c64_frame_interrupt, 1,
-				c128_raster_irq, VIC2_HRETRACERATE,
+				vic2_raster_irq, VIC2_HRETRACERATE,
 			),
 		},
 		VIC6567_VRETRACERATE, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -1137,11 +1345,12 @@ public class c128
 		656,							   /* screen width */
 		216,							   /* screen height */
 		new rectangle(0, 656 - 1, 0, 216 - 1),		   /* visible_area */
-		null,								   /* graphics decode info */
+		c128_gfxdecodeinfo,								   /* graphics decode info */
 		(sizeof (vic2_palette) +sizeof(vdc8563_palette))
 		 / sizeof (vic2_palette[null]) / 3,
-		null,
+		0x100*2,
 		c128_init_palette,				   /* convert color prom */
+	//	VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY, //when it is supported in vic6567
 		VIDEO_TYPE_RASTER,
 		null,
 		c128_vh_start,
@@ -1151,7 +1360,7 @@ public class c128
 		/* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, ntsc_sound_interface ),
 			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
@@ -1166,7 +1375,7 @@ public class c128
 				c128_z80_readmem, c128_z80_writemem,
 				c128_z80_readio, c128_z80_writeio,
 				c64_frame_interrupt, 1,
-				c128_raster_irq, VIC2_HRETRACERATE,
+				vic2_raster_irq, VIC2_HRETRACERATE,
 			),
 			new MachineCPU(
 				CPU_M8502,
@@ -1174,7 +1383,7 @@ public class c128
 				c128_readmem, c128_writemem,
 				null, null,
 				c64_frame_interrupt, 1,
-				c128_raster_irq, VIC2_HRETRACERATE,
+				vic2_raster_irq, VIC2_HRETRACERATE,
 			),
 			C1571_CPU
 		},
@@ -1187,10 +1396,10 @@ public class c128
 		656,							   /* screen width */
 		216,							   /* screen height */
 		new rectangle(0, 656 - 1, 0, 216 - 1),		   /* visible_area */
-		null,								   /* graphics decode info */
+		c128_gfxdecodeinfo,								   /* graphics decode info */
 		(sizeof (vic2_palette) +sizeof(vdc8563_palette))
 		 / sizeof (vic2_palette[null]) / 3,
-		null,
+		0x100*2,
 		c128_init_palette,				   /* convert color prom */
 		VIDEO_TYPE_RASTER,
 		null,
@@ -1201,7 +1410,7 @@ public class c128
 		/* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, ntsc_sound_interface ),
 			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
@@ -1216,7 +1425,7 @@ public class c128
 				c128_z80_readmem, c128_z80_writemem,
 				c128_z80_readio, c128_z80_writeio,
 				c64_frame_interrupt, 1,
-				c128_raster_irq, VIC2_HRETRACERATE,
+				vic2_raster_irq, VIC2_HRETRACERATE,
 			),
 			new MachineCPU(
 				CPU_M8502,
@@ -1224,7 +1433,7 @@ public class c128
 				c128_readmem, c128_writemem,
 				null, null,
 				c64_frame_interrupt, 1,
-				c128_raster_irq, VIC2_HRETRACERATE,
+				vic2_raster_irq, VIC2_HRETRACERATE,
 			),
 		},
 		VIC6569_VRETRACERATE,
@@ -1237,10 +1446,10 @@ public class c128
 		656,							   /* screen width */
 		216,							   /* screen height */
 		new rectangle(0, 656 - 1, 0, 216 - 1),		   /* visible_area */
-		null,								   /* graphics decode info */
+		c128_gfxdecodeinfo,								   /* graphics decode info */
 		(sizeof (vic2_palette) +sizeof(vdc8563_palette))
 		 / sizeof (vic2_palette[null]) / 3,
-		null,
+		0x100*2,
 		c128_init_palette,				   /* convert color prom */
 		VIDEO_TYPE_RASTER,
 		null,
@@ -1251,7 +1460,7 @@ public class c128
 		/* sound hardware */
 		0, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, pal_sound_interface ),
 			new MachineSound(SOUND_DAC, vc20tape_sound_interface)
 		}
 	);
@@ -1261,8 +1470,8 @@ public class c128
 		IODEVICE_CBM_QUICK,
 	#if 0
 		IODEVICE_ROM_SOCKET,
-		IODEVICE_CBM_ROM("crt\080\0", c64_rom_id),
-		IODEVICE_VC20TAPE,
+		IODEVICE_CBM_ROM("crt\080\0"),
+		IODEVICE_VC20TAPE, // needs 2 megahertz in c128 mode!
 	#endif
 		IODEVICE_CBM_DRIVE,
 		{IO_END}
@@ -1273,7 +1482,7 @@ public class c128
 		IODEVICE_CBM_QUICK,
 	#if 0
 		IODEVICE_ROM_SOCKET,
-		IODEVICE_CBM_ROM(c64_rom_id),
+		IODEVICE_CBM_ROM(),
 		IODEVICE_VC20TAPE,
 	#endif
 		IODEVICE_C1571,
@@ -1287,15 +1496,36 @@ public class c128
 	#define io_c128ita io_c128
 	#define io_c128swe io_c128
 	#define io_c128nor io_c128
+	//#define io_c128dita io_c128d
+	#define io_c128dita io_c128
 	
 	/*	  YEAR	NAME		PARENT	MACHINE 	INPUT		INIT		COMPANY   FULLNAME */
-	COMPX (1985, c128,		0,		c128,		c128,		c128,		"Commodore Business Machines Co.","Commodore 128 NTSC",      GAME_IMPERFECT_SOUND)
-	COMPX (1985, c128ger,	c128,	c128pal,	c128ger,	c128pal,	"Commodore Business Machines Co.","Commodore 128 German (PAL)",GAME_IMPERFECT_SOUND)
-	COMPX (1985, c128fra,	c128,	c128pal,	c128fra,	c128pal,	"Commodore Business Machines Co.","Commodore 128 French (PAL)",GAME_IMPERFECT_SOUND)
-	COMPX (1985, c128ita,	c128,	c128pal,	c128ita,	c128pal,	"Commodore Business Machines Co.","Commodore 128 Italian (PAL)",GAME_IMPERFECT_SOUND)
-	/* other countries spanish, belgium, finnish, swedish, norwegian */
+	COMP (1985, c128,		0,		c128,		c128,		c128,		"Commodore Business Machines Co.","Commodore 128 NTSC")
+	COMP (1985, c128ger,	c128,	c128pal,	c128ger,	c128pal,	"Commodore Business Machines Co.","Commodore 128 German (PAL)")
+	COMP (1985, c128fra,	c128,	c128pal,	c128fra,	c128pal,	"Commodore Business Machines Co.","Commodore 128 French (PAL)")
+	COMP (1985, c128ita,	c128,	c128pal,	c128ita,	c128pal,	"Commodore Business Machines Co.","Commodore 128 Italian (PAL)")
+	COMP (1985, c128swe,	c128,	c128pal,	c128swe,	c128pal,	"Commodore Business Machines Co.","Commodore 128 Swedish (PAL)")
+	/* other countries spanish, belgium, norwegian */
 	/* please leave the following as testdriver */
-	COMP (1985, c128swe,	c128,	c128pal,	c128ita,	c128pal,	"Commodore Business Machines Co.","Commodore 128 Swedish (PAL)")
-	COMP (1985, c128nor,	c128,	c128pal,	c128ita,	c128pal,	"Commodore Business Machines Co.","Commodore 128 Norwegian (PAL)")
-	COMP (1985, c128d,		0,		c128d,		c128,		c128,		"Commodore Business Machines Co.","Commodore 128D NTSC")
+	COMPX (1985, c128nor,	c128,	c128pal,	c128ita,	c128pal,	"Commodore Business Machines Co.","Commodore 128 Norwegian (PAL)", GAME_NOT_WORKING)
+	COMPX (1985, c128d,	c128,	c128d,		c128,		c128,		"Commodore Business Machines Co.","Commodore 128D NTSC", GAME_NOT_WORKING)
+	//COMPX (1985, c128dita,	c128,	c128d,		c128,		c128,		"Commodore Business Machines Co.","Commodore 128D Italian (PAL)", GAME_NOT_WORKING)
+	COMPX (1985, c128dita,	c128,	c128pal,	c128ita,	c128pal,	"Commodore Business Machines Co.","Commodore 128D Italian (PAL)", GAME_NOT_WORKING)
+	
+	#ifdef RUNTIME_LOADER
+	extern void c128_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"c128")==0) drivers[i]=&driver_c128;
+			if ( strcmp(drivers[i].name,"c128ger")==0) drivers[i]=&driver_c128ger;
+			if ( strcmp(drivers[i].name,"c128fra")==0) drivers[i]=&driver_c128fra;
+			if ( strcmp(drivers[i].name,"c128ita")==0) drivers[i]=&driver_c128ita;
+			if ( strcmp(drivers[i].name,"c128swe")==0) drivers[i]=&driver_c128swe;
+			if ( strcmp(drivers[i].name,"c128nor")==0) drivers[i]=&driver_c128nor;
+			if ( strcmp(drivers[i].name,"c128d")==0) drivers[i]=&driver_c128d;
+			if ( strcmp(drivers[i].name,"c128dita")==0) drivers[i]=&driver_c128dita;
+		}
+	}
+	#endif
 }

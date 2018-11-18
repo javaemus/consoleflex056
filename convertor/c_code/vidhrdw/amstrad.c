@@ -28,6 +28,169 @@ static int amstrad_rendering;
   Start the video hardware emulation.
 ***************************************************************************/
 
+
+/*************************************************************************/
+/* Amstrad CPC 
+ 
+The Amstrad CPC has a fixed palette of 27 colours generated from 3 levels of Red, 
+Green and Blue.
+
+The hardware allows selection of 32 colours, but these extra colours are copies
+of existing colours.
+*/ 
+
+static unsigned short amstrad_colour_table[32] =
+{
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+	29, 30, 31
+};
+
+unsigned char amstrad_palette[32 * 3] =
+{
+	0x080, 0x080, 0x080,			   /* white */
+	0x080, 0x080, 0x080,			   /* white */
+	0x000, 0x0ff, 0x080,			   /* sea green */
+	0x0ff, 0x0ff, 0x080,			   /* pastel yellow */
+	0x000, 0x000, 0x080,			   /* blue */
+	0x0ff, 0x000, 0x080,			   /* purple */
+	0x000, 0x080, 0x080,			   /* cyan */
+	0x0ff, 0x080, 0x080,			   /* pink */
+	0x0ff, 0x000, 0x080,			   /* purple */
+	0x0ff, 0x0ff, 0x080,			   /* pastel yellow */
+	0x0ff, 0x0ff, 0x000,			   /* bright yellow */
+	0x0ff, 0x0ff, 0x0ff,			   /* bright white */
+	0x0ff, 0x000, 0x000,			   /* bright red */
+	0x0ff, 0x000, 0x0ff,			   /* bright magenta */
+	0x0ff, 0x080, 0x000,			   /* orange */
+	0x0ff, 0x080, 0x0ff,			   /* pastel magenta */
+	0x000, 0x000, 0x080,			   /* blue */
+	0x000, 0x0ff, 0x080,			   /* sea green */
+	0x000, 0x0ff, 0x000,			   /* bright green */
+	0x000, 0x0ff, 0x0ff,			   /* bright cyan */
+	0x000, 0x000, 0x000,			   /* black */
+	0x000, 0x000, 0x0ff,			   /* bright blue */
+	0x000, 0x080, 0x000,			   /* green */
+	0x000, 0x080, 0x0ff,			   /* sky blue */
+	0x080, 0x000, 0x080,			   /* magenta */
+	0x080, 0x0ff, 0x080,			   /* pastel green */
+	0x080, 0x0ff, 0x080,			   /* lime */
+	0x080, 0x0ff, 0x0ff,			   /* pastel cyan */
+	0x080, 0x000, 0x000,			   /* Red */
+	0x080, 0x000, 0x0ff,			   /* mauve */
+	0x080, 0x080, 0x000,			   /* yellow */
+	0x080, 0x080, 0x0ff,			   /* pastel blue */
+};
+
+
+/* Initialise the palette */
+void amstrad_cpc_init_palette(unsigned char *sys_palette, unsigned short *sys_colortable, const unsigned char *color_prom)
+{
+	memcpy(sys_palette, amstrad_palette, sizeof (amstrad_palette));
+	memcpy(sys_colortable, amstrad_colour_table, sizeof (amstrad_colour_table));
+}
+
+/*************************************************************************/
+/* KC Compact
+
+The palette is defined by a colour rom. The only rom dump that exists (from the KC-Club webpage)
+is 2K, which seems correct. In this rom the same 32 bytes of data is repeated throughout the rom.
+
+When a I/O write is made to "Gate Array" to select the colour, Bit 7 and 6 are used by the 
+"Gate Array" to define the function, bit 7 = 0, bit 6 = 1. In the  Amstrad CPC, bits 4..0 
+define the hardware colour number, but in the KC Compact, it seems bits 5..0 
+define the hardware colour number allowing 64 colours to be chosen.
+
+It is possible therefore that the colour rom could be reprogrammed, so that other colour
+selections could be chosen allowing 64 different colours to be used. But this has not been tested
+and co
+
+colour rom byte:
+
+Bit Function 
+7 not used 
+6 not used 
+5,4 Green value
+3,2 Red value
+1,0 Blue value
+
+Green value, Red value, Blue value: 0 = 0%, 01/10 = 50%, 11 = 100%.
+The 01 case is not used, it is unknown if this produces a different amount of colour.
+*/ 
+
+unsigned char kccomp_get_colour_element(int colour_value)
+{
+	switch (colour_value)
+	{
+		case 0:
+			return 0x00;
+		case 1:
+			return 0x60;
+		case 2:
+			return 0x60;
+		case 3:
+			return 0x0ff;
+	}
+
+	return 0x0ff;
+}
+
+
+/* the colour rom has the same 32 bytes repeated, but it might be possible to put a new rom in
+with different data and be able to select the other entries - not tested on a real kc compact yet
+and not supported by this driver */
+void kccomp_init_palette(unsigned char *sys_palette, unsigned short *sys_colortable, const unsigned char *color_prom)
+{
+	int i;
+	int rgb_index = 0;
+
+	color_prom = color_prom+0x018000;
+
+	for (i=0; i<32; i++)
+	{
+		sys_colortable[i] = i;
+		sys_palette[rgb_index] = kccomp_get_colour_element((color_prom[i]>>2) & 0x03);
+		rgb_index++;
+		sys_palette[rgb_index] = kccomp_get_colour_element((color_prom[i]>>4) & 0x03);
+		rgb_index++;
+		sys_palette[rgb_index] = kccomp_get_colour_element((color_prom[i]>>0) & 0x03);
+		rgb_index++;
+	}
+}
+
+
+/********************************************
+Amstrad Plus
+
+The Amstrad Plus has a 4096 colour palette
+*********************************************/
+
+
+void amstrad_plus_init_palette(unsigned char *palette, unsigned short *colortable,const unsigned char *color_prom) 
+{
+	int i;
+
+	for ( i = 0; i < 0x1000; i++ ) 
+	{
+		int r, g, b;
+
+		r = ( i >> 8 ) & 0x0f;
+		g = ( i >> 4 ) & 0x0f;
+		b = i & 0x0f;
+
+		r = ( r << 4 ) | ( r );
+		g = ( g << 4 ) | ( g );
+		b = ( b << 4 ) | ( b );
+
+		*palette++ = r;
+		*palette++ = g;
+		*palette++ = b;
+
+		colortable[i] = i;
+	}
+}
+
+
 /* this contains the colours in Machine->pens form.*/
 /* this is updated from the eventlist and reflects the current state
 of the render colours - these may be different to the current colour palette values */
@@ -35,7 +198,7 @@ of the render colours - these may be different to the current colour palette val
 static unsigned long amstrad_render_colours[17];
 
 #ifndef AMSTRAD_VIDEO_EVENT_LIST
-static struct osd_bitmap	*amstrad_bitmap;
+static struct mame_bitmap	*amstrad_bitmap;
 #endif
 
 /* the mode is re-loaded at each HSYNC */
@@ -94,14 +257,14 @@ static int amstrad_DE=0;
 
 
 //static unsigned char *amstrad_Video_RAM;
-static unsigned char *amstrad_display;
-//static struct osd_bitmap *amstrad_bitmap;
+static UINT16 *amstrad_display;
+//static struct mame_bitmap *amstrad_bitmap;
 
 static int x_screen_pos;
 static int y_screen_pos;
 
 static void (*draw_function)(void);
-
+#if 0
 void amstrad_draw_screen_enabled(void)
 {
 	int sc1;
@@ -333,7 +496,242 @@ void amstrad_draw_screen_enabled(void)
 
 
 }
+#endif
+void amstrad_draw_screen_enabled(void)
+{
+	struct mame_bitmap *bitmap = amstrad_bitmap;
+	int x = x_screen_pos;
+	int y = y_screen_pos;
 
+	int ma, ra;
+	int addr;
+	int byte1, byte2;
+
+	ma = crtc6845_memory_address_r(0);
+	ra = crtc6845_row_address_r(0);
+
+	/* calc mem addr to fetch data from
+	based on ma, and ra */
+	addr = (((ma>>(4+8)) & 0x03)<<14) |
+			((ra & 0x07)<<11) |
+			((ma & 0x03ff)<<1);
+
+	/* amstrad fetches two bytes per CRTC clock. */
+	byte1 = Amstrad_Memory[addr];
+	byte2 = Amstrad_Memory[addr+1];
+
+    /* depending on the mode! */
+	switch (amstrad_render_mode)		
+	{
+    
+		/* mode 0 - low resolution - 16 colours */
+		case 0:
+		{
+			int cpcpen,messpen;
+			unsigned char data;
+
+			data = byte1;
+
+			{
+				cpcpen = Mode0Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+
+				data = data<<1;
+
+				cpcpen = Mode0Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+			
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;                
+			}
+
+			data = byte2;
+
+			{
+				cpcpen = Mode0Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+
+                
+
+				data = data<<1;
+
+				cpcpen = Mode0Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+
+                
+                	}
+		}
+		break;
+
+        /* mode 1 - medium resolution - 4 colours */
+		case 1:
+		{
+                        int i;
+                        int cpcpen;
+                        int messpen;
+                        unsigned char data;
+
+                        data = byte1;
+
+                        for (i=0; i<4; i++)
+                        {
+				cpcpen = Mode1Lookup[data & 0x0ff];
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+                
+				data = data<<1;
+			}
+
+                        data = byte2;
+
+                        for (i=0; i<4; i++)
+			{
+				cpcpen = Mode1Lookup[data & 0x0ff];
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+                
+				data = data<<1;
+			}
+
+		}
+		break;
+
+		/* mode 2: high resolution - 2 colours */
+		case 2:
+		{
+			int i;
+			unsigned long Data = (byte1<<8) | byte2;
+			int cpcpen,messpen;
+
+			for (i=0; i<16; i++)
+			{
+				cpcpen = (Data>>15) & 0x01;
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+                
+				Data = Data<<1;
+
+			}
+
+		}
+		break;
+
+		/* undocumented mode. low resolution - 4 colours */
+		case 3:
+		{
+			int cpcpen,messpen;
+			unsigned char data;
+
+			data = byte1;
+
+			{
+				cpcpen = Mode3Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				data = data<<1;
+
+				cpcpen = Mode3Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+			
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+                
+			}
+
+			data = byte2;
+
+			{
+				cpcpen = Mode3Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+                
+
+				data = data<<1;
+
+				cpcpen = Mode3Lookup[data];
+				messpen = amstrad_render_colours[cpcpen];
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+				plot_pixel(bitmap,x,y,messpen);
+				x++;
+                
+                	}
+
+
+		}
+		break;
+
+		default:
+			break;
+	}
+
+
+}
+
+#if 0
 void amstrad_draw_screen_disabled(void)
 {
 	int sc1;
@@ -347,6 +745,19 @@ void amstrad_draw_screen_disabled(void)
 		amstrad_display[sc1]=border_colour;	
 	}
 }
+#endif
+void amstrad_draw_screen_disabled(void)
+{
+	struct mame_bitmap *bitmap = amstrad_bitmap;
+	int x = x_screen_pos;
+	int y = y_screen_pos;
+	int border_colour;
+
+	border_colour = amstrad_render_colours[16];	
+	
+	plot_box(bitmap,x,y,16,1,border_colour);
+}
+
 
 /* Select the Function to draw the screen area */
 void amstrad_Set_VideoULA_DE(void)
@@ -407,7 +818,7 @@ void amstrad_Set_HSync(int offset, int data)
 							if ((y_screen_pos>=0) && (y_screen_pos<AMSTRAD_SCREEN_HEIGHT))
 							{
 									x_screen_pos=x_screen_offset;
-									amstrad_display=(amstrad_bitmap->line[y_screen_pos])+x_screen_pos;
+									amstrad_display=(UINT16 *)((unsigned long)(amstrad_bitmap->line[y_screen_pos])+(unsigned long)(x_screen_pos<<1));
 							}
 					}
 		}
@@ -435,7 +846,7 @@ void amstrad_Set_VSync(int offset, int data)
 
 			   if ((y_screen_pos>=0) && (y_screen_pos<=AMSTRAD_SCREEN_HEIGHT))
 			   {
-					amstrad_display=(amstrad_bitmap->line[y_screen_pos])+x_screen_pos;
+					amstrad_display=(UINT16 *)((unsigned long)(amstrad_bitmap->line[y_screen_pos])+(unsigned long)(x_screen_pos<<1));
 				}
 	//		}
 	//		else
@@ -520,19 +931,19 @@ void amstrad_vh_execute_crtc_cycles(int crtc_execute_cycles)
  * resfresh the amstrad video screen
  ************************************************************************/
 
-void amstrad_vh_screenrefresh(struct osd_bitmap *bitmap, int full_refresh)
+void amstrad_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 {
 #ifndef AMSTRAD_VIDEO_EVENT_LIST
 	struct rectangle rect;
 
 	rect.min_x = 0;
-	rect.max_x = AMSTRAD_SCREEN_WIDTH;
+	rect.max_x = AMSTRAD_SCREEN_WIDTH-1;
 	rect.min_y = 0;
-	rect.max_y = AMSTRAD_SCREEN_HEIGHT;
+	rect.max_y = AMSTRAD_SCREEN_HEIGHT-1;
 
-    copybitmap(bitmap, amstrad_bitmap, 0,0,0,0,&rect, TRANSPARENCY_NONE,0);
-	
-	
+
+    copybitmap(bitmap, amstrad_bitmap, 0,0,0,0,&rect, TRANSPARENCY_NONE,0); 
+
 #else
 	int c;
 
@@ -547,7 +958,7 @@ void amstrad_vh_screenrefresh(struct osd_bitmap *bitmap, int full_refresh)
 	crtc6845_set_state(0, &amstrad_vidhrdw_6845_state);
 
 	previous_time = 0;
-        num_cycles_remaining = cpu_getcurrentcycles()>>2;	//get19968; //cpu_getfperiod();
+        num_cycles_remaining = cycles_currently_ran()>>2;	//get19968; //cpu_getfperiod();
 
 	amstrad_bitmap=bitmap;
 	amstrad_display = amstrad_bitmap->line[0];
@@ -628,7 +1039,7 @@ void amstrad_vh_screenrefresh(struct osd_bitmap *bitmap, int full_refresh)
 
     /* Assume all other routines have processed their data from the list */
     EventList_Reset();
-    EventList_SetOffsetStartTime ( cpu_getcurrentcycles() );
+    EventList_SetOffsetStartTime ( cycles_currently_ran() );
 
 	crtc6845_get_state(0, &amstrad_vidhrdw_6845_state);
 	amstrad_rendering = 0;
@@ -667,7 +1078,7 @@ int amstrad_vh_start(void)
 	amstrad_rendering = 0;
 	EventList_Initialise(19968);
 #else
-	amstrad_bitmap = osd_alloc_bitmap(AMSTRAD_SCREEN_WIDTH, AMSTRAD_SCREEN_HEIGHT,8);
+	amstrad_bitmap = bitmap_alloc_depth(AMSTRAD_SCREEN_WIDTH, AMSTRAD_SCREEN_HEIGHT,16);
 	amstrad_display = amstrad_bitmap->line[0];
 #endif
 
@@ -688,7 +1099,7 @@ void amstrad_vh_stop(void)
 #else
 	if (amstrad_bitmap)
 	{
-		osd_free_bitmap(amstrad_bitmap);
+		bitmap_free(amstrad_bitmap);
 		amstrad_bitmap = NULL;
 	}
 #endif

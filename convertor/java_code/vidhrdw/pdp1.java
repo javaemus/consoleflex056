@@ -19,6 +19,7 @@ package vidhrdw;
 public class pdp1
 {
 	
+	
 	int fio_dec=0;
 	int concise=0;
 	int case_state=0;
@@ -107,7 +108,7 @@ public class pdp1
 		new_index = 0;
 	}
 	
-	static void clear_points(struct osd_bitmap *bitmap)
+	static void clear_points(struct mame_bitmap *bitmap)
 	{
 		unsigned char bg=Machine.pens[0];
 		int i;
@@ -117,13 +118,14 @@ public class pdp1
 			int x=(&old_list[i]).x;
 			int y=(&old_list[i]).y;
 	
-			bitmap.line[y][x]=bg;
-			osd_mark_dirty(x,y,x,y,1);
+			/*bitmap.line[y][x]=bg;*/
+			plot_pixel(bitmap, x, y, bg);
+			osd_mark_dirty(x,y,x,y);
 		}
 		old_index=0;
 	}
 	
-	static void set_points(struct osd_bitmap *bitmap)
+	static void set_points(struct mame_bitmap *bitmap)
 	{
 		unsigned char fg=Machine.pens[1];
 		int i;
@@ -133,8 +135,9 @@ public class pdp1
 			int x=(&new_list[i]).x;
 			int y=(&new_list[i]).y;
 	
-			bitmap.line[y][x]=fg;
-			osd_mark_dirty(x,y,x,y,1);
+			/*bitmap.line[y][x]=fg;*/
+			plot_pixel(bitmap, x, y, fg);
+			osd_mark_dirty(x,y,x,y);
 		}
 	}
 	
@@ -256,7 +259,7 @@ public class pdp1
 		return 0;
 	}
 	
-	void pdp1_vh_update (struct osd_bitmap *bitmap, int full_refresh)
+	void pdp1_vh_update (struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int sense=readinputport(1);
 	
@@ -265,7 +268,10 @@ public class pdp1
 			bitmap_width=bitmap.width;
 			bitmap_height=bitmap.height;
 		}
-		clear_points(bitmap);
+		if (full_refresh != 0)
+			fillbitmap(bitmap, Machine.pens[0], /*&Machine.visible_area*/NULL);
+		else
+			clear_points(bitmap);
 		set_points(bitmap);
 		clear_point_list();
 		cpu_set_reg(PDP1_S1,sense&0x80);

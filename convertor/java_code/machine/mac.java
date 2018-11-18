@@ -56,10 +56,10 @@ public class mac
 	
 	#endif
 	
-	static static static int mac_via_in_a(int offset);
-	static int mac_via_in_b(int offset);
-	static void mac_via_out_a(int offset, int val);
-	static void mac_via_out_b(int offset, int val);
+	static static static READ_HANDLER(mac_via_in_a);
+	static READ_HANDLER(mac_via_in_b);
+	static WRITE_HANDLER(mac_via_out_a);
+	static WRITE_HANDLER(mac_via_out_b);
 	
 	static struct via6522_interface mac_via6522_intf =
 	{
@@ -120,18 +120,18 @@ public class mac
 	*/
 	
 	#define RAM_BANK1		1
-	#define MRA_RAM_BANK1	MRA_BANK1
-	#define MWA_RAM_BANK1	MWA_BANK1
+	#define MRA_RAM_BANK1	MRA16_BANK1
+	#define MWA_RAM_BANK1	MWA16_BANK1
 	/*#define RAM_BANK2		11*/
 	#define UPPER_RAM_BANK	2
-	#define MRA_UPPER_RAM_BANK	MRA_BANK2
-	#define MWA_UPPER_RAM_BANK	MWA_BANK2
+	#define MRA_UPPER_RAM_BANK	MRA16_BANK2
+	#define MWA_UPPER_RAM_BANK	MWA16_BANK2
 	#define ROM_BANK		3
-	#define MRA_ROM_BANK	MRA_BANK3
+	#define MRA_ROM_BANK	MRA16_BANK3
 	
 	static int mac_overlay = 0;
 	
-	WRITE_HANDLER ( mac_autovector_w )
+	WRITE16_HANDLER ( mac_autovector_w )
 	{
 	#if LOG_GENERAL
 		logerror("mac_autovector_w: offset=0x%08x data=0x%04x\n", offset, data);
@@ -142,7 +142,7 @@ public class mac
 		/* Not yet implemented */
 	}
 	
-	READ_HANDLER ( mac_autovector_r )
+	READ16_HANDLER ( mac_autovector_r )
 	{
 	#if LOG_GENERAL
 		logerror("mac_autovector_r: offset=0x%08x\n", offset);
@@ -172,11 +172,11 @@ public class mac
 		videoram = mac_ram_ptr + mac_ram_size - (buffer ? 0x5900 : 0xD900);
 	}
 	
-	static READ_HANDLER (mac_RAM_r);
-	static WRITE_HANDLER (mac_RAM_w);
-	static READ_HANDLER (mac_RAM_r2);
-	static WRITE_HANDLER (mac_RAM_w2);
-	static READ_HANDLER (mac_ROM_r);
+	static READ16_HANDLER (mac_RAM_r);
+	static WRITE16_HANDLER (mac_RAM_w);
+	static READ16_HANDLER (mac_RAM_r2);
+	static WRITE16_HANDLER (mac_RAM_w2);
+	static READ16_HANDLER (mac_ROM_r);
 	
 	static void set_memory_overlay(int overlay)
 	{
@@ -185,12 +185,12 @@ public class mac
 		if (overlay != 0)
 		{
 			/* ROM mirror */
-			install_mem_read_handler(0, 0x000000, rom_size-1, MRA_RAM_BANK1);
-			install_mem_write_handler(0, 0x000000, rom_size-1, MWA_RAM_BANK1);
+			install_mem_read16_handler(0, 0x000000, rom_size-1, MRA_RAM_BANK1);
+			install_mem_write16_handler(0, 0x000000, rom_size-1, MWA_RAM_BANK1);
 			cpu_setbank(RAM_BANK1, rom_ptr);
 	
-			install_mem_read_handler(0, rom_size, 0x3fffff, mac_ROM_r);
-			install_mem_write_handler(0, rom_size, 0x3fffff, MWA_NOP);
+			install_mem_read16_handler(0, rom_size, 0x3fffff, mac_ROM_r);
+			install_mem_write16_handler(0, rom_size, 0x3fffff, MWA16_NOP);
 	
 			/* HACK! - copy in the initial reset/stack */
 			memcpy(mac_ram_ptr, rom_ptr, 8);
@@ -198,14 +198,14 @@ public class mac
 		else
 		{
 			/* RAM */
-			install_mem_read_handler(0, 0x000000, mac_ram_size-1, MRA_RAM_BANK1);
-			install_mem_write_handler(0, 0x000000, mac_ram_size-1, MWA_RAM_BANK1);
+			install_mem_read16_handler(0, 0x000000, mac_ram_size-1, MRA_RAM_BANK1);
+			install_mem_write16_handler(0, 0x000000, mac_ram_size-1, MWA_RAM_BANK1);
 			cpu_setbank(RAM_BANK1, mac_ram_ptr);
 	
 			if (mac_ram_size < 0x400000)
 			{
-				install_mem_read_handler(0, mac_ram_size, 0x3fffff, (mac_ram_size != 0x280000) ? mac_RAM_r : mac_RAM_r2);
-				install_mem_write_handler(0, mac_ram_size, 0x3fffff, (mac_ram_size != 0x280000) ? mac_RAM_w : mac_RAM_w2);
+				install_mem_read16_handler(0, mac_ram_size, 0x3fffff, (mac_ram_size != 0x280000) ? mac_RAM_r : mac_RAM_r2);
+				install_mem_write16_handler(0, mac_ram_size, 0x3fffff, (mac_ram_size != 0x280000) ? mac_RAM_w : mac_RAM_w2);
 			}
 		}
 	
@@ -984,28 +984,30 @@ public class mac
 		scsi_checkpins();
 	}
 	
-	READ_HANDLER ( macplus_scsi_r )
+	READ16_HANDLER ( macplus_scsi_r )
 	{
 	#if LOG_SCSI
 		logerror("macplus_scsi_r: offset=0x%08x pc=0x%08x\n", offset, (int) cpu_get_pc());
 	#endif
 	
+		offset <<= 1;
 		offset %= sizeof(scsi_state);
 		offset /= sizeof(scsi_state[0]);
 	
 		return scsi_state[offset];
 	}
 	
-	WRITE_HANDLER ( macplus_scsi_w )
+	WRITE16_HANDLER ( macplus_scsi_w )
 	{
 	#if LOG_SCSI
 		logerror("macplus_scsi_w: offset=0x%08x data=0x%04x pc=0x%08x\n", offset, data, (int) cpu_get_pc());
 	#endif
 	
+		offset <<= 1;
 		offset %= sizeof(scsi_state);
 		offset /= sizeof(scsi_state[0]);
 	
-		scsi_state[offset] &= (UINT16) (data >> 16);
+		scsi_state[offset] &= (UINT16) mem_mask;
 		scsi_state[offset] |= (UINT16) data;
 		scsi_do_check = 1;
 	
@@ -1086,7 +1088,7 @@ public class mac
 		}
 	}
 	
-	READ_HANDLER ( mac_scc_r )
+	READ16_HANDLER ( mac_scc_r )
 	{
 		int result;
 	
@@ -1095,9 +1097,9 @@ public class mac
 	#endif
 	
 		result = 0;
-		offset &= 7;
+		offset &= 3;
 	
-		switch(offset >> 1)
+		switch(offset)
 		{
 		case 0:
 			/* Channel B (Printer Port) Control */
@@ -1133,13 +1135,13 @@ public class mac
 		return (result << 8) | result;
 	}
 	
-	WRITE_HANDLER ( mac_scc_w )
+	WRITE16_HANDLER ( mac_scc_w )
 	{
-		offset &= 7;
+		offset &= 3;
 	
 		data &= 0xff;
 	
-		switch(offset >> 1)
+		switch(offset)
 		{
 		case 0:
 			/* Channel B (Printer Port) Control */
@@ -1495,7 +1497,7 @@ public class mac
 	 * IWM Code specific to the Mac Plus  *
 	 * ********************************** */
 	
-	READ_HANDLER ( mac_iwm_r )
+	READ16_HANDLER ( mac_iwm_r )
 	{
 		/* The first time this is called is in a floppy test, which goes from
 		 * $400104 to $400126.  After that, all access to the floppy goes through
@@ -1511,18 +1513,18 @@ public class mac
 		logerror("mac_iwm_r: offset=0x%08x\n", offset);
 	#endif
 	
-		result = iwm_r(offset >> 9);
+		result = iwm_r(offset >> 8);
 		return (result << 8) | result;
 	}
 	
-	WRITE_HANDLER ( mac_iwm_w )
+	WRITE16_HANDLER ( mac_iwm_w )
 	{
 	#if LOG_MAC_IWM
 		logerror("mac_iwm_w: offset=0x%08x data=0x%04x\n", offset, data);
 	#endif
 	
-		if ((data & 0x00ff0000) == 0)
-			iwm_w(offset >> 9, data & 0xff);
+		if (ACCESSING_LSB != 0)
+			iwm_w(offset >> 8, data & 0xff);
 	}
 	
 	int mac_floppy_init(int id)
@@ -1530,15 +1532,15 @@ public class mac
 	#if 0
 		if ((mac_model == model_Mac128k512k) && (id == 0))
 			/* on Mac 128k/512k, internal floppy is single sided */
-			return iwm_floppy_init(id, IWM_FLOPPY_ALLOW400K);
+			return sony_floppy_init(id, SONY_FLOPPY_ALLOW400K);
 		else
 	#endif
-			return iwm_floppy_init(id, IWM_FLOPPY_ALLOW400K | IWM_FLOPPY_ALLOW800K);
+			return sony_floppy_init(id, SONY_FLOPPY_ALLOW400K | SONY_FLOPPY_ALLOW800K);
 	}
 	
 	void mac_floppy_exit(int id)
 	{
-		iwm_floppy_exit(id);
+		sony_floppy_exit(id);
 	}
 	
 	/* *************************************************************************
@@ -1569,12 +1571,12 @@ public class mac
 	 *
 	 */
 	
-	static int mac_via_in_a(int offset)
+	static READ_HANDLER(mac_via_in_a)
 	{
 		return 0x80;
 	}
 	
-	static int mac_via_in_b(int offset)
+	static READ_HANDLER(mac_via_in_b)
 	{
 		int val = 0;
 	
@@ -1594,26 +1596,26 @@ public class mac
 		return val;
 	}
 	
-	static void mac_via_out_a(int offset, int val)
+	static WRITE_HANDLER(mac_via_out_a)
 	{
-		set_scc_waitrequest((val & 0x80) >> 7);
-		set_screen_buffer((val & 0x40) >> 6);
-		iwm_set_sel_line((val & 0x20) >> 5);
-		if (((val & 0x10) >> 4) ^ mac_overlay)
-			set_memory_overlay((val & 0x10) >> 4);
-		mac_set_buffer((val >> 3) & 0x01);
-		mac_set_volume(val & 0x07);
+		set_scc_waitrequest((data & 0x80) >> 7);
+		set_screen_buffer((data & 0x40) >> 6);
+		sony_set_sel_line((data & 0x20) >> 5);
+		if (((data & 0x10) >> 4) ^ mac_overlay)
+			set_memory_overlay((data & 0x10) >> 4);
+		mac_set_buffer((data >> 3) & 0x01);
+		mac_set_volume(data & 0x07);
 	}
 	
-	static void mac_via_out_b(int offset, int val)
+	static WRITE_HANDLER(mac_via_out_b)
 	{
 		int new_rtc_rTCClk;
 	
-		mac_enable_sound((val & 0x80) == 0);
-		rtc_write_rTCEnb(val & 0x04);
-		new_rtc_rTCClk = (val >> 1) & 0x01;
+		mac_enable_sound((data & 0x80) == 0);
+		rtc_write_rTCEnb(data & 0x04);
+		new_rtc_rTCClk = (data >> 1) & 0x01;
 		if ((! new_rtc_rTCClk) && (rtc_rTCClk))
-			rtc_shift_data(val & 0x01);
+			rtc_shift_data(data & 0x01);
 		rtc_rTCClk = new_rtc_rTCClk;
 	}
 	
@@ -1623,11 +1625,11 @@ public class mac
 		cpu_set_irq_line(0, 1, state);
 	}
 	
-	READ_HANDLER ( mac_via_r )
+	READ16_HANDLER ( mac_via_r )
 	{
 		int data;
 	
-		offset >>= 9;
+		offset >>= 8;
 		offset &= 0x0f;
 	
 	#if LOG_VIA
@@ -1638,16 +1640,16 @@ public class mac
 		return (data & 0xff) | (data << 8);
 	}
 	
-	WRITE_HANDLER ( mac_via_w )
+	WRITE16_HANDLER ( mac_via_w )
 	{
-		offset >>= 9;
+		offset >>= 8;
 		offset &= 0x0f;
 	
 	#if LOG_VIA
 		logerror("mac_via_w: offset=0x%02x data=0x%08x\n", offset, data);
 	#endif
 	
-		if ((data & 0xff000000) == 0)
+		if (ACCESSING_MSB != 0)
 			via_0_w(offset, (data >> 8) & 0xff);
 	}
 	
@@ -1756,17 +1758,17 @@ public class mac
 	}
 	
 	/* will not work with 2.5Mb RAM config */
-	static READ_HANDLER (mac_RAM_r)
+	static READ16_HANDLER (mac_RAM_r)
 	{
-		return READ_WORD(mac_ram_ptr + (offset & (mac_ram_size - 1)));
+		return ((UINT16*)mac_ram_ptr)[offset & ((mac_ram_size - 1) >> 1)];
 	}
 	
 	/* will not work with 2.5Mb RAM config */
-	static WRITE_HANDLER (mac_RAM_w)
+	static WRITE16_HANDLER (mac_RAM_w)
 	{
-		UINT8 *dest = mac_ram_ptr + (offset & (mac_ram_size - 1));
+		UINT16 *dest = ((UINT16*)mac_ram_ptr) + (offset & ((mac_ram_size - 1) >> 1));
 	
-		COMBINE_WORD_MEM(dest, data);
+		COMBINE_DATA(dest);
 	}
 	
 	/* for 2.5Mb RAM config only */
@@ -1785,24 +1787,24 @@ public class mac
 	}
 	
 	/* for 2.5Mb RAM config only */
-	/* will NOT work if (offset < 0x200000) */
-	static READ_HANDLER (mac_RAM_r2)
+	/* will NOT work if (offset < 0x100000) */
+	static READ16_HANDLER (mac_RAM_r2)
 	{
-		return READ_WORD(mac_ram_ptr + 0x200000 + (offset & 0x07ffff));
+		return ((UINT16*)mac_ram_ptr)[0x100000 + (offset & 0x03ffff)];
 	}
 	
 	/* for 2.5Mb RAM config only */
-	/* will NOT work if (offset < 0x200000) */
-	static WRITE_HANDLER (mac_RAM_w2)
+	/* will NOT work if (offset < 0x100000) */
+	static WRITE16_HANDLER (mac_RAM_w2)
 	{
-		UINT8 *dest = mac_ram_ptr + 0x200000 + (offset & 0x07ffff);
+		UINT16 *dest = ((UINT16*)mac_ram_ptr) + 0x100000 + (offset & 0x03ffff);
 	
-		COMBINE_WORD_MEM(dest, data);
+		COMBINE_DATA(dest);
 	}
 	
-	static READ_HANDLER (mac_ROM_r)
+	static READ16_HANDLER (mac_ROM_r)
 	{
-		return READ_WORD(rom_ptr + (offset & (rom_size -1)));
+		return ((UINT16*)rom_ptr)[offset & ((rom_size -1)>>1)];
 	}
 	
 	static int current_scanline;
@@ -1812,26 +1814,26 @@ public class mac
 		mac_ram_ptr = memory_region(REGION_CPU1);
 		rom_ptr = memory_region(REGION_CPU1) + 0x400000;
 	
-		cpu_setOPbaseoverride(0, (mac_ram_size != 0x280000) ? mac_OPbaseoverride : mac_OPbaseoverride2);
+		memory_set_opbase_handler(0, (mac_ram_size != 0x280000) ? mac_OPbaseoverride : mac_OPbaseoverride2);
 	
 		/* set up RAM mirror at 0x600000-0x6fffff (0x7fffff ???) */
-		install_mem_read_handler(0, 0x600000, (mac_ram_size > 0x10000) ? 0x6fffff : (0x600000 + mac_ram_size-1),
+		install_mem_read16_handler(0, 0x600000, (mac_ram_size > 0x10000) ? 0x6fffff : (0x600000 + mac_ram_size-1),
 									MRA_UPPER_RAM_BANK);
-		install_mem_write_handler(0, 0x600000, (mac_ram_size > 0x10000) ? 0x6fffff : (0x600000 + mac_ram_size-1),
+		install_mem_write16_handler(0, 0x600000, (mac_ram_size > 0x10000) ? 0x6fffff : (0x600000 + mac_ram_size-1),
 									MWA_UPPER_RAM_BANK);
 		cpu_setbank(UPPER_RAM_BANK, mac_ram_ptr);
 	
 		if (mac_ram_size < 0x100000)
 		{
-			install_mem_read_handler(0, 0x600000+mac_ram_size, 0x6fffff, mac_RAM_r);
-			install_mem_write_handler(0, 0x600000+mac_ram_size, 0x6fffff, mac_RAM_w);
+			install_mem_read16_handler(0, 0x600000+mac_ram_size, 0x6fffff, mac_RAM_r);
+			install_mem_write16_handler(0, 0x600000+mac_ram_size, 0x6fffff, mac_RAM_w);
 		}
 	
-		/* set up ROM at 0x400000-0x4fffff */
-		install_mem_read_handler(0, 0x400000, (0x400000 + rom_size-1), MRA_ROM_BANK);
+		/* set up ROM at 0x400000-0x4fffff (-0x5fffff for mac 128k/512k/512ke) */
+		install_mem_read16_handler(0, 0x400000, (0x400000 + rom_size-1), MRA_ROM_BANK);
 		cpu_setbank(ROM_BANK, rom_ptr);
 	
-		install_mem_read_handler(0, 0x400000+rom_size,
+		install_mem_read16_handler(0, 0x400000+rom_size,
 									(mac_model == model_MacPlus) ? 0x4fffff : 0x5fffff, mac_ROM_r);
 	
 		/* initialize real-time clock */
@@ -1841,7 +1843,19 @@ public class mac
 		scc_init();
 	
 		/* initialize floppy */
-		iwm_init();
+		{
+			iwm_interface intf =
+			{
+				sony_set_lines,
+				sony_set_enable_lines,
+	
+				sony_read_data,
+				sony_write_data,
+				sony_read_status
+			};
+	
+			iwm_init(& intf);
+		}
 	
 		/* setup the memory overlay */
 		set_memory_overlay(1);

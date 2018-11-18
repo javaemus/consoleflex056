@@ -4,7 +4,6 @@ extern extern int mbee_cassette_init(int id);
 extern void mbee_cassette_exit(int id);
 extern int mbee_floppy_init(int id);
 extern int mbee_rom_load(int id);
-extern int mbee_rom_id(int id);
 
 extern READ_HANDLER ( mbee_pio_r );
 extern WRITE_HANDLER ( mbee_pio_w );
@@ -37,4 +36,4 @@ extern WRITE_HANDLER ( mbee_videoram_w );
 extern READ_HANDLER ( mbee_pcg_color_r );
 extern WRITE_HANDLER ( mbee_pcg_color_w );
 
-extern extern extern 
+extern extern extern void mbee_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);

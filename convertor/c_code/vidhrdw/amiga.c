@@ -142,7 +142,9 @@ INLINE int copper_update( int x_pos, int y_pos, int *end_x ) {
 			copper.pc += 4;
 
 			if ( inst >= min )	/* If not invalid, go at it */
-				amiga_custom_w( inst, param );
+				/* KT - I've no idea what the memory mask should be so
+				added -1 for now! */
+			    amiga_custom_w( inst>>1, param , 0 /*???*/);
 			else {
 				/* stop the copper until the next frame */
 				copper.waiting = 1;
@@ -262,8 +264,8 @@ static void amiga_sprite_set_ctrl( int spritenum, unsigned short data ) {
 
 void amiga_reload_sprite_info( int spritenum ) {
 
-	unsigned char *RAM = Machine->memory_region[0];
-
+	unsigned char *RAM = memory_region(REGION_CPU1);
+	
 	amiga_sprite_set_pos( spritenum, READ_WORD( &RAM[custom_regs.SPRxPT[spritenum]] ) );
 
 	amiga_sprite_set_ctrl( spritenum, READ_WORD( &RAM[custom_regs.SPRxPT[spritenum] + 2] ) );
@@ -335,7 +337,7 @@ INLINE void amiga_render_sprite( int num, int x, int y, unsigned short *dst ) {
 
 ***************************************************************************/
 
-INLINE void amiga_display_msg (struct osd_bitmap *bitmap, const char *str ) {
+INLINE void amiga_display_msg (struct mame_bitmap *bitmap, const char *str ) {
 	static struct DisplayText dt[2];
 
 	if ( update_regs.once_per_frame == 0 ) {
@@ -343,7 +345,7 @@ INLINE void amiga_display_msg (struct osd_bitmap *bitmap, const char *str ) {
 		dt[0].color = DT_COLOR_WHITE;
 		dt[0].x = dt[0].y = 10;
 		dt[1].text = 0;
-		displaytext(bitmap, dt,0,0);
+		displaytext(bitmap, dt);
 	}
 
 	update_regs.once_per_frame = 1;
@@ -410,7 +412,7 @@ INLINE void init_update_regs( void ) {
 
 ***********************************************************************************/
 #define BEGIN_UPDATE( name ) \
-static void name##(struct osd_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x ) { \
+static void name(struct mame_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x ) { \
 	int i; \
 	if ( x < update_regs.ddf_start_pixel ) { /* see if we need to start fetching */ \
 		dst[x] = update_regs.back_color; /* fill the pixel with color 0 */ \
@@ -442,7 +444,7 @@ static void name##(struct osd_bitmap *bitmap, unsigned short *dst, int planes, i
 #endif
 
 #define BEGIN_UPDATE_WITH_SPRITES( name ) \
-static void name##(struct osd_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x ) { \
+static void name(struct mame_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x ) { \
 	int i; \
 	if ( x < update_regs.ddf_start_pixel ) { /* see if we need to start fetching */ \
 		dst[x] = update_regs.back_color; /* fill the pixel with color 0 */ \
@@ -488,7 +490,7 @@ static void name##(struct osd_bitmap *bitmap, unsigned short *dst, int planes, i
 }
 
 #define UNIMPLEMENTED( name ) \
-	static void name##(struct osd_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x ) { \
+	static void name(struct mame_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x ) { \
 		amiga_display_msg(bitmap,  "Unimplemented screen mode: ##name## " ); \
 	}
 
@@ -617,7 +619,7 @@ UNIMPLEMENTED( render_pixel_ham_lace )
 UNIMPLEMENTED( render_pixel_ham_sprites )
 UNIMPLEMENTED( render_pixel_ham_lace_sprites )
 
-typedef void (*render_pixel_def)(struct osd_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x );
+typedef void (*render_pixel_def)(struct mame_bitmap *bitmap, unsigned short *dst, int planes, int x, int y, int min_x );
 
 static render_pixel_def render_pixel[] = {
 	render_pixel_lores,
@@ -682,7 +684,7 @@ INLINE int get_mode( void ) {
 	return ret;
 }
 
-void amiga_vh_screenrefresh( struct osd_bitmap *bitmap, int full_refresh ) {
+void amiga_vh_screenrefresh( struct mame_bitmap *bitmap, int full_refresh ) {
 	int planes = 0, sw = Machine->drv->screen_width;
 	int min_x = Machine->visible_area.min_x;
 	int y, x, start_x, end_x, line_done;
@@ -790,8 +792,8 @@ int amiga_vh_start( void ) {
 	update_regs.old_DIWSTRT = -1;
 	update_regs.old_DIWSTOP = -1;
 	update_regs.old_DDFSTRT = -1;
-	update_regs.RAM = Machine->memory_region[0];
-
+	update_regs.RAM = memory_region(REGION_CPU1);
+	
 	update_regs.sprite_in_scanline = malloc( Machine->drv->screen_height * sizeof( int ) );
 	if ( update_regs.sprite_in_scanline == 0 )
 		return 1;

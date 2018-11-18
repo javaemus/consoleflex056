@@ -6,17 +6,13 @@ package mame;
 
 public class filemngr
 {
-	//
-	/* used to tell updatescreen(void) to clear the bitmap */
-	extern int need_to_clear_bitmap;
 	
 	static int count_chars_entered;
 	static char *enter_string;
 	static int enter_string_size;
 	static int enter_filename_mode;
 	
-	#define MAX_ENTER_FILENAME_LENGTH 256
-	static char entered_filename[MAX_ENTER_FILENAME_LENGTH];
+	static char entered_filename[512];
 	
 	static void start_enter_string(char *string_buffer, int max_string_size, int filename_mode)
 	{
@@ -331,7 +327,7 @@ public class filemngr
 			/* this will not work if roms is not a sub-dir of mess, and
 			   will also not work if we are not in the mess dir */
 			/* go to initial roms directory */
-			osd_change_directory("roms");
+			osd_change_directory("software");
 			osd_change_directory(Machine.gamedrv.name);
 			fs_init_done = 1;
 		}
@@ -474,7 +470,7 @@ public class filemngr
 	/* and mask to get bits */
 	#define SEL_BITS_MASK			(~SEL_MASK)
 	
-	int fileselect(struct osd_bitmap *bitmap, int selected)
+	int fileselect(struct mame_bitmap *bitmap, int selected)
 	{
 		int sel, total, arrowize;
 		int visible;
@@ -542,7 +538,7 @@ public class filemngr
 					fs_free();
 				}
 	
-				need_to_clear_bitmap = 1;
+				schedule_full_refresh();
 				return sel + 1;
 			}
 	
@@ -598,13 +594,13 @@ public class filemngr
 					case FILESELECT_FILESPEC:
 						start_enter_string(current_filespecification, 32, 0);
 						sel |= 1 << SEL_BITS; /* we'll ask for a key */
-						need_to_clear_bitmap = 1;
+						schedule_full_refresh();
 						break;
 	
 					case FILESELECT_FILE:
 						/* copy filename */
-						strncpy(entered_filename, fs_item[sel],MAX_ENTER_FILENAME_LENGTH-1);
-						entered_filename[MAX_ENTER_FILENAME_LENGTH-1]='\0';
+						strncpyz(entered_filename, osd_get_cwd(), sizeof(entered_filename) / sizeof(entered_filename[0]));
+						strncatz(entered_filename, fs_item[sel], sizeof(entered_filename) / sizeof(entered_filename[0]));
 	
 						fs_free();
 						sel = -3;
@@ -615,14 +611,14 @@ public class filemngr
 						osd_change_directory(fs_item[sel]);
 						fs_free();
 	
-						need_to_clear_bitmap = 1;
+						schedule_full_refresh();
 						break;
 	
 					case FILESELECT_DEVICE:
 						/*	 fs_chdir("/"); */
 						osd_change_device(fs_item[sel]);
 						fs_free();
-						need_to_clear_bitmap = 1;
+						schedule_full_refresh();
 						break;
 	
 					default:
@@ -646,12 +642,12 @@ public class filemngr
 			fs_free();
 	
 		if (sel == -1 || sel == -2 || sel == -3)
-			need_to_clear_bitmap = 1;
+			schedule_full_refresh();
 	
 		return sel + 1;
 	}
 	
-	int filemanager(struct osd_bitmap *bitmap, int selected)
+	int filemanager(struct mame_bitmap *bitmap, int selected)
 	{
 		static int previous_sel;
 		const char *name;
@@ -663,30 +659,35 @@ public class filemngr
 	
 		int sel, total, arrowize, type, id;
 	
+		const struct IODevice *dev = Machine.gamedrv.dev;
+	
 		sel = selected - 1;
 	
 	
 		total = 0;
-		for (type = 0; type < IO_COUNT; type++)
+	
+		/* Cycle through all devices for this system */
+		while(dev.type != IO_END)
 		{
-			for (id = 0; id < device_count(type); id++)
+			type = dev.type;
+			for (id = 0; id < dev.count; id++)
 			{
 				name = device_typename_id(type, id);
 	
-				if (name != 0)
-				{
-					menu_item[total] = name;
+				menu_item[total] = (name) ? name : "---";
 	
-					name = device_filename(type, id);
-					menu_subitem[total] = (name) ? name : "---";
+				name = device_filename(type, id);
 	
-					flag[total] = 0;
-					types[total] = type;
-					ids[total] = id;
+				menu_subitem[total] = (name) ? name : "---";
 	
-					total++;
-				}
+				flag[total] = 0;
+				types[total] = type;
+				ids[total] = id;
+	
+				total++;
+	
 			}
+			dev++;
 		}
 	
 	
@@ -749,7 +750,7 @@ public class filemngr
 					device_filename_change(types[sel], ids[sel], name);
 			}
 	
-			need_to_clear_bitmap = 1;
+			schedule_full_refresh();
 			return sel + 1;
 		}
 	
@@ -797,12 +798,12 @@ public class filemngr
 						entered_filename[0] = '\0';
 					else
 						strcpy(entered_filename, menu_subitem[sel]);
-					start_enter_string(entered_filename, MAX_ENTER_FILENAME_LENGTH-1, 1);
+					start_enter_string(entered_filename, (sizeof(entered_filename) / sizeof(entered_filename[0])) - 1, 1);
 	
 					sel |= 1 << SEL_BITS;	/* we'll ask for a key */
 	
 					/* tell updatescreen() to clean after us (in case the window changes size) */
-					need_to_clear_bitmap = 1;
+					schedule_full_refresh();
 				}
 			}
 		}
@@ -814,7 +815,7 @@ public class filemngr
 			sel = -2;
 	
 		if (sel == -1 || sel == -2)
-			need_to_clear_bitmap = 1;
+			schedule_full_refresh();
 	
 		return sel + 1;
 	}

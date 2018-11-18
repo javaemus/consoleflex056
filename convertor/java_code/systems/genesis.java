@@ -58,79 +58,66 @@ public class genesis
 	
 	#define ARMLong(x) (((x << 24) | (((unsigned long) x) >> 24) | (( x & 0x0000ff00) << 8) | (( x & 0x00ff0000) >> 8)))
 	
-	extern int data_width;
-	
 	int deb = 0;
 	
 	
 	unsigned int	z80_68000_latch			= 0;
 	unsigned int	z80_latch_bitcount		= 0;
 	
-	unsigned char cartridge_ram[0x1000]; /* any cartridge RAM */
+	#define EASPORTS_HACK
+	UINT16 cartridge_ram[0x10000]; /* any cartridge RAM */
 	
-	WRITE_HANDLER ( genesis_videoram1_w );
-	
-	/* machine/genesis.c */
-	void genesis_ram_w (int offset,int data);
-	int genesis_ram_r (int offset);
-	UINT32 genesis_partialcrc(const UBytePtr ,unsigned int);
-	
-	void genesis_background_w(int offset,int data);
-	
-	
-	WRITE_HANDLER ( YM2612_68000_w );
-	READ_HANDLER  ( YM2612_68000_r );
-	
-	
-	extern int z80running;
 	
 	#if LSB_FIRST
 		#define BYTE_XOR(a) ((a) ^ 1)
-	
 	#else
 		#define BYTE_XOR(a) (a)
-	
 	#endif
 	
 	
-	READ_HANDLER ( genesis_vdp_76489_r )
+	public static ReadHandlerPtr genesis_vdp_76489_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-	  return 0;
-	}
-	WRITE_HANDLER (genesis_vdp_76489_w )
+		return 0;
+	} };
+	static WRITE16_HANDLER (genesis_vdp_76489_w )
 	{
-	  SN76496_0_w(0, data);
+		SN76496_0_w(0, data);
 	}
 	
-	WRITE_HANDLER ( genesis_ramlatch_w ) /* note value will be meaningless unless all bits are correctly set in */
+	public static WriteHandlerPtr genesis_ramlatch_w = new WriteHandlerPtr() {public void handler(int offset, int data) /* note value will be meaningless unless all bits are correctly set in */
 	{
-	  	if (offset !=0 ) return;
+		if (offset !=0 ) return;
 		if (!z80running) logerror("undead Z80 latch write!\n");
-	  //	cpu_halt(0,0);
+	//	cpu_halt(0,0);
 		if (z80_latch_bitcount == 0) z80_68000_latch = 0;
 	/*	logerror("latch update\n");*/
-	  	z80_68000_latch = z80_68000_latch | ((( ((unsigned char)data) & 0x01) << (15+z80_latch_bitcount)));
+		z80_68000_latch = z80_68000_latch | ((( ((unsigned char)data) & 0x01) << (15+z80_latch_bitcount)));
 	 	logerror("value %x written to latch\n", data);
 		z80_latch_bitcount++;
 		if (z80_latch_bitcount == 9)
 		{
-		   //	cpu_halt(0,1);
+		//	cpu_halt(0,1);
 			z80_latch_bitcount = 0;
 			logerror("latch set, value %x\n", z80_68000_latch);
 		}
+	} };
+	
+	static WRITE16_HANDLER ( genesis_ramlatch_68000_w )
+	{
+		genesis_ramlatch_w(offset, data);
 	}
 	
-	WRITE_HANDLER ( genesis_s_68000_ram_w )
+	public static WriteHandlerPtr genesis_s_68000_ram_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 		unsigned int address = (z80_68000_latch) + (offset & 0x7fff);
 		if (!z80running) logerror("undead Z80.68000 write!\n");
 		if (z80_latch_bitcount != 0) logerror("writing whilst latch being set!\n");
 	
-	  	if (address > 0xff0000) genesis_sharedram[BYTE_XOR(offset)] = data;
+		if (address > 0xff0000) genesis_sharedram[BYTE_XOR(offset)] = data;
 		logerror("z80 poke to address %x\n", address);
-	}
+	} };
 	
-	READ_HANDLER ( genesis_s_68000_ram_r )
+	public static ReadHandlerPtr genesis_s_68000_ram_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		int address = (z80_68000_latch) + (offset & 0x7fff);
 	
@@ -146,119 +133,121 @@ public class genesis
 	 	else if (address > 0xff0000) return genesis_sharedram[BYTE_XOR(offset)];
 	
 		return -1;
-	}
+	} };
 	
-	WRITE_HANDLER ( genesis_soundram_w )
+	static WRITE16_HANDLER ( genesis_soundram_w )
 	{
 		if (z80running != 0) logerror("Z80 written whilst running!\n");
 		logerror("68000.z80 sound write, %x to %x\n", data, offset);
 	
-		if (LOWER_BYTE_ACCESS(data)) genesis_soundram[offset+1] = data & 0xff;
-		if (UPPER_BYTE_ACCESS(data)) genesis_soundram[offset] = (data >> 8) & 0xff;
+		if (ACCESSING_LSB != 0) genesis_soundram[(offset<<1)+1] = data & 0xff;
+		if (ACCESSING_MSB != 0) genesis_soundram[offset<<1] = (data >> 8) & 0xff;
 	}
 	
-	READ_HANDLER ( genesis_soundram_r )
+	static READ16_HANDLER ( genesis_soundram_r )
 	{
 		if (z80running != 0) logerror("Z80 read whilst running!\n");
-		logerror("soundram_r returning %x\n",(genesis_soundram[offset] << 8) + genesis_soundram[offset+1]);
-		return (genesis_soundram[offset] << 8) + genesis_soundram[offset+1];
-	
+		logerror("soundram_r returning %x\n",(genesis_soundram[offset<<1] << 8) + genesis_soundram[(offset<<1)+1]);
+		return (genesis_soundram[offset<<1] << 8) + genesis_soundram[(offset<<1)+1];
 	}
 	
-	void genesis_sharedram_w (int offset,int data)
+	/*static void genesis_sharedram_w (int offset,int data)
 	{
-	   	COMBINE_WORD_MEM(&genesis_sharedram[offset], data);
+	 	COMBINE_WORD_MEM(&genesis_sharedram[offset], data);
 	}
 	
-	int genesis_sharedram_r (int offset)
+	static int genesis_sharedram_r (int offset)
 	{
 		return READ_WORD(&genesis_sharedram[offset]);
+	}*/
+	
+	
+	#ifdef EASPORTS_HACK
+	READ16_HANDLER(cartridge_ram_r)
+	{
+		logerror("cartridge ram read.. %x\n", offset);
+		return cartridge_ram[(offset&0xffff)>>1];
 	}
-	
-	
-	
-	
-	
-	
-	static MemoryReadAddress genesis_readmem[] =
+	WRITE16_HANDLER(cartridge_ram_w)
 	{
-		new MemoryReadAddress( 0x000000, 0x3fffff, MRA_ROM ),
-		new MemoryReadAddress( 0xff0000, 0xffffff, MRA_BANK2), /* RAM */
-		new MemoryReadAddress( 0xc00014, 0xfeffff, MRA_NOP ),
+		logerror("cartridge ram write.. %x to %x\n", data, offset);
+		cartridge_ram[offset] = data;
+	}
+	#endif
 	
-	   	new MemoryReadAddress( 0xc00000, 0xc00003, genesis_vdp_data_r ),
-		new MemoryReadAddress( 0xc00004, 0xc00007, genesis_vdp_ctrl_r ),
-		new MemoryReadAddress( 0xc00008, 0xc0000b, genesis_vdp_hv_r ),
-		new MemoryReadAddress( 0xc00010, 0xc00013, MRA_NOP /*would be genesis_vdp_76489_r*/ ),
-		new MemoryReadAddress( 0xa11204, 0xbfffff, MRA_NOP ),
+	static MEMORY_READ16_START(genesis_readmem)
+		// { 0x000000, 0x3fffff, MRA16_ROM },
+		{ 0x000000, 0x1fffff, MRA16_ROM },
+		{ 0xff0000, 0xffffff, MRA16_BANK2}, /* RAM */
+		{ 0xc00014, 0xfeffff, MRA16_NOP },
 	
-		new MemoryReadAddress( 0xa11000, 0xa11203, genesis_ctrl_r ),
-		new MemoryReadAddress( 0xa10000, 0xa1001f, genesis_io_r ),
-		new MemoryReadAddress( 0xa00000, 0xa01fff, genesis_soundram_r ),
-	  	new MemoryReadAddress( 0xa04000, 0xa04003, YM2612_68000_r ),
+	 	{ 0xc00000, 0xc00003, genesis_vdp_data_r },
+		{ 0xc00004, 0xc00007, genesis_vdp_ctrl_r },
+		{ 0xc00008, 0xc0000b, genesis_vdp_hv_r },
+		{ 0xc00010, 0xc00013, MRA16_NOP /*would be genesis_vdp_76489_r*/ },
+		{ 0xa11204, 0xbfffff, MRA16_NOP },
 	
+		{ 0xa11000, 0xa11203, genesis_ctrl_r },
+		{ 0xa10000, 0xa1001f, genesis_io_r },
+		{ 0xa00000, 0xa01fff, genesis_soundram_r },
+		{ 0xa04000, 0xa04003, YM2612_68000_r },
 	
-	
-	/*	new MemoryReadAddress( 0x200000, 0x200fff, cartridge_ram_r),*/
-		new MemoryReadAddress( -1 )  /* end of table */
-	};
-	
-	
-	static MemoryWriteAddress genesis_writemem[] =
-	{
-		new MemoryWriteAddress( 0xff0000, 0xffffff, MWA_BANK2, /*genesis_sharedram_w*/ ),
-	   	new MemoryWriteAddress( 0xd00000, 0xd03fff, genesis_videoram1_w, videoram, videoram_size ), /*this is just a fake */
-		new MemoryWriteAddress( 0xc00014, 0xcfffff, MWA_NOP ),
-		new MemoryWriteAddress( 0xc00000, 0xc00003, genesis_vdp_data_w ),
-		new MemoryWriteAddress( 0xc00004, 0xc00007, genesis_vdp_ctrl_w ),
-		new MemoryWriteAddress( 0xc00008, 0xc0000b, genesis_vdp_hv_w ),
-	   	new MemoryWriteAddress( 0xc00010, 0xc00013, genesis_vdp_76489_w ),
-		new MemoryWriteAddress( 0xa11204, 0xbfffff, MWA_NOP ),
-		new MemoryWriteAddress( 0xa11000, 0xa11203, genesis_ctrl_w ),
-		new MemoryWriteAddress( 0xa10000, 0xa1001f, genesis_io_w),
-		new MemoryWriteAddress( 0xa07f10, 0xa07f13, genesis_vdp_76489_w ),
-		new MemoryWriteAddress( 0xa06000, 0xa06003, genesis_ramlatch_w ),
-		new MemoryWriteAddress( 0xa00000, 0xa01fff, genesis_soundram_w ),
-		new MemoryWriteAddress( 0xa04000, 0xa04003, YM2612_68000_w ),
-	/*	new MemoryWriteAddress( 0x200000, 0x200fff, cartridge_ram_w ),	*/
-		new MemoryWriteAddress( 0x000000, 0x3fffff, MWA_ROM ),
-		new MemoryWriteAddress( -1 )  /* end of table */
-	};
+	#ifdef EASPORTS_HACK
+		{ 0x200000, 0x20ffff, MRA16_ROM},
+	#endif
+	MEMORY_END
 	
 	
+	static MEMORY_WRITE16_START(genesis_writemem)
+		{ 0xff0000, 0xffffff, MWA16_BANK2, /*genesis_sharedram_w*/ },
+	 	{ 0xd00000, 0xd03fff, genesis_videoram1_w, (data16_t**)&videoram, &videoram_size }, /*this is just a fake */
+		{ 0xc00014, 0xcfffff, MWA16_NOP },
+		{ 0xc00000, 0xc00003, genesis_vdp_data_w },
+		{ 0xc00004, 0xc00007, genesis_vdp_ctrl_w },
+		{ 0xc00008, 0xc0000b, genesis_vdp_hv_w },
+	 	{ 0xc00010, 0xc00013, genesis_vdp_76489_w },
+		{ 0xa11204, 0xbfffff, MWA16_NOP },
+		{ 0xa11000, 0xa11203, genesis_ctrl_w },
+		{ 0xa10000, 0xa1001f, genesis_io_w},
+		{ 0xa07f10, 0xa07f13, genesis_vdp_76489_w },
+		{ 0xa06000, 0xa06003, genesis_ramlatch_68000_w },
+		{ 0xa00000, 0xa01fff, genesis_soundram_w },
+		{ 0xa04000, 0xa04003, YM2612_68000_w },
+	#ifdef EASPORTS_HACK
+		{ 0x200000, 0x20ffff, MWA16_RAM /*cartridge_ram_w*/ },
+		{ 0x000000, 0x1fffff, MWA16_ROM },
+	#endif
+	#ifndef EASPORT_HACK
+		// { 0x000000, 0x3fffff, MWA16_ROM },
+		{ 0x000000, 0x1fffff, MWA16_ROM },
+	#endif
+	MEMORY_END
 	
 	
-	static MemoryReadAddress genesis_s_readmem[] =
-	{
-	 	new MemoryReadAddress( 0x0000, 0x1fff, MRA_BANK1, /*genesis_soundram*//*genesis_soundram_r*/ ),
-	    new MemoryReadAddress( 0x4000, 0x4000, YM2612_status_port_0_A_r ),
-		new MemoryReadAddress( 0x4001, 0x4001, YM2612_read_port_0_r ),
-		new MemoryReadAddress( 0x4002, 0x4002, YM2612_status_port_0_B_r ),
-	//	new MemoryReadAddress( 0x4003, 0x4003, YM2612_3_r ),
-		new MemoryReadAddress( 0x8000, 0xffff, genesis_s_68000_ram_r ),
-		new MemoryReadAddress( 0x7f11, 0x7f11, genesis_vdp_76489_r ),
-	 	new MemoryReadAddress( -1 )  /* end of table */
-	};
+	static MEMORY_READ_START(genesis_s_readmem)
+	 	{ 0x0000, 0x1fff, MRA_BANK1, /*&genesis_soundram*//*genesis_soundram_r*/ },
+		{ 0x4000, 0x4000, YM2612_status_port_0_A_r },
+		{ 0x4001, 0x4001, YM2612_read_port_0_r },
+		{ 0x4002, 0x4002, YM2612_status_port_0_B_r },
+	//	{ 0x4003, 0x4003, YM2612_3_r },
+		{ 0x8000, 0xffff, genesis_s_68000_ram_r },
+		{ 0x7f11, 0x7f11, genesis_vdp_76489_r },
+	MEMORY_END
 	
-	static MemoryWriteAddress genesis_s_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x1fff, MWA_BANK1 /*genesis_soundram_w*/ ),
-	  	new MemoryWriteAddress( 0x4000, 0x4000, YM2612_control_port_0_A_w ),
-		new MemoryWriteAddress( 0x4001, 0x4001, YM2612_data_port_0_A_w ),
-		new MemoryWriteAddress( 0x4002, 0x4002, YM2612_control_port_0_B_w ),
-		new MemoryWriteAddress( 0x4003, 0x4003, YM2612_data_port_0_B_w ),
-		new MemoryWriteAddress( 0x6000, 0x6000, genesis_ramlatch_w ),
-	   	new MemoryWriteAddress( 0x7f11, 0x7f11, SN76496_0_w ),
-	   	new MemoryWriteAddress( 0x8000, 0xffff, genesis_s_68000_ram_w ),
-	  	new MemoryWriteAddress( -1 )  /* end of table */
-	};
+	static MEMORY_WRITE_START(genesis_s_writemem)
+		{ 0x0000, 0x1fff, MWA_BANK1 /*genesis_soundram_w*/ },
+		{ 0x4000, 0x4000, YM2612_control_port_0_A_w },
+		{ 0x4001, 0x4001, YM2612_data_port_0_A_w },
+		{ 0x4002, 0x4002, YM2612_control_port_0_B_w },
+		{ 0x4003, 0x4003, YM2612_data_port_0_B_w },
+		{ 0x6000, 0x6000, genesis_ramlatch_w },
+	 	{ 0x7f11, 0x7f11, SN76496_0_w },
+	 	{ 0x8000, 0xffff, genesis_s_68000_ram_w },
+	MEMORY_END
 	
-	static IOWritePort writeport[] =
-	{
-		new IOWritePort( 0x7f, 0x7f, SN76496_0_w ),
-		new IOWritePort( -1 )	/* end of table */
-	};
-	
+	static PORT_WRITE_START(writeport)
+		{ 0x7f, 0x7f, SN76496_0_w },
+	PORT_END
 	
 	
 	static InputPortPtr input_ports_genesis = new InputPortPtr(){ public void handler() { 
@@ -326,8 +315,6 @@ public class genesis
 	};
 	
 	
-	
-	
 	static MachineDriver machine_driver_genesis = new MachineDriver
 	(
 		/* basic machine hardware */
@@ -355,7 +342,7 @@ public class genesis
 		64,64/sizeof(unsigned short), /* genesis uses 4 color schemes of 16 colors each, null of each bank is transparent*/
 		genesis_vh_convert_color_prom,
 	
-		VIDEO_TYPE_RASTER | VIDEO_MODIFIES_PALETTE,
+		VIDEO_TYPE_RASTER /*| VIDEO_MODIFIES_PALETTE*/,
 		0,
 		genesis_vh_start,
 		genesis_vh_stop,
@@ -377,17 +364,17 @@ public class genesis
 	
 	
 	static RomLoadPtr rom_genesis = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x405000,REGION_CPU1);
+		ROM_REGION(0x415000,REGION_CPU1,0);
 	ROM_END(); }}; 
 	
 	static const struct IODevice io_genesis[] = {
 		{
 			IO_CARTSLOT,		/* type */
 			1,					/* count */
-			"smd\0bin\0md\0",       /* file extensions */
+			"smd\0bin\0md\0",	/* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-	        genesis_id_rom,     /* id */
-			genesis_load_rom,	/* init */
+			0,
+			genesis_init_cart,	/* init */
 			NULL,				/* exit */
 			NULL,				/* info */
 			NULL,				/* open */
@@ -395,12 +382,12 @@ public class genesis
 			NULL,				/* status */
 			NULL,				/* seek */
 			NULL,				/* tell */
-	        NULL,               /* input */
+			NULL,				/* input */
 			NULL,				/* output */
 			NULL,				/* input_chunk */
 			NULL,				/* output_chunk */
 			genesis_partialcrc /* get 'true' crc even if .smd format */
-	    },
+		},
 		{ IO_END }
 	};
 	

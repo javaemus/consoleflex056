@@ -76,46 +76,41 @@
 #define LOG(N,M,A)
 #endif
 
-static struct MemoryReadAddress readmem_mz700[] =
-{
+MEMORY_READ_START( readmem_mz700 )
 	{ 0x00000, 0x00fff, MRA_BANK1 },
 	{ 0x01000, 0x0cfff, MRA_RAM },
 	{ 0x0d000, 0x0d7ff, MRA_BANK6 },
 	{ 0x0d800, 0x0dfff, MRA_BANK7 },
 	{ 0x0e000, 0x0ffff, MRA_BANK8 },
+#if 0 //mame37b9 traps
 	{ 0x10000, 0x10fff, MRA_ROM },
 	{ 0x12000, 0x127ff, MRA_RAM },
 	{ 0x12800, 0x12fff, MRA_RAM },
 	{ 0x16000, 0x16fff, MRA_RAM },
-    {-1}
-};
+#endif
+MEMORY_END
 
-static struct MemoryWriteAddress writemem_mz700[] =
-{
+MEMORY_WRITE_START( writemem_mz700 )
 	{ 0x00000, 0x00fff, MWA_BANK1 },
 	{ 0x01000, 0x0cfff, MWA_RAM },
 	{ 0x0d000, 0x0d7ff, MWA_BANK6 },
 	{ 0x0d800, 0x0dfff, MWA_BANK7 },
 	{ 0x0e000, 0x0ffff, MWA_BANK8 },
+#if 0
 	{ 0x12000, 0x127ff, videoram_w, &videoram, &videoram_size },
 	{ 0x12800, 0x12fff, colorram_w, &colorram },
 	{ 0x16000, 0x16fff, pcgram_w },
-    {-1}
-};
+#endif
+MEMORY_END
 
-static struct IOReadPort readport_mz700[] =
-{
-	{-1}
-};
+PORT_READ_START( readport_mz700 )
+PORT_END
 
-static struct IOWritePort writeport_mz700[] =
-{
+PORT_WRITE_START( writeport_mz700 )
 	{ 0xe0, 0xe6, mz700_bank_w },
-	{-1}
-};
+PORT_END
 
-static struct MemoryReadAddress readmem_mz800[] =
-{
+MEMORY_READ_START( readmem_mz800 )
 	{ 0x00000, 0x00fff, MRA_BANK1 },
 	{ 0x01000, 0x01fff, MRA_BANK2 },
 	{ 0x02000, 0x07fff, MRA_RAM },
@@ -125,14 +120,14 @@ static struct MemoryReadAddress readmem_mz800[] =
 	{ 0x0d000, 0x0d7ff, MRA_BANK6 },
 	{ 0x0d800, 0x0dfff, MRA_BANK7 },
 	{ 0x0e000, 0x0ffff, MRA_BANK8 },
+#if 0
 	{ 0x10000, 0x10fff, MRA_ROM },
 	{ 0x11000, 0x11fff, MRA_ROM },
 	{ 0x12000, 0x15fff, MRA_RAM },
-    {-1}
-};
+#endif
+MEMORY_END
 
-static struct MemoryWriteAddress writemem_mz800[] =
-{
+MEMORY_WRITE_START( writemem_mz800 )
 	{ 0x00000, 0x00fff, MWA_BANK1 },
 	{ 0x01000, 0x01fff, MWA_BANK2 },
 	{ 0x02000, 0x07fff, MWA_RAM },
@@ -142,24 +137,22 @@ static struct MemoryWriteAddress writemem_mz800[] =
 	{ 0x0d000, 0x0d7ff, MWA_BANK6 },
 	{ 0x0d800, 0x0dfff, MWA_BANK7 },
 	{ 0x0e000, 0x0ffff, MWA_BANK8 },
+#if 0
 	{ 0x10000, 0x10fff, MWA_ROM },
 	{ 0x11000, 0x11fff, MWA_ROM },
     { 0x12000, 0x16fff, videoram_w, &videoram, &videoram_size },
 	{ 0x12800, 0x12fff, colorram_w, &colorram },
-    {-1}
-};
+#endif
+MEMORY_END
 
-static struct IOReadPort readport_mz800[] =
-{
+PORT_READ_START( readport_mz800 )
 	{ 0xce, 0xce, mz800_crtc_r },
 	{ 0xd0, 0xd7, mz800_mmio_r },
 	{ 0xe0, 0xe9, mz800_bank_r },
 	{ 0xea, 0xea, mz800_ramdisk_r },
-    {-1}
-};
+PORT_END
 
-static struct IOWritePort writeport_mz800[] =
-{
+PORT_WRITE_START( writeport_mz800 )
 	{ 0xcc, 0xcc, mz800_write_format_w },
 	{ 0xcd, 0xcd, mz800_read_format_w },
 	{ 0xce, 0xce, mz800_display_mode_w },
@@ -169,8 +162,7 @@ static struct IOWritePort writeport_mz800[] =
 	{ 0xea, 0xea, mz800_ramdisk_w },
 	{ 0xeb, 0xeb, mz800_ramaddr_w },
 	{ 0xf0, 0xf0, mz800_palette_w },
-    {-1}
-};
+PORT_END
 
 INPUT_PORTS_START( mz700 )
 	PORT_START /* status */
@@ -300,16 +292,17 @@ static struct GfxLayout char_layout =
 static struct GfxDecodeInfo gfxdecodeinfo[] =
 {
 	{ REGION_GFX1, 0, &char_layout, 0, 256 },
-	{ -1 } /* end of array */
+MEMORY_END	 /* end of array */
+
+static struct beep_interface mz700_beep_interface =
+{
+	1,
+	{ 50 }
 };
 
-static struct CustomSound_interface spkr_interface = {
-	mz700_sh_start,
-	mz700_sh_stop,
-	mz700_sh_update
-};
 
-static struct Wave_interface wave_interface = {
+static struct Wave_interface wave_interface =
+{
 	1,
 	{ 50 }
 };
@@ -348,8 +341,8 @@ static struct MachineDriver machine_driver_mz700 =
 	0,0,0,0,
 	{
 		{
-			SOUND_CUSTOM,
-			&spkr_interface
+			SOUND_BEEP,
+			&mz700_beep_interface
         },
         {
             SOUND_WAVE,
@@ -392,8 +385,8 @@ static struct MachineDriver machine_driver_mz800 =
 	0,0,0,0,
 	{
 		{
-			SOUND_CUSTOM,
-			&spkr_interface
+			SOUND_BEEP,
+			&mz700_beep_interface
         },
         {
             SOUND_WAVE,
@@ -403,32 +396,32 @@ static struct MachineDriver machine_driver_mz800 =
 };
 
 ROM_START(mz700)
-	ROM_REGION(0x18000,REGION_CPU1)
+	ROM_REGION(0x18000,REGION_CPU1,0)
 		ROM_LOAD("1z-013a.rom", 0x10000, 0x1000, 0x4c6c6b7b)
-	ROM_REGION(0x01000,REGION_GFX1)
+	ROM_REGION(0x01000,REGION_GFX1,0)
 		ROM_LOAD("mz700fon.int",0x00000, 0x1000, 0x42b9e8fb)
 ROM_END
 
 ROM_START(mz700j)
-	ROM_REGION(0x18000,REGION_CPU1)
+	ROM_REGION(0x18000,REGION_CPU1,0)
 		ROM_LOAD("1z-013a.rom", 0x10000, 0x1000, 0x4c6c6b7b)
-	ROM_REGION(0x01000,REGION_GFX1)
+	ROM_REGION(0x01000,REGION_GFX1,0)
 		ROM_LOAD("mz700fon.jap",0x00000, 0x1000, 0x425eedf5)
 ROM_END
 
 ROM_START(mz800)
-	ROM_REGION(0x18000,REGION_CPU1)
-		ROM_LOAD("mz800h.rom",  0x10000, 0x2000, 0x0c281675)
-	ROM_REGION(0x10000,REGION_USER1)
+	ROM_REGION(0x18000,REGION_CPU1,0)
+		ROM_LOAD("mz800h.rom",  0x10000, 0x2000, BADCRC(0x0c281675))
+	ROM_REGION(0x10000,REGION_USER1,0)
 		/* RAMDISK */
-    ROM_REGION(0x01000,REGION_GFX1)
+    ROM_REGION(0x01000,REGION_GFX1,0)
 		ROM_LOAD("mz700fon.int",0x00000, 0x1000, 0x42b9e8fb)
 ROM_END
 
 
 
 static const struct IODevice io_mz700[] = {
-	IO_CASSETTE_WAVE(1,"m12\0wav\0",mz700_cassette_id,mz700_cassette_init,mz700_cassette_exit),
+	IO_CASSETTE_WAVE(1,"m12\0wav\0",0,mz700_cassette_init,mz700_cassette_exit),
     { IO_END }
 };
 

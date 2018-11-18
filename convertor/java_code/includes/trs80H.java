@@ -15,18 +15,17 @@ public class trs80H
 	
 	extern UINT8 trs80_port_ff;
 	
-	extern int trs80_cas_id(int id);
+	
 	extern int trs80_cas_init(int id);
 	extern void trs80_cas_exit(int id);
 	
-	extern int trs80_cmd_id(int id);
 	extern int trs80_cmd_init(int id);
 	extern void trs80_cmd_exit(int id);
 	
 	extern int trs80_floppy_init(int id);
-	extern void trs80_floppy_exit(int id);
 	
-	extern extern extern 
+	extern extern extern void trs80_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+	
 	extern void trs80_sh_sound_init(const char * gamename);
 	
 	extern extern extern 

@@ -22,24 +22,33 @@
 #define LOG(N,M,A)
 #endif
 
+typedef UINT32 data_t;
+
 static void *ne556_timer[2] = {NULL,};	  /* NE556 timer */
 static UINT8 ne556_out[2] = {0,};		/* NE556 current output status */
 
 static UINT8 mz700_motor_ff = 0;    /* cassette motor control flipflop */
 static UINT8 mz700_motor_on = 0;	/* cassette motor key (play key) */
 
-static READ_HANDLER( pio_port_a_r );
-static READ_HANDLER( pio_port_b_r );
-static READ_HANDLER( pio_port_c_r );
-static WRITE_HANDLER( pio_port_a_w );
-static WRITE_HANDLER( pio_port_b_w );
-static WRITE_HANDLER( pio_port_c_w );
+static READ_HANDLER ( pio_port_a_r );
+static READ_HANDLER ( pio_port_b_r );
+static READ_HANDLER ( pio_port_c_r );
+static WRITE_HANDLER ( pio_port_a_w );
+static WRITE_HANDLER ( pio_port_b_w );
+static WRITE_HANDLER ( pio_port_c_w );
 
 static ppi8255_interface ppi8255 = {
     1,
-	pio_port_a_r, pio_port_b_r, pio_port_c_r,
-	pio_port_a_w, pio_port_b_w, pio_port_c_w
+	{pio_port_a_r},
+	{pio_port_b_r},
+	{pio_port_c_r},
+	{pio_port_a_w},
+	{pio_port_b_w},
+	{pio_port_c_w}
 };
+
+static int pio_port_a_output;
+static int pio_port_c_output;
 
 static void pit_clk_0(double clock);
 static void pit_clk_1(double clock);
@@ -84,6 +93,8 @@ static void ne556_callback(int param)
 
 void init_mz700(void)
 {
+	videoram=memory_region(REGION_CPU1)+0x12000;videoram_size=0x800;
+	colorram=memory_region(REGION_CPU1)+0x12800;
     mz700_bank_w(4, 0);
 }
 
@@ -110,7 +121,8 @@ void mz700_stop_machine(void)
 /* timer 0 is the clock for the speaker output */
 static void pit_clk_0(double clockout)
 {
-	mz700_sh_set_clock(clockout);
+	beep_set_state(0, 1);
+    beep_set_frequency(0, clockout);
 }
 
 /* timer 1 is the clock for timer 2 clock input */
@@ -123,37 +135,37 @@ static void pit_clk_1(double clockout)
 static void pit_irq_2(int which)
 {
 	/* INTMSK: interrupt enabled? */
-    if (ppi8255_peek(0,2) & 0x04)
+    if (pio_port_c_output & 0x04)
 		cpu_set_irq_line(0, 0, HOLD_LINE);
 }
 
 /************************ PIO ************************************************/
 
-static READ_HANDLER( pio_port_a_r )
+static READ_HANDLER ( pio_port_a_r )
 {
-    data_t data = ppi8255_peek(0, 0);
+	data8_t data = pio_port_a_output;
 	LOG(2,"mz700_pio_port_a_r",("%02X\n", data));
-    return data;
+	return data;
 }
 
 /* read keyboard row - indexed by a demux LS145 which is connected to PA0-3 */
-static READ_HANDLER( pio_port_b_r )
+static READ_HANDLER ( pio_port_b_r )
 {
-	data_t demux_LS145, data = 0xff;
+	data8_t demux_LS145, data = 0xff;
 
 	if( setup_active() || onscrd_active() )
 		return data;
 
-    demux_LS145 = ppi8255_peek(0, 0) & 15;
+    demux_LS145 = pio_port_a_output & 15;
     data = readinputport(1 + demux_LS145);
 	LOG(2,"mz700_pio_port_b_r",("%02X\n", data));
 
     return data;
 }
 
-static READ_HANDLER( pio_port_c_r )
+static READ_HANDLER (pio_port_c_r )
 {
-    data_t data = ppi8255_peek(0, 2) & 0x0f;
+    data8_t data = pio_port_c_output & 0x0f;
 
     /*
      * bit 7 in     vertical blank
@@ -177,12 +189,13 @@ static READ_HANDLER( pio_port_c_r )
     return data;
 }
 
-static WRITE_HANDLER( pio_port_a_w )
+static WRITE_HANDLER (pio_port_a_w )
 {
 	LOG(2,"mz700_pio_port_a_w",("%02X\n", data));
+	pio_port_a_output = data;
 }
 
-static WRITE_HANDLER( pio_port_b_w )
+static WRITE_HANDLER ( pio_port_b_w )
 {
 	/*
 	 * bit 7	NE556 reset
@@ -200,7 +213,7 @@ static WRITE_HANDLER( pio_port_b_w )
     timer_enable(ne556_timer[0], (data & 0x80) ? 0 : 1);
 }
 
-static WRITE_HANDLER( pio_port_c_w )
+static WRITE_HANDLER ( pio_port_c_w )
 {
     /*
      * bit 3 out    motor control (0 = on)
@@ -209,6 +222,7 @@ static WRITE_HANDLER( pio_port_c_w )
      * bit 0 out    unused
      */
 	LOG(2,"mz700_pio_port_c_w",("%02X\n", data));
+	pio_port_c_output = data;
 
 	mz700_motor_ff = (data & 0x08) ? 1 : 0;
 	device_status(IO_CASSETTE, 0, mz700_motor_ff & mz700_motor_on);
@@ -220,7 +234,7 @@ static WRITE_HANDLER( pio_port_c_w )
 
 READ_HANDLER ( mz700_mmio_r )
 {
-	data_t data = 0x7e;
+	data8_t data = 0x7e;
 
 	switch (offset & 15)
 	{
@@ -271,22 +285,22 @@ WRITE_HANDLER ( mz700_mmio_w )
 static void bank1_RAM(UINT8 *mem)
 {
 	cpu_setbank(1, &mem[0x00000]);
-	cpu_setbankhandler_r(1, MRA_BANK1);
-	cpu_setbankhandler_w(1, MWA_BANK1);
+	memory_set_bankhandler_r(1, 0, MRA_BANK1);
+	memory_set_bankhandler_w(1, 0, MWA_BANK1);
 }
 
 static void bank1_NOP(UINT8 *mem)
 {
     cpu_setbank(1, &mem[0x00000]);
-	cpu_setbankhandler_r(1, MRA_NOP);
-	cpu_setbankhandler_w(1, MWA_NOP);
+	memory_set_bankhandler_r(1, 0, MRA_NOP);
+	memory_set_bankhandler_w(1, 0, MWA_NOP);
 }
 
 static void bank1_ROM(UINT8 *mem)
 {
 	cpu_setbank(1, &mem[0x10000]);
-	cpu_setbankhandler_r(1, MRA_BANK1);
-	cpu_setbankhandler_w(1, MWA_ROM);
+	memory_set_bankhandler_r(1, 0, MRA_BANK1);
+	memory_set_bankhandler_w(1, 0, MWA_ROM);
 }
 
 
@@ -294,15 +308,15 @@ static void bank1_ROM(UINT8 *mem)
 static void bank2_RAM(UINT8 *mem)
 {
 	cpu_setbank(2, &mem[0x01000]);
-	cpu_setbankhandler_r(2, MRA_BANK2);
-	cpu_setbankhandler_w(2, MWA_BANK2);
+	memory_set_bankhandler_r(2, 0, MRA_BANK2);
+	memory_set_bankhandler_w(2, 0, MWA_BANK2);
 }
 
 static void bank2_ROM(UINT8 *mem)
 {
 	cpu_setbank(2, &mem[0x11000]);
-	cpu_setbankhandler_r(2, MRA_BANK2);
-	cpu_setbankhandler_w(2, MWA_ROM);
+	memory_set_bankhandler_r(2, 0, MRA_BANK2);
+	memory_set_bankhandler_w(2, 0, MWA_ROM);
 }
 
 
@@ -310,15 +324,15 @@ static void bank2_ROM(UINT8 *mem)
 static void bank3_RAM(UINT8 *mem)
 {
 	cpu_setbank(3, &mem[0x08000]);
-	cpu_setbankhandler_r(3, MRA_BANK3);
-	cpu_setbankhandler_w(3, MWA_BANK3);
+	memory_set_bankhandler_r(3, 0, MRA_BANK3);
+	memory_set_bankhandler_w(3, 0, MWA_BANK3);
 }
 
 static void bank3_VID(UINT8 *mem)
 {
 	cpu_setbank(3, &mem[0x12000]);
-	cpu_setbankhandler_r(3, MRA_BANK3);
-	cpu_setbankhandler_w(3, videoram0_w);
+	memory_set_bankhandler_r(3, 0, MRA_BANK3);
+	memory_set_bankhandler_w(3, 0, videoram0_w);
 }
 
 
@@ -326,15 +340,15 @@ static void bank3_VID(UINT8 *mem)
 static void bank4_RAM(UINT8 *mem)
 {
 	cpu_setbank(4, &mem[0x0a000]);
-	cpu_setbankhandler_r(4, MRA_BANK4);
-	cpu_setbankhandler_w(4, MWA_BANK4);
+	memory_set_bankhandler_r(4, 0, MRA_BANK4);
+	memory_set_bankhandler_w(4, 0, MWA_BANK4);
 }
 
 static void bank4_VID(UINT8 *mem)
 {
 	cpu_setbank(4, &mem[0x14000]);
-	cpu_setbankhandler_r(4, MRA_BANK4);
-	cpu_setbankhandler_w(4, videoram2_w);
+	memory_set_bankhandler_r(4, 0, MRA_BANK4);
+	memory_set_bankhandler_w(4, 0, videoram2_w);
 }
 
 
@@ -342,15 +356,15 @@ static void bank4_VID(UINT8 *mem)
 static void bank5_RAM(UINT8 *mem)
 {
 	cpu_setbank(5, &mem[0x0c000]);
-	cpu_setbankhandler_r(5, MRA_BANK5);
-	cpu_setbankhandler_w(5, MWA_BANK5);
+	memory_set_bankhandler_r(5, 0, MRA_BANK5);
+	memory_set_bankhandler_w(5, 0, MWA_BANK5);
 }
 
 static void bank5_VID(UINT8 *mem)
 {
 	cpu_setbank(5, &mem[0x11000]);
-	cpu_setbankhandler_r(5, MRA_BANK5);
-	cpu_setbankhandler_w(5, pcgram_w);
+	memory_set_bankhandler_r(5, 0, MRA_BANK5);
+	memory_set_bankhandler_w(5, 0, pcgram_w);
 }
 
 
@@ -358,22 +372,22 @@ static void bank5_VID(UINT8 *mem)
 static void bank6_NOP(UINT8 *mem)
 {
 	cpu_setbank(6, &mem[0x0d000]);
-	cpu_setbankhandler_r(6, MRA_NOP);
-	cpu_setbankhandler_w(6, MWA_NOP);
+	memory_set_bankhandler_r(6, 0, MRA_NOP);
+	memory_set_bankhandler_w(6, 0, MWA_NOP);
 }
 
 static void bank6_RAM(UINT8 *mem)
 {
 	cpu_setbank(6, &mem[0x0d000]);
-	cpu_setbankhandler_r(6, MRA_BANK6);
-	cpu_setbankhandler_w(6, MWA_BANK6);
+	memory_set_bankhandler_r(6, 0, MRA_BANK6);
+	memory_set_bankhandler_w(6, 0, MWA_BANK6);
 }
 
 static void bank6_VIO(UINT8 *mem)
 {
 	cpu_setbank(6, &mem[0x12000]);
-	cpu_setbankhandler_r(6, MRA_BANK6);
-	cpu_setbankhandler_w(6, videoram_w);
+	memory_set_bankhandler_r(6, 0, MRA_BANK6);
+	memory_set_bankhandler_w(6, 0, videoram_w);
 }
 
 
@@ -381,22 +395,22 @@ static void bank6_VIO(UINT8 *mem)
 static void bank7_NOP(UINT8 *mem)
 {
 	cpu_setbank(7, &mem[0x0d800]);
-	cpu_setbankhandler_r(7, MRA_NOP);
-	cpu_setbankhandler_w(7, MWA_NOP);
+	memory_set_bankhandler_r(7, 0, MRA_NOP);
+	memory_set_bankhandler_w(7, 0, MWA_NOP);
 }
 
 static void bank7_RAM(UINT8 *mem)
 {
 	cpu_setbank(7, &mem[0x0d800]);
-	cpu_setbankhandler_r(7, MRA_BANK7);
-	cpu_setbankhandler_w(7, MWA_BANK7);
+	memory_set_bankhandler_r(7, 0, MRA_BANK7);
+	memory_set_bankhandler_w(7, 0, MWA_BANK7);
 }
 
 static void bank7_VIO(UINT8 *mem)
 {
 	cpu_setbank(7, &mem[0x12800]);
-	cpu_setbankhandler_r(7, MRA_BANK7);
-	cpu_setbankhandler_w(7, colorram_w);
+	memory_set_bankhandler_r(7, 0, MRA_BANK7);
+	memory_set_bankhandler_w(7, 0, colorram_w);
 }
 
 
@@ -404,23 +418,23 @@ static void bank7_VIO(UINT8 *mem)
 static void bank8_NOP(UINT8 *mem)
 {
 	cpu_setbank(8, &mem[0x0e000]);
-	cpu_setbankhandler_r(8, MRA_NOP);
-	cpu_setbankhandler_w(8, MWA_NOP);
+	memory_set_bankhandler_r(8, 0, MRA_NOP);
+	memory_set_bankhandler_w(8, 0, MWA_NOP);
 
 }
 
 static void bank8_RAM(UINT8 *mem)
 {
 	cpu_setbank(8, &mem[0x0e000]);
-	cpu_setbankhandler_r(8, MRA_BANK8);
-	cpu_setbankhandler_w(8, MWA_BANK8);
+	memory_set_bankhandler_r(8, 0, MRA_BANK8);
+	memory_set_bankhandler_w(8, 0, MWA_BANK8);
 }
 
 static void bank8_VIO(UINT8 *mem)
 {
 	cpu_setbank(8, &mem[0x16000]);
-	cpu_setbankhandler_r(8, mz700_mmio_r);
-	cpu_setbankhandler_w(8, mz700_mmio_w);
+	memory_set_bankhandler_r(8, 0, mz700_mmio_r);
+	memory_set_bankhandler_w(8, 0, mz700_mmio_w);
 }
 
 
@@ -772,7 +786,7 @@ int mz700_cassette_init(int id)
 {
 	void *file;
 
-    file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+    file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
     if( file )
 	{
 		struct wave_args wa = {0,};
@@ -796,12 +810,12 @@ int mz700_cassette_init(int id)
 		wa.chunk_size = 1;
 		wa.chunk_samples = 2 * BYTE_SAMPLES;
 		if( device_open(IO_CASSETTE,id,0,&wa) )
-			return INIT_FAILED;
+			return INIT_FAIL;
 
-        return INIT_OK;
+        return INIT_PASS;
 	}
 
-    file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW_CREATE);
+    file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW_CREATE);
 	if( file )
 	{
 		struct wave_args wa = {0,};
@@ -810,21 +824,16 @@ int mz700_cassette_init(int id)
 		wa.fill_wave = NULL;
 		wa.smpfreq = Machine->sample_rate;
 		if( device_open(IO_CASSETTE,id,1,&wa) )
-			return INIT_FAILED;
+			return INIT_FAIL;
 
-        return INIT_OK;
+        return INIT_PASS;
 	}
-	return INIT_FAILED;
+	return INIT_PASS;
 }
 
 void mz700_cassette_exit(int id)
 {
 	device_close(IO_CASSETTE,id);
-}
-
-int mz700_cassette_id(int id)
-{
-	return 0;
 }
 
 /******************************************************************************
@@ -842,7 +851,7 @@ static UINT8 mz800_palette_bank;
 /* port CE */
 READ_HANDLER( mz800_crtc_r )
 {
-	data_t data = 0x00;
+	data8_t data = 0x00;
 	LOG(1,"mz800_crtc_r",("%02X\n",data));
     return data;
 }
@@ -850,7 +859,7 @@ READ_HANDLER( mz800_crtc_r )
 /* port D0 - D7 / memory E000 - FFFF */
 READ_HANDLER( mz800_mmio_r )
 {
-	data_t data = 0x7e;
+	data8_t data = 0x7e;
 
 	switch (offset & 15)
 	{
@@ -874,7 +883,7 @@ READ_HANDLER( mz800_mmio_r )
 READ_HANDLER( mz800_bank_r )
 {
 	UINT8 *mem = memory_region(REGION_CPU1);
-    data_t data = 0xff;
+    data8_t data = 0xff;
 
     switch (offset)
     {
@@ -936,7 +945,7 @@ READ_HANDLER( mz800_bank_r )
 READ_HANDLER( mz800_ramdisk_r )
 {
 	UINT8 *mem = memory_region(REGION_USER1);
-	data_t data = mem[mz800_ramaddr];
+	data8_t data = mem[mz800_ramaddr];
 	LOG(2,"mz800_ramdisk_r",("[%04X] -> %02X\n", mz800_ramaddr, data));
 	if (mz800_ramaddr++ == 0)
 		LOG(1,"mz800_ramdisk_r",("address wrap 0000\n"));
@@ -1115,6 +1124,9 @@ WRITE_HANDLER( pcgram_w ) { videoram_w(offset + 0x4000, data); }
 void init_mz800(void)
 {
 	UINT8 *mem = memory_region(REGION_CPU1);
+
+	videoram=memory_region(REGION_CPU1)+0x12000;videoram_size=0x5000;
+	colorram=memory_region(REGION_CPU1)+0x12800;
 
     mem[0x10001] = 0x4a;
 	mem[0x10002] = 0x00;

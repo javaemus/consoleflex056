@@ -13,13 +13,13 @@
 #define VERBOSE_DBG 1
 #include "includes/cbm.h"
 #include "includes/cia6526.h"
-#include "includes/c1551.h"
+#include "includes/cbmserb.h"
 #include "includes/vc1541.h"
 #include "includes/vc20tape.h"
 #include "includes/vic6567.h"
 #include "includes/vdc8563.h"
 #include "includes/sid6581.h"
-#include "includes/praster.h"
+#include "includes/state.h"
 
 #include "includes/c128.h"
 
@@ -40,12 +40,6 @@
  3 textmode
  5 graphics (turned on ram at 0x1000 for video chip
 */
-
-/* computer is a c128 */
-int c128 = 0;
-
-UINT8 c128_keyline[3] =
-{0xff, 0xff, 0xff};
 
 UINT8 *c128_basic;
 UINT8 *c128_kernal;
@@ -101,8 +95,11 @@ WRITE_HANDLER( c128_write_d000 )
 			vdc8563_port_w (offset & 0xff, data);
 			break;
 		case 8: case 9: case 0xa: case 0xb:
-			c64_colorram[offset & 0x3ff] = data | 0xf0;
-			break;
+		    if (c64mode)
+			c64_colorram[(offset & 0x3ff)] = data | 0xf0;
+		    else
+			c64_colorram[(offset & 0x3ff)|((c64_port6510&3)<<10)] = data | 0xf0; // maybe all 8 bit connected!
+		    break;
 		case 0xc:
 			cia6526_0_port_w (offset & 0xff, data);
 			break;
@@ -188,12 +185,12 @@ void c128_bankswitch_64 (int reset)
 	if ((!c64_game && c64_exrom)
 		|| (charen && (loram || hiram)))
 	{
-		cpu_setbankhandler_r (13, c128_read_io);
+		memory_set_bankhandler_r (13, 0, c128_read_io);
 		c128_write_io = 1;
 	}
 	else
 	{
-		cpu_setbankhandler_r (13, MRA_BANK5);
+		memory_set_bankhandler_r (13, 0, MRA_BANK5);
 		c128_write_io = 0;
 		if ((!charen && (loram || hiram)))
 		{
@@ -208,16 +205,16 @@ void c128_bankswitch_64 (int reset)
 	if (!c64_game && c64_exrom)
 	{
 		cpu_setbank (14, c64_romh);
-		cpu_setbank (15, 0x1f00 + c64_romh);
-		cpu_setbank (16, 0x1f05 + c64_romh);
+		cpu_setbank (15, c64_romh+0x1f00);
+		cpu_setbank (16, c64_romh+0x1f05);
 	}
 	else
 	{
 		if (hiram)
 		{
 			cpu_setbank (14, c64_kernal);
-			cpu_setbank (15, 0x1f00 + c64_kernal);
-			cpu_setbank (16, 0x1f05 + c64_kernal);
+			cpu_setbank (15, c64_kernal+0x1f00);
+			cpu_setbank (16, c64_kernal+0x1f05);
 		}
 		else
 		{
@@ -397,17 +394,17 @@ static int mmu_page0, mmu_page1;
 		else
 			c128_ram_top = 0x10000;
 
-		cpu_setbankhandler_r (15, c128_mmu8722_ff00_r);
+		memory_set_bankhandler_r (15, 0, c128_mmu8722_ff00_r);
 
 		if (MMU_IO_ON)
 			{
-				cpu_setbankhandler_r (13, c128_read_io);
+				memory_set_bankhandler_r (13, 0, c128_read_io);
 				c128_write_io = 1;
 			}
 		else
 			{
 				c128_write_io = 0;
-				cpu_setbankhandler_r (13, MRA_BANK13);
+				memory_set_bankhandler_r (13, 0, MRA_BANK13);
 			}
 
 		if (MMU_RAM_HI)
@@ -489,9 +486,9 @@ static void c128_bankswitch (int reset)
 				{
 					DBG_LOG (1, "switching to z80",
 							 ("active %d\n",cpu_getactivecpu()) );
-					memorycontextswap(0);
+					memory_set_context(0);
 					c128_bankswitch_z80();
-					memorycontextswap(1);
+					memory_set_context(1);
 					cpu_set_halt_line (0, 0);
 					cpu_set_halt_line (1, 1);
 				}
@@ -500,9 +497,9 @@ static void c128_bankswitch (int reset)
 			{
 				DBG_LOG (1, "switching to m6502",
 						 ("active %d\n",cpu_getactivecpu()) );
-				memorycontextswap(1);
+				memory_set_context(1);
 				c128_bankswitch_128(reset);
-				memorycontextswap(0);
+				memory_set_context(0);
 				cpu_set_halt_line (1, 0);
 				cpu_set_halt_line (0, 1);
 			}
@@ -721,7 +718,7 @@ static int c128_dma_read(int offset)
 			return c64_chargen[offset & 0xfff];
 		return c64_vicaddr[offset];
 	}
-	if ( ((c64_port6510&7)!=5)
+	if ( !(c64_port6510&4)
 		 && (((c128_vicaddr - c64_memory + offset) & 0x7000) == 0x1000) )
 		return c128_chargen[offset & 0xfff];
 	return c128_vicaddr[offset];
@@ -729,11 +726,44 @@ static int c128_dma_read(int offset)
 
 static int c128_dma_read_color (int offset)
 {
-	return c64_colorram[offset & 0x3ff] & 0xf;
+    if (c64mode) return c64_colorram[offset & 0x3ff] & 0xf;
+    return c64_colorram[(offset & 0x3ff)|((c64_port6510&0x3)<<10)] & 0xf;
 }
 
 static void c128_common_driver_init (void)
 {
+	UINT8 *gfx=memory_region(REGION_GFX1);
+	int i;
+
+#if 0
+	{0x100000, 0x107fff, MWA_ROM, &c128_basic},	/* maps to 0x4000 */
+	{0x108000, 0x109fff, MWA_ROM, &c64_basic},	/* maps to 0xa000 */
+	{0x10a000, 0x10bfff, MWA_ROM, &c64_kernal},	/* maps to 0xe000 */
+	{0x10c000, 0x10cfff, MWA_ROM, &c128_editor},
+	{0x10d000, 0x10dfff, MWA_ROM, &c128_z80},		/* maps to z80 0 */
+	{0x10e000, 0x10ffff, MWA_ROM, &c128_kernal},
+	{0x110000, 0x117fff, MWA_ROM, &c128_internal_function},
+	{0x118000, 0x11ffff, MWA_ROM, &c128_external_function},
+	{0x120000, 0x120fff, MWA_ROM, &c64_chargen},
+	{0x121000, 0x121fff, MWA_ROM, &c128_chargen},
+	{0x122000, 0x1227ff, MWA_RAM, &c64_colorram},
+	{0x122800, 0x1327ff, MWA_RAM, &c128_vdcram},
+#endif
+		c128_basic=memory_region(REGION_CPU1)+0x100000;
+		c64_basic=memory_region(REGION_CPU1)+0x108000;
+		c64_kernal=memory_region(REGION_CPU1)+0x10a000;
+		c128_editor=memory_region(REGION_CPU1)+0x10c000;
+		c128_z80=memory_region(REGION_CPU1)+0x10d000;
+		c128_kernal=memory_region(REGION_CPU1)+0x10e000;
+		c128_internal_function=memory_region(REGION_CPU1)+0x110000;
+		c128_external_function=memory_region(REGION_CPU1)+0x118000;
+		c64_chargen=memory_region(REGION_CPU1)+0x120000;
+		c128_chargen=memory_region(REGION_CPU1)+0x121000;
+		c64_colorram=memory_region(REGION_CPU1)+0x122000;
+		c128_vdcram=memory_region(REGION_CPU1)+0x122800;
+
+	for (i=0; i<0x100; i++) gfx[i]=i;
+
 	memset(c64_memory, 0xff, 0x100000);
 	c128 = 1;
 	vc20_tape_open (c64_tape_read);
@@ -743,7 +773,6 @@ static void c128_common_driver_init (void)
 	cbm_drive_attach_fs (0);
 	cbm_drive_attach_fs (1);
 
-	sid6581_0_init (c64_paddle_read, c64_pal);
 	c64_cia0.todin50hz = c64_pal;
 	cia6526_config (0, &c64_cia0);
 	c64_cia1.todin50hz = c64_pal;
@@ -756,10 +785,9 @@ void c128_driver_init (void)
 	vic6567_init (1, c64_pal,
 				  c128_dma_read, c128_dma_read_color, c64_vic_interrupt);
 	vic2_set_rastering(0);
-	vdc8563_init(c128_vdcram, 0);
+	vdc8563_init(0);
 	vdc8563_set_rastering(1);
-	raster1.display_state=c64_state;
-	raster2.display_state=c128_state;
+	state_add_function(c128_state);
 }
 
 void c128pal_driver_init (void)
@@ -769,10 +797,9 @@ void c128pal_driver_init (void)
 	vic6567_init (1, c64_pal,
 				  c128_dma_read, c128_dma_read_color, c64_vic_interrupt);
 	vic2_set_rastering(1);
-	vdc8563_init(c128_vdcram, 0);
+	vdc8563_init(0);
 	vdc8563_set_rastering(0);
-	raster1.display_state=c64_state;
-	raster2.display_state=c128_state;
+	state_add_function(c128_state);
 }
 
 void c128_driver_shutdown (void)
@@ -787,8 +814,7 @@ void c128_init_machine (void)
 	c64_common_init_machine ();
 	c128_vicaddr = c64_vicaddr = c64_memory;
 
-	sid6581_0_reset();
-	sid6581_0_configure(SID8580);
+	sid6581_reset(0);
 
 	c64_rom_recognition ();
 	c64_rom_load();
@@ -809,7 +835,7 @@ void c128_shutdown_machine (void)
 
 int c128_vh_start (void)
 {
-	return vdc8563_vh_start()|vic2_vh_start();
+	return vdc8563_vh_start()||vic2_vh_start();
 }
 
 void c128_vh_stop (void)
@@ -818,28 +844,20 @@ void c128_vh_stop (void)
 	vic2_vh_stop();
 }
 
-void c128_vh_screenrefresh(struct osd_bitmap *bitmap, int full_refresh)
+void c128_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 {
 	vdc8563_vh_screenrefresh(bitmap, full_refresh);
 	vic2_vh_screenrefresh(bitmap,full_refresh);
 }
 
-int c128_raster_irq (void)
+void c128_state(void)
 {
-	return vdc8563_raster_irq()|vic2_raster_irq();
-}
-
-void c128_state(PRASTER *This)
-{
-	int y;
 	char text[70];
-
-	y = Machine->visible_area.max_y + 1 - Machine->uifont->height;
 
 #if VERBOSE_DBG
 # if 0
 	cia6526_status (text, sizeof (text));
-	praster_draw_text (This, text, &y);
+	state_display_text (This, text, &y);
 
 #  if 1
 	snprintf (text, size, "c128 vic:%.5x m6510:%d exrom:%d game:%d",
@@ -850,22 +868,20 @@ void c128_state(PRASTER *This)
 			  MMU_SIZE, MMU_BOTTOM?"bottom":"", MMU_TOP?"top":"",MMU_RAM_ADDR, MMU_IO_ON?"io":"",
 			  MMU_PAGE0, MMU_PAGE1);
 #  endif
-	praster_draw_text (This, text, &y);
+	state_display_text (text);
 # endif
 
-	vdc8563_status(text, sizeof(text));
-	praster_draw_text (This, text, &y);
 #endif
 
 	vc20_tape_status (text, sizeof (text));
-	praster_draw_text (This, text, &y);
+	state_display_text (text);
 #ifdef VC1541
 	vc1541_drive_status (text, sizeof (text));
 #else
 	cbm_drive_0_status (text, sizeof (text));
 #endif
-	praster_draw_text (This, text, &y);
+	state_display_text (text);
 
 	cbm_drive_1_status (text, sizeof (text));
-	praster_draw_text (This, text, &y);
+	state_display_text (text);
 }

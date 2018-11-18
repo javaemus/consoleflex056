@@ -50,16 +50,16 @@ public class jupiter
 		}
 	} };
 	
-	public static VhUpdatePtr jupiter_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void jupiter_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 		int offs;
 	
 		/* do we need a full refresh? */
 	    if (full_refresh != 0)
-			memset(dirtybuffer, 1, videoram_size[0]);
+			memset(dirtybuffer, 1, videoram_size);
 	
-	    for( offs = 0; offs < videoram_size[0]; offs++ )
+	    for( offs = 0; offs < videoram_size; offs++ )
 		{
 	        if( dirtybuffer[offs]  )
 			{
@@ -75,5 +75,5 @@ public class jupiter
 	            dirtybuffer[offs] = 0;
 			}
 		}
-	} };
+	}
 }

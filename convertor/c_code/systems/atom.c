@@ -7,6 +7,7 @@ CPU: 65C02
 		0000-00ff Zero page
 		0100-01ff Stack
 		0200-1fff RAM (expansion)
+		0a00-0a04 FDC 8271
 		2000-21ff RAM (dos catalogue buffer)
 		2200-27ff RAM (dos seq file buffer)
 		2800-28ff RAM (float buffer)
@@ -16,11 +17,9 @@ CPU: 65C02
 		a000-afff ROM (extension)
 		b000-b003 PPIA 8255
 		b003-b7ff NOP
-		b800-b80f VIA 6522
-		b810-b9ff NOP
-		ba00-ba04 FDC 8271
+		b800-bbff VIA 6522
 		bc00-bfdf NOP
-		bfe0-bfe2 MOUSE
+		bfe0-bfe2 MOUSE	- extension??
 		bfe3-bfff NOP
 		c000-cfff ROM (basic)
 		d000-dfff ROM (float)
@@ -30,7 +29,6 @@ CPU: 65C02
 Video:		MC6847
 
 Sound:		Buzzer
-
 Floppy:		FDC8271
 
 Hardware:	PPIA 8255
@@ -42,6 +40,21 @@ Hardware:	PPIA 8255
 			b002	4 2.4kHz input, 5 cas input, 6 REPT key, 7 60 Hz input
 
 			VIA 6522
+
+
+	DOS:
+
+	The original location of the 8271 memory mapped registers is 0xa00-0x0a04.
+	(This is the memory range assigned by Acorn in their design.)
+
+	This is in the middle of the area for expansion RAM. Many Atom owners
+	thought this was a bad design and have modified their Atom's and dos rom
+	to use a different memory area.
+
+	The atom driver in MESS uses the original memory area.
+
+
+
 ***************************************************************************/
 
 #include "driver.h"
@@ -49,6 +62,12 @@ Hardware:	PPIA 8255
 #include "machine/8255ppi.h"
 #include "vidhrdw/m6847.h"
 #include "includes/atom.h"
+#include "includes/i8271.h"
+#include "includes/basicdsk.h"
+#include "includes/flopdrv.h"
+#include "machine/6522via.h"
+#include "printer.h"
+#include "includes/centroni.h"
 
 /* functions */
 
@@ -56,35 +75,68 @@ Hardware:	PPIA 8255
 
 /* memory w/r functions */
 
-static struct MemoryReadAddress atom_readmem[] =
-{
-	{ 0x0000, 0x7fff, MRA_RAM },
+static MEMORY_READ_START (atom_readmem)
+	{ 0x0000, 0x09ff, MRA_RAM },
+    { 0x0a00, 0x0a04, atom_8271_r},
+	{ 0x0a05, 0x07fff, MRA_RAM},
 	{ 0x8000, 0x97ff, videoram_r },		// VDG 6847
 	{ 0x9800, 0x9fff, MRA_RAM },
-	{ 0xa000, 0xafff, MRA_ROM },
-	{ 0xb000, 0xb7ff, ppi8255_0_r },	// PPIA 8255
-	{ 0xb800, 0xb9ff, MRA_NOP },		// VIA 6522
-	{ 0xba00, 0xbfdf, MRA_NOP },		// FDC 8271
-	{ 0xbfe0, 0xbfff, MRA_NOP },		// MOUSE
-	{ 0xc000, 0xffff, MRA_ROM },
-	{ -1 }
-};
+    { 0xb000, 0xb003, ppi8255_0_r },    // PPIA 8255
+	{ 0xb800, 0xbbff, atom_via_r},		// VIA 6522
+    { 0xc000, 0xcfff, MRA_ROM },
+    { 0xd000, 0xdfff, MRA_ROM },
+    { 0xe000, 0xefff, MRA_ROM },
+    { 0xf000, 0xffff, MRA_ROM },
 
-static struct MemoryWriteAddress atom_writemem[] =
-{
-	{ 0x0000, 0x7fff, MWA_RAM },
+MEMORY_END
+
+static MEMORY_WRITE_START (atom_writemem)
+	{ 0x0000, 0x09ff, MWA_RAM },
+    { 0x0a00, 0x0a04, atom_8271_w},
+	{ 0x0a05, 0x07fff, MWA_RAM},
 	{ 0x8000, 0x97ff, videoram_w, &videoram, &videoram_size}, // VDG 6847
 	{ 0x9800, 0x9fff, MWA_RAM },
-	{ 0xa000, 0xafff, MWA_ROM },
-	{ 0xb000, 0xb7ff, ppi8255_0_w },	// PIA 8255
-
-	{ 0xb800, 0xb9ff, MWA_NOP },		// VIA 6522
-	{ 0xba00, 0xbfdf, MWA_NOP },		// FDC 8271
-	{ 0xbfe0, 0xbfff, MWA_NOP },		// MOUSE
+    { 0xb000, 0xb003, ppi8255_0_w },    // PIA 8255
+	{ 0xb800, 0xbbff, atom_via_w},		// VIA 6522
 	{ 0xc000, 0xffff, MWA_ROM },
-	{ -1 }
-};
+    { 0xd000, 0xdfff, MWA_ROM },
+    { 0xe000, 0xefff, MWA_ROM },
+    { 0xf000, 0xffff, MWA_ROM },
+MEMORY_END
 
+
+static MEMORY_READ_START (atomeb_readmem)
+	{ 0x0000, 0x09ff, MRA_RAM },
+    { 0x0a00, 0x0a04, atom_8271_r},
+	{ 0x0a05, 0x07fff, MRA_RAM},
+	{ 0x8000, 0x97ff, videoram_r },		// VDG 6847
+	{ 0x9800, 0x9fff, MRA_RAM },
+    { 0xa000, 0xafff, MRA_BANK1 },		// eprom data from eprom box
+    { 0xb000, 0xb003, ppi8255_0_r },    // PPIA 8255
+	{ 0xb800, 0xbbff, atom_via_r},		// VIA 6522
+    { 0xbfff, 0xbfff, atom_eprom_box_r},
+	{ 0xc000, 0xcfff, MRA_ROM },
+    { 0xd000, 0xdfff, MRA_ROM },
+    { 0xe000, 0xefff, MRA_ROM },
+    { 0xf000, 0xffff, MRA_ROM },
+
+MEMORY_END
+
+static MEMORY_WRITE_START (atomeb_writemem)
+	{ 0x0000, 0x09ff, MWA_RAM },
+    { 0x0a00, 0x0a04, atom_8271_w},
+	{ 0x0a05, 0x07fff, MWA_RAM},
+	{ 0x8000, 0x97ff, videoram_w, &videoram, &videoram_size}, // VDG 6847
+	{ 0x9800, 0x9fff, MWA_RAM },
+ /*   { 0xa000, 0xafff, MWA_NOP }, */
+    { 0xb000, 0xb003, ppi8255_0_w },    // PIA 8255
+	{ 0xb800, 0xbbff, atom_via_w},		// VIA 6522
+    { 0xbfff, 0xbfff, atom_eprom_box_w},
+	{ 0xc000, 0xffff, MWA_ROM },
+    { 0xd000, 0xdfff, MWA_ROM },
+    { 0xe000, 0xefff, MWA_ROM },
+    { 0xf000, 0xffff, MWA_ROM },
+MEMORY_END
 /* graphics output */
 
 /* keyboard input */
@@ -93,7 +145,7 @@ static struct MemoryWriteAddress atom_writemem[] =
 
 INPUT_PORTS_START (atom)
 	PORT_START /* 0 VBLANK */
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_VBLANK )
+    PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_VBLANK )
 
 	PORT_START /* 1 */
 	PORT_BITX( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD, "deadkey", KEYCODE_NONE, IP_JOY_NONE)
@@ -204,22 +256,66 @@ static struct MachineDriver machine_driver_atom =
 	/* basic machine hardware */
 	{
 		{
-			CPU_M65C02,
+            CPU_M65C02,
 			1000000,
 			atom_readmem, atom_writemem,
 			0, 0,
-			0, 0,
+			m6847_vh_interrupt, M6847_INTERRUPTS_PER_FRAME,
+			0, 0
 		},
 	},
-	60, DEFAULT_REAL_60HZ_VBLANK_DURATION, /* frames/sec, vblank duration */
+	50, 128, /* frames/sec, vblank duration */
 	0,
 	atom_init_machine,
 	atom_stop_machine,
 
 	/* video hardware */
-	32*8,										/* screen width */
-	16*12,									/* screen height (pixels doubled) */
-	{ 0, 32*8-1, 0, 16*12-1},					/* visible_area */
+	320,					/* screen width */
+	240,					/* screen height (pixels doubled) */
+	{ 0, 319, 0, 239 },		/* visible_area */
+	0,							/* graphics decode info */
+	M6847_TOTAL_COLORS,
+	0,
+	m6847_vh_init_palette,						/* initialise palette */
+
+	VIDEO_TYPE_RASTER | VIDEO_SUPPORTS_DIRTY,
+	0,
+	atom_vh_start,
+	m6847_vh_stop,
+	m6847_vh_update,
+	/* sound hardware */
+	0, 0, 0, 0,
+	{
+		{
+			SOUND_SPEAKER,
+			&atom_sh_interface
+		}
+	}
+};
+
+
+static struct MachineDriver machine_driver_atomeb =
+{
+	/* basic machine hardware */
+	{
+		{
+            CPU_M65C02,
+			1000000,
+			atomeb_readmem, atomeb_writemem,
+			0, 0,
+			m6847_vh_interrupt, M6847_INTERRUPTS_PER_FRAME,
+			0, 0
+		},
+	},
+	50, 128, /* frames/sec, vblank duration */
+	0,
+	atomeb_init_machine,
+	atom_stop_machine,
+
+	/* video hardware */
+	320,					/* screen width */
+	240,					/* screen height (pixels doubled) */
+	{ 0, 319, 0, 239 },		/* visible_area */
 	0,							/* graphics decode info */
 	M6847_TOTAL_COLORS,
 	0,
@@ -241,22 +337,38 @@ static struct MachineDriver machine_driver_atom =
 };
 
 ROM_START (atom)
-	ROM_REGION (0x10000, REGION_CPU1)
+	ROM_REGION (0x10000, REGION_CPU1,0)
 	ROM_LOAD ("akernel.rom", 0xf000, 0x1000, 0xc604db3d)
-	// ROM_LOAD ("ados.rom", 0xe000, 0x1000, 0xe5b1f5f6)
+	ROM_LOAD ("dosrom.rom", 0xe000, 0x1000, 0xc431a9b7)
 	ROM_LOAD ("afloat.rom", 0xd000, 0x1000, 0x81d86af7)
 	ROM_LOAD ("abasic.rom", 0xc000, 0x1000, 0x43798b9b)
-	//ROM_REGION (0x300, REGION_GFX1)
-	//ROM_LOAD ("atom.chr", 0x0000, 0x0300, 0x0)
+ROM_END
+
+ROM_START (atomeb)
+	ROM_REGION (0x10000+0x09000, REGION_CPU1,0)
+	ROM_LOAD ("akernel.rom", 0xf000, 0x1000, 0xc604db3d)
+	ROM_LOAD ("dosrom.rom", 0xe000, 0x1000, 0xc431a9b7)
+	ROM_LOAD ("afloat.rom", 0xd000, 0x1000, 0x81d86af7)
+	ROM_LOAD ("abasic.rom", 0xc000, 0x1000, 0x43798b9b)
+	/* roms from another oric emulator */
+	ROM_LOAD ("axr1.rom",0x010000,0x1000, 0x868fda8b)
+	ROM_LOAD ("pcharme.rom",0x011000,0x1000,0x9e8bd79f)
+	ROM_LOAD ("gags.rom",0x012000,0x1000,0x35e1d713)
+	ROM_LOAD ("werom.rom",0x013000,0x1000,0xdfcb3bf8)
+	ROM_LOAD ("unknown.rom",0x014000,0x1000,0x013b8f93)
+	ROM_LOAD ("combox.rom",0x015000,0x1000,0x9c8210ab)
+	ROM_LOAD ("salfaa.rom",0x016000,0x1000,0x0ef857b25)
+	ROM_LOAD ("mousebox.rom",0x017000,0x01000,0x0dff30e4)
+	ROM_LOAD ("atomicw.rom",0x018000,0x1000,0xa3fd737d)
 ROM_END
 
 static const struct IODevice io_atom[] =
 {
 	{
-		IO_CARTSLOT,
+		IO_QUICKLOAD,
 		1,						/* count */
 		"atm\0",				/* file extn */
-		IO_RESET_ALL,			/* reset if file changed */
+		IO_RESET_NONE,			/* reset if file changed */
         NULL,                   /* id */
 		atom_init_atm,			/* init */
 		NULL,					/* exit */
@@ -271,8 +383,33 @@ static const struct IODevice io_atom[] =
 		NULL,					/* input_chunk */
 		NULL					/* output_chunk */
 	},
+	{
+		IO_FLOPPY,				/* type */
+		2,						/* count */
+		"ssd\0",                /* file extensions */
+		IO_RESET_NONE,			/* reset if file changed */
+		0,
+		atom_floppy_init,		/* init */
+		basicdsk_floppy_exit,	/* exit */
+		NULL,					/* info */
+		NULL,					/* open */
+		NULL,					/* close */
+		floppy_status,			/* status */
+		NULL,					/* seek */
+		NULL,					/* tell */
+		NULL,					/* input */
+		NULL,					/* output */
+		NULL,					/* input_chunk */
+		NULL					/* output_chunk */
+	},
+    /* these are not working properly yet! */
+	IO_CASSETTE_WAVE(1,"wav\0",NULL,atom_cassette_init,atom_cassette_exit),
+    IO_PRINTER_PORT (1, "prn\0"),
 	{ IO_END }
 };
 
+#define io_atomeb io_atom
+
 /*    YEAR  NAME      PARENT    MACHINE   INPUT     INIT      COMPANY   FULLNAME */
 COMP( 1979, atom,     0,        atom,     atom,     0,        "Acorn",  "Atom" )
+COMP( 1979, atomeb,   atom,     atomeb,     atom,     0,        "Acorn",  "Atom with Eprom Box" )

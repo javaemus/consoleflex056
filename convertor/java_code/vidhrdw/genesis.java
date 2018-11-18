@@ -21,8 +21,6 @@ public class genesis
 {
 	
 	
-	extern int z80running;
-	
 	/* skeleton code included from closet.h */
 	#ifdef GARETHS_LITTLE_SECRET
 	#define DIM >>3
@@ -127,13 +125,13 @@ public class genesis
 	int current_dma_increment = 0;
 	int current_dma_id = 0;
 	
-	//struct osd_bitmap *scroll_a;
-	//struct osd_bitmap *scroll_b;
-	//struct osd_bitmap *bitmap_vram;
-	//struct osd_bitmap *bitmap_sprite;
-	struct osd_bitmap *bitmap2;
+	//struct mame_bitmap *scroll_a;
+	//struct mame_bitmap *scroll_b;
+	//struct mame_bitmap *bitmap_vram;
+	//struct mame_bitmap *bitmap_sprite;
+	struct mame_bitmap *bitmap2;
 	
-	struct osd_bitmap *spritelayer;
+	struct mame_bitmap *spritelayer;
 	
 	unsigned short colours[256];
 	
@@ -142,7 +140,7 @@ public class genesis
 	short dirty_attribute_a[16384];
 	short dirty_attribute_b[16384];
 	
-	char *tile_changed_1, *tile_changed_2;
+	char *tile_changed_1 = NULL, *tile_changed_2 = NULL;
 	
 	struct GfxElement scroll_element =
 		{
@@ -159,7 +157,7 @@ public class genesis
 	
 	typedef struct
 	{
-		struct osd_bitmap *bitmap;
+		struct mame_bitmap *bitmap;
 		int x;
 		int y;
 		int attribute;
@@ -173,7 +171,7 @@ public class genesis
 	
 	
 	
-	void genesis_vh_convert_color_prom (UBytePtr palette, UBytePtr colortable,const UBytePtr color_prom)
+	public static VhConvertColorPromPtr genesis_vh_convert_color_prom = new VhConvertColorPromPtr() { public void handler(char []palette, char []colortable, UBytePtr color_prom) 
 	{
 		int i;
 	
@@ -185,13 +183,13 @@ public class genesis
 			*(palette++) = ((i & 2) >> 1) * 0xff;
 			*(palette++) = ((i & 4) >> 2) * 0xff;
 		}
-	}
+	} };
 	
 	
-	WRITE_HANDLER ( genesis_videoram1_w )
+	WRITE16_HANDLER ( genesis_videoram1_w )
 	{
 		logerror("what is this doing? %x, %x\n", offset, data);
-		offset = data;
+		//offset = data;
 	}
 	
 	public static VhStartPtr genesis_vh_start = new VhStartPtr() { public int handler() 
@@ -209,22 +207,22 @@ public class genesis
 		if ((scroll_b = osd_create_bitmap(1024,1024)) == 0)
 		{
 			generic_vh_stop();
-			osd_free_bitmap(scroll_a);
+			bitmap_free(scroll_a);
 			return 1;
 		}*/
 	
 	   	if ((spritelayer = bitmap_alloc(2500,2500)) == 0)
 		{
 			generic_vh_stop();
-	   //		osd_free_bitmap(scroll_a);
-	   //		osd_free_bitmap(scroll_b);
+	   //		bitmap_free(scroll_a);
+	   //		bitmap_free(scroll_b);
 			return 1;
 		}
 		if ((bitmap2 = bitmap_alloc(320,224)) == 0)
 		{
 			generic_vh_stop();
-	   //		osd_free_bitmap(scroll_a);
-	   //		osd_free_bitmap(scroll_b);
+	   //		bitmap_free(scroll_a);
+	   //		bitmap_free(scroll_b);
 			return 1;
 		}
 	
@@ -233,9 +231,9 @@ public class genesis
 	   /*	if ((bitmap_vram = osd_create_bitmap(8,18000)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-	    	osd_free_bitmap(spritelayer);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+	    	bitmap_free(spritelayer);
 	
 	
 		   	return 1;
@@ -244,33 +242,33 @@ public class genesis
 	   /*	if ((bitmap_sprite = osd_create_bitmap(64,64)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//   	osd_free_bitmap(bitmap_vram);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//   	bitmap_free(bitmap_vram);
 			return 1;
 		}*/
 	
 	
-		if ((tile_changed_1 = malloc(0x800)) == 0)
+		if ((tile_changed_1 = malloc(0x1000)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//	osd_free_bitmap(bitmap_vram);
-		//	osd_free_bitmap(bitmap_sprite);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//	bitmap_free(bitmap_vram);
+		//	bitmap_free(bitmap_sprite);
 			return 1;
 		}
 	
-		if ((tile_changed_2 = malloc(0x800)) == 0)
+		if ((tile_changed_2 = malloc(0x1000)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//	osd_free_bitmap(bitmap_vram);
-		//	osd_free_bitmap(bitmap_sprite);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//	bitmap_free(bitmap_vram);
+		//	bitmap_free(bitmap_sprite);
 			free(tile_changed_1);
 			return 1;
 		}
@@ -282,8 +280,8 @@ public class genesis
 		memset(dirty_attribute_b, -1, (128*128)*sizeof(short));
 	
 	
-		memset(tile_changed_1, 1, 0x800);
-		memset(tile_changed_2, 1, 0x800);
+		memset(tile_changed_1, 1, 0x1000);
+		memset(tile_changed_2, 1, 0x1000);
 	
 		memset(dirty_colour, 1, 64);
 	
@@ -344,18 +342,18 @@ public class genesis
 	public static VhStopPtr genesis_vh_stop = new VhStopPtr() { public void handler() 
 	{
 		/* Free everything */
-	 //	osd_free_bitmap(scroll_a);
-	 //	osd_free_bitmap(scroll_b);
-		osd_free_bitmap(spritelayer);
-	 //	osd_free_bitmap(bitmap_vram);
-	 //	osd_free_bitmap(bitmap_sprite);
+	 //	bitmap_free(scroll_a);
+	 //	bitmap_free(scroll_b);
+		bitmap_free(spritelayer);
+	 //	bitmap_free(bitmap_vram);
+	 //	bitmap_free(bitmap_sprite);
 		free(tile_changed_1);
 		free(tile_changed_2);
 	
 		generic_vh_stop ();
 	} };
 	
-	UBytePtr get_dma_dest_address(int id)
+	static UBytePtr get_dma_dest_address(int id)
 	{
 		switch (id)
 		{
@@ -380,7 +378,7 @@ public class genesis
 		return NULL;
 	}
 	
-	READ_HANDLER ( genesis_vdp_data_r )
+	READ16_HANDLER ( genesis_vdp_data_r )
 	{
 		int data = 0;		 /* don't worry about this for now, really doesn't happen */
 	
@@ -401,13 +399,13 @@ public class genesis
 				logerror("unknown vdp port read type %x\n", vdp_id);
 		}
 	
-	   /*	if ((offset == 1) || (offset == 3))	  */
+	   /*	if ((offset == .5) || (offset == 1.5))	  */
 			vdp_address += vdp_auto_increment;
 	
 		return data;
 	}
 	
-	WRITE_HANDLER ( genesis_vdp_data_w )
+	WRITE16_HANDLER ( genesis_vdp_data_w )
 	{
 	  	int tempsource = 0;
 	  	int temp_vdp_address = vdp_address;
@@ -417,10 +415,10 @@ public class genesis
 	
 		if (vdp_dma_enable && (vdp_id & 0x20))
 		{
-			if (offset == 0 || offset == 2)
+			if (offset == 0 || offset == 1)
 			{
 	
-			 vdp_vram_fill = COMBINE_WORD(vdp_vram_fill, data);
+				COMBINE_DATA(&vdp_vram_fill);
 				temp_vdp_address = vdp_address;
 	//			logerror("DMA VRAM FILL, dest %x, fill %x, length %x, real dest %x, id %x, inc %x\n", vdp_address, vdp_vram_fill, vdp_dma_length, get_dma_dest_address(vdp_id)+vdp_address, vdp_id, vdp_auto_increment);
 				/* now do the rest of the DMA fill */
@@ -479,9 +477,9 @@ public class genesis
 		}
 		  /*	logerror("%x",vdp_vram_fill);*/
 	
-		/*  if (first_access && (offset == 1 || offset == 3))
+		/*  if (first_access && (offset == .0 || offset == 1.5))
 			logerror("misaligned\n"); */
-			 /*  	logerror("would write %x to... %x\n", data, ((vdp_address+ 0*//*(int)&vdp_vram[0]*//*) +(  (offset & 0x01))) );*/
+			 /*  	logerror("would write %x to... %x\n", data, ((vdp_address+ 0*//*(int)&vdp_vram[0]*//*) +(  (offset & 0.5))) );*/
 		if ((vdp_address & 1)) logerror("!");
 	
 		switch (vdp_id)
@@ -490,24 +488,25 @@ public class genesis
 				{
 				int sx, sy;
 	
-				sy = ((vdp_address+(offset & 1))<<1) >> 3;
-				sx = ((vdp_address+(offset & 1))<<1) & 7;
-			  	COMBINE_WORD_MEM(vdp_address+(int)vdp_vram, data);
+				sy = ((vdp_address/*+(offset & 0.5)*/)<<1) >> 3;
+				sx = ((vdp_address/*+(offset & 0.5)*/)<<1) & 7;
+			  	COMBINE_DATA((UINT16*)(vdp_address+(int)vdp_vram));
 	
 		 		//bitmap_vram.line[sy][sx]     = (data >> 12) & 0x0f;
 		 		//bitmap_vram.line[sy][sx + 1] = (data >>  8) & 0x0f;
 				//bitmap_vram.line[sy][sx + 2] = (data >>  4) & 0x0f;
 		 		//bitmap_vram.line[sy][sx + 3] = (data      ) & 0x0f;
-				tile_changed_1[sy >> BLOCK_SHIFT] = tile_changed_2[sy >> BLOCK_SHIFT] = 1;
+		 		printf("SY:%d\n",sy);
+				if (sy < 16384) tile_changed_1[sy >> BLOCK_SHIFT] = tile_changed_2[sy >> BLOCK_SHIFT] = 1;
 	
 				}
 				break;
 			case MODE_VSRAM_WRITE:
-				COMBINE_WORD_MEM(vdp_address+(int)vdp_vsram,data);
+				COMBINE_DATA((UINT16*)(vdp_address+(int)vdp_vsram));
 				break;
 	
 			case MODE_CRAM_WRITE:
-				COMBINE_WORD_MEM(vdp_address+(int)vdp_cram, data);
+				COMBINE_DATA((UINT16*)(vdp_address+(int)vdp_cram));
 				dirty_colour[vdp_address>>1] = 1;
 				//logerror("%x\n", vdp_address);
 				break;
@@ -516,7 +515,7 @@ public class genesis
 				logerror("unknown vdp port write type %x\n", vdp_id);
 		}
 	
-	   //	if ((offset == 1 || offset == 3) /*|| (data_width == 1)*/)
+	   //	if ((offset == .5 || offset == 1.5) /*|| (data_width == 1)*/)
 			vdp_address += vdp_auto_increment;
 	
 		if (vdp_auto_increment == 1) logerror("1");
@@ -525,7 +524,7 @@ public class genesis
 	
 	
 	
-	READ_HANDLER ( genesis_vdp_ctrl_r )
+	READ16_HANDLER ( genesis_vdp_ctrl_r )
 	{
 	static int  fake_dma_mode = 0;
 	fake_dma_mode ^=8;
@@ -541,16 +540,16 @@ public class genesis
 		return vdp_ctrl_status;
 	}
 	
-	WRITE_HANDLER ( genesis_vdp_ctrl_w )
+	WRITE16_HANDLER ( genesis_vdp_ctrl_w )
 	{
 		static int first_read = 1;
 		static int vdp_register, full_vdp_data;
-		int vdp_data = full_vdp_data = COMBINE_WORD(full_vdp_data, data);
+		int vdp_data = COMBINE_DATA(&full_vdp_data);
 		//cpu_yield();
 		switch (offset)
 		{
 			case 0:
-		  	case 2:
+		  	case 1:
 		  	  	 /* logerror("genesis_vdp_ctrl_w %x, %x, %x, %x\n", offset, data, vdp_data, data >>16);*/
 	
 	
@@ -623,6 +622,7 @@ public class genesis
 							vdp_h_scroll_addr	= (char *)(&vdp_vram[0]+(vdp_data<<10));
 							break;
 						case 14: /* nothing */
+							logerror("$c10001c register usage @ PC=%08x\n",(UINT32)cpu_get_pc());
 							break;
 						case 15: /* autoincrement data */
 							vdp_auto_increment	= vdp_data;
@@ -745,12 +745,12 @@ public class genesis
 		}
 	}
 	
-	READ_HANDLER ( genesis_vdp_hv_r )
+	READ16_HANDLER ( genesis_vdp_hv_r )
 	{
-	   			return vdp_hv_status;
+		return vdp_hv_status;
 	}
 	
-	WRITE_HANDLER ( genesis_vdp_hv_w )
+	WRITE16_HANDLER ( genesis_vdp_hv_w )
 	{
 	}
 	
@@ -831,7 +831,7 @@ public class genesis
 	
 					#endif
 	
-				 	if ((sy >> 3) < 0x7ff) tile_changed_1[sy >> BLOCK_SHIFT] = tile_changed_2[sy >> BLOCK_SHIFT] = 1;
+				 	if ((sy >> 3) < 0xfff) tile_changed_1[sy >> BLOCK_SHIFT] = tile_changed_2[sy >> BLOCK_SHIFT] = 1;
 	
 	
 	
@@ -889,7 +889,7 @@ public class genesis
 	
 	/* this function is subject to serious change! */
 	
-	void combinelayers(struct osd_bitmap *dest, int startline, int endline)
+	static void combinelayers(struct mame_bitmap *dest, int startline, int endline)
 	{
 		int x;
 		unsigned char y;
@@ -903,7 +903,7 @@ public class genesis
 		unsigned char a_shift, b_shift;
 		UBytePtr shift;
 		int indx, increment;
-		UBytePtr sprite_ptr, *output_ptr;
+		unsigned short *sprite_ptr, *output_ptr;
 		unsigned short *scroll_a_attribute_linebase;
 		unsigned short *scroll_b_attribute_linebase;
 	//	UBytePtr scroll_a_pixel_addr = 0, *scroll_b_pixel_addr = 0;
@@ -989,8 +989,9 @@ public class genesis
 				  for layers A & B, for the given set of pixels on the screen we're about to render */
 			  	  /* the sprite layer position is about to be set too */
 	
-	   			sprite_ptr = &spritelayer.line[y+128][x+128];
-				output_ptr = &dest.line[y][x];
+	   			// sprite_ptr = &spritelayer.line[y+128][x+128];
+				sprite_ptr = &((UINT16**)spritelayer.line)[y+128][x+128];
+				output_ptr = &((UINT16**)dest.line)[y][x];
 				/* base + (y/8) * (number of width attributes * size of attributes, which is 2 bytes) */
 			   	scroll_a_attribute_linebase= (unsigned short *)(vdp_pattern_scroll_a+((scroll_a_y>>3)*(vdp_h_scrollsize<<1)));
 			   	scroll_b_attribute_linebase= (unsigned short *)(vdp_pattern_scroll_b+((scroll_b_y>>3)*(vdp_h_scrollsize<<1)));
@@ -1077,9 +1078,9 @@ public class genesis
 	
 								skip:
 	
-								/*if (tile_changed_1[attribute & 0x7ff])
+								/*if (tile_changed_1[attribute & 0xfff])
 								{
-								tile_changed_2[attribute & 0x7ff]=0;
+								tile_changed_2[attribute & 0xfff]=0;
 								*/
 								scroll_pixel_addr = &vdp_vram[(attribute & 0x7ff)<<5];
 	
@@ -1130,8 +1131,8 @@ public class genesis
 					//if (*output_ptr != output) *output_ptr = output;
 	
 					/* increment our X position within the layers accounting for wraparound */
-				 	scroll_a_x = ((++scroll_a_x) & h_mask);
-				 	scroll_b_x = ((++scroll_b_x) & h_mask);
+				 	scroll_a_x = ((scroll_a_x + 1) & h_mask);
+				 	scroll_b_x = ((scroll_b_x + 1) & h_mask);
 	
 					//sprite_ptr++;
 	
@@ -1146,14 +1147,14 @@ public class genesis
 	
 	/* fonky tile plotter - ASMable fairly easily */
 	
-	INLINE void genesis_plot_tile(struct osd_bitmap *dest, int tilenum, int attribute, int sx, int sy)
+	INLINE void genesis_plot_tile(struct mame_bitmap *dest, int tilenum, int attribute, int sx, int sy)
 	{
 		/* Bugger! If only I could plot 4 pixels at a time... would it be faster on macs if I
 		packed reads into a 32-bit word and wrote that? */
 	
 		unsigned char code = ((attribute >> 9) & 0x30) | ((attribute & 0x8000) >> 8);
 		int line;
-		UBytePtr bm;
+		unsigned short *bm;
 		UBytePtr c;
 		int flips = (attribute & 0x1800);
 		#ifdef LSB_FIRST
@@ -1173,7 +1174,7 @@ public class genesis
 			c=&vdp_vram[tilenum<<5];
 			for (line = 0; line < 8; line++)
 			{
-				bm = &dest.line[sy+line][sx];
+				bm = &((UINT16**)dest.line)[sy+line][sx];
 			//	c  = &bitmap_vram.line[(tilenum<<3)+line][0];
 			  		if (!bm[0]) bm[0]=colours2[(c[OF0]>>4) | code];
 					if (!bm[1]) bm[1]=colours2[(c[OF0]&0xf) | code];
@@ -1201,7 +1202,7 @@ public class genesis
 			c=&vdp_vram[tilenum<<5];
 			for (line = 0; line < 8; line++)
 			{
-				bm = &dest.line[sy+line][sx];
+				bm = &((UINT16**)dest.line)[sy+line][sx];
 			//	c  = &bitmap_vram.line[(tilenum<<3)+line][0];
 	
 			   		if (!bm[1]) bm[1]=colours2[(c[OF3]>>4) | code];
@@ -1230,7 +1231,7 @@ public class genesis
 			c=&vdp_vram[tilenum<<5]+28;
 			for (line = 0; line < 8; line++)
 			{
-				bm = &dest.line[sy+line][sx];
+				bm = &((UINT16**)dest.line)[sy+line][sx];
 			//	c  = &bitmap_vram.line[(tilenum<<3)+(7-line)][0];
 	
 					if (!bm[0]) bm[0]=colours2[(c[OF0]>>4) | code];
@@ -1260,7 +1261,7 @@ public class genesis
 			c=&vdp_vram[tilenum<<5]+28;
 			for (line = 0; line < 8; line++)
 			{
-				bm = &dest.line[sy+line][sx];
+				bm = &((UINT16**)dest.line)[sy+line][sx];
 			//	c  = &bitmap_vram.line[(tilenum<<3)+(7-line)][0];
 	
 			   		if (!bm[1]) bm[1]=colours2[(c[OF3]>>4) | code];
@@ -1288,7 +1289,7 @@ public class genesis
 		}
 	}
 	
-	void plot_sprites(int priority)
+	static void plot_sprites(int priority)
 	{
 		#ifdef LSB_FIRST
 		#define SIZE 3
@@ -1387,18 +1388,17 @@ public class genesis
 	 void genesis_modify_display(int);
 	/***************************************************************************
 	
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function, it will be called by
 	  the main emulation engine.
 	
 	***************************************************************************/
-	public static VhUpdatePtr genesis_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void genesis_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	genesis_modify_display(0);
-	palette_recalc();
 	copybitmap(bitmap, bitmap2, 0, 0, 0, 0, 0, 0, 0);
-	} };
+	}
 	
 	void genesis_modify_display(int inter)
 	{
@@ -1504,8 +1504,8 @@ public class genesis
 			}
 	
 	
-			num_a = attribute_a & 0x7ff;
-			num_b = attribute_b & 0x7ff;
+			num_a = attribute_a & 0xfff;
+			num_b = attribute_b & 0xfff;
 	
 			if ((dirty_attribute_a[offs] !=attribute_a) || tile_changed_1[num_a])
 			{
@@ -1553,11 +1553,15 @@ public class genesis
 		combinelayers(bitmap2,0,vdp_display_height);
 	
 	 /* mark all tiles as unchanged */
-	   //	memset(tile_changed_1, 0, 0x800);
-	   //	memset(tile_changed_2, 0, 0x800);
+	   //	memset(tile_changed_1, 0, 0x1000);
+	   //	memset(tile_changed_2, 0, 0x1000);
 	
 	
 	}
+	
+	
+	
+	
 	
 	#else
 	#ifdef macintosh
@@ -1684,13 +1688,13 @@ public class genesis
 	int current_dma_increment = 0;
 	int current_dma_id = 0;
 	
-	struct osd_bitmap *scroll_a;
-	struct osd_bitmap *scroll_b;
-	//struct osd_bitmap *bitmap_vram;
-	//struct osd_bitmap *bitmap_sprite;
-	struct osd_bitmap *bitmap2;
+	struct mame_bitmap *scroll_a;
+	struct mame_bitmap *scroll_b;
+	//struct mame_bitmap *bitmap_vram;
+	//struct mame_bitmap *bitmap_sprite;
+	struct mame_bitmap *bitmap2;
 	
-	struct osd_bitmap *spritelayer;
+	struct mame_bitmap *spritelayer;
 	
 	unsigned short colours[256];
 	
@@ -1713,7 +1717,7 @@ public class genesis
 	
 	typedef struct
 	{
-		struct osd_bitmap *bitmap;
+		struct mame_bitmap *bitmap;
 		int x;
 		int y;
 		int attribute;
@@ -1763,22 +1767,22 @@ public class genesis
 		if ((scroll_b = osd_create_bitmap(1024,1024)) == 0)
 		{
 			generic_vh_stop();
-			osd_free_bitmap(scroll_a);
+			bitmap_free(scroll_a);
 			return 1;
 		}
 	
 	   	if ((spritelayer = osd_create_bitmap(2500,2500)) == 0)
 		{
 			generic_vh_stop();
-	   //		osd_free_bitmap(scroll_a);
-	   //		osd_free_bitmap(scroll_b);
+	   //		bitmap_free(scroll_a);
+	   //		bitmap_free(scroll_b);
 			return 1;
 		}
 		if ((bitmap2 = osd_create_bitmap(320,224)) == 0)
 		{
 			generic_vh_stop();
-	   //		osd_free_bitmap(scroll_a);
-	   //		osd_free_bitmap(scroll_b);
+	   //		bitmap_free(scroll_a);
+	   //		bitmap_free(scroll_b);
 			return 1;
 		}
 	
@@ -1787,9 +1791,9 @@ public class genesis
 	   /*	if ((bitmap_vram = osd_create_bitmap(8,18000)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-	    	osd_free_bitmap(spritelayer);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+	    	bitmap_free(spritelayer);
 	
 	
 		   	return 1;
@@ -1798,10 +1802,10 @@ public class genesis
 	   /*	if ((bitmap_sprite = osd_create_bitmap(64,64)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//   	osd_free_bitmap(bitmap_vram);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//   	bitmap_free(bitmap_vram);
 			return 1;
 		}*/
 	
@@ -1809,22 +1813,22 @@ public class genesis
 		if ((tile_changed_1 = malloc(0x800)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//	osd_free_bitmap(bitmap_vram);
-		//	osd_free_bitmap(bitmap_sprite);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//	bitmap_free(bitmap_vram);
+		//	bitmap_free(bitmap_sprite);
 			return 1;
 		}
 	
 		if ((tile_changed_2 = malloc(0x800)) == 0)
 		{
 			generic_vh_stop();
-		//	osd_free_bitmap(scroll_a);
-		//	osd_free_bitmap(scroll_b);
-			osd_free_bitmap(spritelayer);
-		//	osd_free_bitmap(bitmap_vram);
-		//	osd_free_bitmap(bitmap_sprite);
+		//	bitmap_free(scroll_a);
+		//	bitmap_free(scroll_b);
+			bitmap_free(spritelayer);
+		//	bitmap_free(bitmap_vram);
+		//	bitmap_free(bitmap_sprite);
 			free(tile_changed_1);
 			return 1;
 		}
@@ -1898,11 +1902,11 @@ public class genesis
 	public static VhStopPtr genesis_vh_stop = new VhStopPtr() { public void handler() 
 	{
 		/* Free everything */
-	 //	osd_free_bitmap(scroll_a);
-	 //	osd_free_bitmap(scroll_b);
-		osd_free_bitmap(spritelayer);
-	 //	osd_free_bitmap(bitmap_vram);
-	 //	osd_free_bitmap(bitmap_sprite);
+	 //	bitmap_free(scroll_a);
+	 //	bitmap_free(scroll_b);
+		bitmap_free(spritelayer);
+	 //	bitmap_free(bitmap_vram);
+	 //	bitmap_free(bitmap_sprite);
 		free(tile_changed_1);
 		free(tile_changed_2);
 	
@@ -2442,7 +2446,7 @@ public class genesis
 	
 	/* this function is subject to serious change! */
 	
-	void combinelayers(struct osd_bitmap *dest, int startline, int endline)
+	void combinelayers(struct mame_bitmap *dest, int startline, int endline)
 	{
 		int x;
 		unsigned char y;
@@ -2697,9 +2701,9 @@ public class genesis
 	
 	}
 	
-	inline void genesis_plot_distorted_tile(struct osd_bitmap *dest, int tilenum, int attribute, int sx, int sy, short *distort);
+	inline void genesis_plot_distorted_tile(struct mame_bitmap *dest, int tilenum, int attribute, int sx, int sy, short *distort);
 	
-	void combinelayers2(struct osd_bitmap *dest, int startline, int endline)
+	void combinelayers2(struct mame_bitmap *dest, int startline, int endline)
 	{
 		int pom, sx = 0, sy = 0, ay = 0, by = 0;//, offs;
 		int line = 0;
@@ -2842,7 +2846,7 @@ public class genesis
 	
 	}
 	
-	inline void genesis_plot_distorted_tile(struct osd_bitmap *dest, int tilenum, int attribute, int sx, int sy, short *distort)
+	inline void genesis_plot_distorted_tile(struct mame_bitmap *dest, int tilenum, int attribute, int sx, int sy, short *distort)
 	{
 		/* Bugger! If only I could plot 4 pixels at a time... would it be faster on macs if I
 		packed reads into a 32-bit word and wrote that? */
@@ -2957,7 +2961,7 @@ public class genesis
 	
 	/* fonky tile plotter - ASMable fairly easily */
 	
-	inline void genesis_plot_tile(struct osd_bitmap *dest, int tilenum, int attribute, int sx, int sy)
+	inline void genesis_plot_tile(struct mame_bitmap *dest, int tilenum, int attribute, int sx, int sy)
 	{
 		/* Bugger! If only I could plot 4 pixels at a time... would it be faster on macs if I
 		packed reads into a 32-bit word and wrote that? */
@@ -3198,19 +3202,19 @@ public class genesis
 	 void genesis_modify_display(int);
 	/***************************************************************************
 	
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function, it will be called by
 	  the main emulation engine.
 	
 	***************************************************************************/
-	public static VhUpdatePtr genesis_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void genesis_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	genesis_modify_display(0);
 	//copybitmap(bitmap, bitmap2, 0, 0, 0, 0, 0, 0, 0);
 	copybitmap(bitmap, bitmap2, 0, 0, 0, 0, 0, 0, 0);
 	
-	} };
+	}
 	
 	void genesis_modify_display(int inter)
 	{

@@ -55,7 +55,6 @@ public class mbee
 	char mbee_frame_message[128+1];
 	int mbee_frame_counter;
 	
-	extern int bitmap_dirty;
 	
 	UINT8 *pcgram;
 	
@@ -203,7 +202,7 @@ public class mbee
 		if( off_y > 128 )
 			off_y = 128;
 	
-		bitmap_dirty = 1;
+		schedule_full_refresh();
 	
 		logerror("6545 offset x:%d  y:%d\n", off_x, off_y);
 	}
@@ -356,7 +355,7 @@ public class mbee
 		case 1:
 			if( crt.horizontal_displayed == data )
 				break;
-			bitmap_dirty = 1;
+			schedule_full_refresh();
 			crt.horizontal_displayed = data;
 			logerror("6545 horizontal displayed    %d\n", data);
 	        break;
@@ -388,7 +387,7 @@ public class mbee
 		case 6:
 			if( crt.vertical_displayed == data )
 				break;
-			bitmap_dirty = 1;
+			schedule_full_refresh();
 			logerror("6545 vertical displayed      %d\n", data);
 	        crt.vertical_displayed = data;
 			break;
@@ -515,7 +514,7 @@ public class mbee
 		generic_vh_stop();
 	} };
 	
-	public static VhUpdatePtr mbee_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void mbee_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int offs, cursor;
 	
@@ -534,12 +533,9 @@ public class mbee
 			}
 	    }
 	
-	    if( palette_recalc() )
-			full_refresh = 1;
-	
 	    if (full_refresh != 0)
 		{
-			memset(dirtybuffer, 1, videoram_size[0]);
+			memset(dirtybuffer, 1, videoram_size);
 	        fillbitmap(bitmap, Machine.pens[0], &Machine.visible_area);
 		}
 	
@@ -578,7 +574,7 @@ public class mbee
 	            }
 			}
 		}
-	} };
+	}
 	
 	
 	

@@ -7,6 +7,10 @@ package includes;
 public class pc_fdc_hH
 {
 	
+	#ifdef __cplusplus
+	extern "C" {
+	#endif
+	
 	/* if not 1, DACK and TC inputs to FDC are disabled, and DRQ and IRQ are held
 	at high impedance i.e they are not affective */ 
 	#define PC_FDC_FLAGS_DOR_DMA_ENABLED (1<<3)
@@ -61,4 +65,9 @@ public class pc_fdc_hH
 	void	pc_fdc_init(pc_fdc_hw_interface *iface);
 	void	pc_fdc_set_tc_state(int state);
 	void	pc_fdc_dack_w(int);
+	
+	#ifdef __cplusplus
+	}
+	#endif
+	
 }

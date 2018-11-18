@@ -7,6 +7,8 @@ package machine;
 public class nes
 {
 	
+	#define M6502_INT_NONE	0
+	
 	/* Uncomment this to dump reams of ppu state info to the errorlog */
 	//#define LOG_PPU
 	
@@ -20,8 +22,7 @@ public class nes
 	char battery_name[1024];
 	UINT8 battery_data[BATTERY_SIZE];
 	
-	void nes_vh_renderscanline (int scanline);
-	
+	static int famicom_image_registered = 0;
 	struct ppu_struct ppu;
 	struct nes_struct nes;
 	struct fds_struct nes_fds;
@@ -60,10 +61,10 @@ public class nes
 	static UINT32 in_0_shift;
 	static UINT32 in_1_shift;
 	
-	void nes_ppu_w (int offset, int data);
+	//void nes_ppu_w (int offset, int data);
 	
 	/* local prototypes */
-	static void ppu_reset (struct ppu_struct *ppu_);
+	static static void ppu_reset (struct ppu_struct *ppu_);
 	
 	static public static InitDriverPtr init_nes_core = new InitDriverPtr() { public void handler() 
 	{
@@ -104,11 +105,11 @@ public class nes
 				install_mem_read_handler(0, 0xa000, 0xbfff, MRA_BANK2);
 				install_mem_read_handler(0, 0xc000, 0xdfff, MRA_BANK3);
 				install_mem_read_handler(0, 0xe000, 0xffff, MRA_BANK4);
-				cpu_setbankhandler_r (1, MRA_BANK1);
-				cpu_setbankhandler_r (2, MRA_BANK2);
-				cpu_setbankhandler_r (3, MRA_BANK3);
-				cpu_setbankhandler_r (4, MRA_BANK4);
-				cpu_setbankhandler_r (5, MRA_BANK5);
+				memory_set_bankhandler_r (1, 0, MRA_BANK1);
+				memory_set_bankhandler_r (2, 0, MRA_BANK2);
+				memory_set_bankhandler_r (3, 0, MRA_BANK3);
+				memory_set_bankhandler_r (4, 0, MRA_BANK4);
+				memory_set_bankhandler_r (5, 0, MRA_BANK5);
 	
 				install_mem_write_handler(0, 0x6000, 0x7fff, nes_mid_mapper_w);
 				install_mem_write_handler(0, 0x8000, 0xffff, nes_mapper_w);
@@ -199,7 +200,7 @@ public class nes
 		}
 	}
 	
-	void ppu_reset (struct ppu_struct *_ppu)
+	static void ppu_reset (struct ppu_struct *_ppu)
 	{
 		/* Reset PPU variables */
 		PPU_Control0 = PPU_Control1 = PPU_Status = 0;
@@ -231,7 +232,7 @@ public class nes
 		}
 	}
 	
-	int nes_IN0_r (int offset)
+	READ_HANDLER ( nes_IN0_r )
 	{
 		int dip;
 		int retVal;
@@ -256,7 +257,7 @@ public class nes
 					retVal |= ((in_0[0] & 0x01) << 4);
 	
 					/* Look at the screen and see if the cursor is over a bright pixel */
-					pix = Machine.scrbitmap.line[in_0[2]][in_0[1]];
+					pix = read_pixel(Machine.scrbitmap, in_0[1], in_0[2]);
 					if ((pix == Machine.pens[0x20]) || (pix == Machine.pens[0x30]) ||
 						(pix == Machine.pens[0x33]) || (pix == Machine.pens[0x34]))
 					{
@@ -278,7 +279,7 @@ public class nes
 		return retVal;
 	}
 	
-	int nes_IN1_r (int offset)
+	READ_HANDLER ( nes_IN1_r )
 	{
 		int dip;
 		int retVal;
@@ -304,7 +305,7 @@ public class nes
 					retVal |= ((in_1[0] & 0x01) << 4);
 	
 					/* Look at the screen and see if the cursor is over a bright pixel */
-					pix = Machine.scrbitmap.line[in_1[2]][in_1[1]];
+					pix = read_pixel(Machine.scrbitmap, in_1[1], in_1[2]);
 					if ((pix == Machine.pens[0x20]) || (pix == Machine.pens[0x30]) ||
 						(pix == Machine.pens[0x33]) || (pix == Machine.pens[0x34]))
 					{
@@ -506,7 +507,7 @@ public class nes
 		if ((ret != M6502_INT_NONE))
 		{
 	    	logerror("--- scanline %d", current_scanline);
-	    	if (ret == M6502_INT_IRQ)
+	    	if (ret == M6502_IRQ_LINE)
 	    		logerror(" IRQ\n");
 	    	else logerror(" NMI\n");
 	    }
@@ -514,7 +515,7 @@ public class nes
 		return ret;
 	} };
 	
-	data_t nes_ppu_r (int offset)
+	READ_HANDLER ( nes_ppu_r )
 	{
 		UINT8 retVal=0;
 	/*
@@ -584,7 +585,7 @@ public class nes
 		return retVal;
 	}
 	
-	void nes_ppu_w (int offset, int data)
+	WRITE_HANDLER ( nes_ppu_w )
 	{
 	
 		switch (offset & 0x07)
@@ -1077,11 +1078,8 @@ public class nes
 		PPU_address += PPU_add;
 	}
 	
-	extern struct GfxLayout nes_charlayout;
-	
-	int nes_load_rom (int id)
+	int nes_init_cart (int id)
 	{
-	
 		const char *mapinfo;
 		int mapint1=0,mapint2=0,mapint3=0,mapint4=0,goodcrcinfo = 0;
 		FILE *romfile;
@@ -1091,10 +1089,15 @@ public class nes
 		char m;
 		int i;
 	
+		const char *sysname;
+		sysname = Machine.gamedrv.name;
+	
 		if ((!device_filename(IO_CARTSLOT,id)) && (id == 0))
 		{
-	//		printf("NES requires cartridge!\n");
-			return INIT_FAILED;
+			if(!strcmp(sysname, "famicom")) /* If its a famicom, then pass! */
+				return INIT_PASS;
+			else
+				return INIT_FAIL;
 		}
 		else
 		{
@@ -1114,10 +1117,10 @@ public class nes
 			logerror ("battery name (minus extension): %s\n", battery_name);
 		}
 	
-		if (!(romfile = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0)))
+		if (!(romfile = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0)))
 		{
-			logerror("image_fopen failed in nes_load_rom.\n");
-				return 1;
+			logerror("image_fopen failed in nes_init_cart.\n");
+				return INIT_FAIL;
 		}
 	
 		/* Verify the file is in iNES format */
@@ -1139,7 +1142,7 @@ public class nes
 				nes.chr_chunks = mapint4;
 				logerror("NES.CRC info: %d %d %d %d\n",mapint1,mapint2,mapint3,mapint4);
 				goodcrcinfo = 1;
-			} else 
+			} else
 			{
 				logerror("NES: [%s], Invalid mapinfo found\n",mapinfo);
 			}
@@ -1147,7 +1150,7 @@ public class nes
 		{
 			logerror("NES: No extrainfo found\n");
 		}
-		if (!goodcrcinfo) 
+		if (!goodcrcinfo)
 		{
 			osd_fread (romfile, &nes.prg_chunks, 1);
 			osd_fread (romfile, &nes.chr_chunks, 1);
@@ -1195,8 +1198,8 @@ public class nes
 	    free_memory_region (REGION_GFX1);
 	
 	    /* Allocate them again with the proper size */
-	    if( new_memory_region(REGION_CPU1, 0x10000 + (nes.prg_chunks+1) * 0x4000) ||
-	        new_memory_region(REGION_GFX1, (nes.chr_chunks+1) * 0x2000) )
+	    if( new_memory_region(REGION_CPU1, 0x10000 + (nes.prg_chunks+1) * 0x4000,0) ||
+	        new_memory_region(REGION_GFX1, (nes.chr_chunks+1) * 0x2000,0) )
 	    {
 	        printf ("Memory allocation failed reading roms!\n");
 	        goto bad;
@@ -1292,12 +1295,13 @@ public class nes
 		}
 	
 		osd_fclose (romfile);
-		return 0;
+		famicom_image_registered = 1;
+		return INIT_PASS;
 	
 	bad:
 		logerror("BAD section hit during LOAD ROM.\n");
 		osd_fclose (romfile);
-		return 1;
+		return INIT_FAIL;
 	}
 	
 	// extern unsigned int crc32 (unsigned int crc, const UBytePtr buf, unsigned int len);
@@ -1311,37 +1315,27 @@ public class nes
 	return crc;
 	}
 	
-	int nes_id_rom (int id)
-	{
-	    FILE *romfile;
-		unsigned char magic[4];
-		int retval;
-	
-		if (!(romfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0))) return 0;
-	
-		retval = 1;
-		/* Verify the file is in iNES format */
-		osd_fread (romfile, magic, 4);
-		if ((magic[0] != 'N') ||
-			(magic[1] != 'E') ||
-			(magic[2] != 'S'))
-			retval = 0;
-	
-		osd_fclose (romfile);
-		return retval;
-	}
-	
 	int nes_load_disk (int id)
 	{
 	 	FILE *diskfile;
 		unsigned char magic[4];
 	
-		if (!device_filename(IO_FLOPPY,id)) return INIT_FAILED;
+		if (!device_filename(IO_FLOPPY,id))
+		{
+			/* The cart has passed, so this must fail if no image inserted */
+			if(!famicom_image_registered)
+			{
+				logerror("No Cart OR Floppy Disk specified!\n");
+				return INIT_FAIL;
+			}
+			else
+				return INIT_PASS;
+		}
 	
-		if (!(diskfile = image_fopen (IO_FLOPPY, id, OSD_FILETYPE_IMAGE_R, 0)))
+		if (!(diskfile = image_fopen (IO_FLOPPY, id, OSD_FILETYPE_IMAGE, 0)))
 		{
 			logerror("image_fopen failed in nes_load_disk for [%s].\n",device_filename(IO_FLOPPY,id));
-				return 1;
+				return INIT_FAIL;
 		}
 	
 		/* See if it has a fucking redundant header on it */
@@ -1381,10 +1375,11 @@ public class nes
 		nes_fds.sides --;
 		nes_fds.data = realloc (nes_fds.data, nes_fds.sides * 65500);
 	
-		logerror ("Number of sides: %d", nes_fds.sides);
+		logerror ("Number of sides: %d\n", nes_fds.sides);
 	
 		osd_fclose (diskfile);
-		return 0;
+		famicom_image_registered = 1;
+		return INIT_PASS;
 	
 	//bad:
 		logerror("BAD section hit during disk load.\n");

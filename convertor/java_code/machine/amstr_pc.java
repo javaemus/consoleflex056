@@ -8,7 +8,55 @@ public class amstr_pc
 {
 	
 	
-	/* bios power up self test
+	/* pc20 (v2)
+	   fc078
+	   fc102 color/mono selection
+	   fc166
+	   fc1b4
+	   fd841 (output something)
+	   ff17c (output something, read monitor type inputs)
+	   fc212
+	   fc26c
+	   fc2df
+	   fc3fe
+	   fc0f4
+	   fc432
+	   fc49f
+	   fc514
+	   fc566
+	   fc5db
+	   fc622 in 3de
+	
+	port 0379 read
+	port 03de write/read
+	 */
+	
+	/* pc1512 (v1)
+	   fc1b5
+	   fc1f1
+	   fc264
+	   fc310
+	   fc319
+	   fc385
+	   fc436
+	   fc459
+	   fc4cb
+	   fc557
+	   fc591
+	   fc624
+	   fc768
+	   fc818
+	   fc87d display amstrad ..
+	    fca17 keyboard check
+		 fca69
+		 fd680
+	      fd7f9
+		 fca7b !keyboard interrupt routine for this check 
+	 */
+	
+	
+	/* pc1640 (v3)
+	   bios power up self test
 	   important addresses
 	
 	   fc0c9
@@ -56,6 +104,7 @@ public class amstr_pc
 		} mouse;
 	
 		// 64 system status register?
+		UINT8 port60;
 		UINT8 port61;
 		UINT8 port62;
 		UINT8 port65;
@@ -96,32 +145,22 @@ public class amstr_pc
 	   7e 00 01 mouse button left
 	   7d 01 01 mouse button right
 	*/
-	static void pc1640_timer(int param)
-	{
-		if( !pic8259_0_irq_pending(1) )
-		{
-			pc_port[0x60]=0xaa;
-			pic8259_0_issue_irq(1);
-		}
-	}
 	
 	public static WriteHandlerPtr pc1640_port60_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 		switch (offset) {
 		case 1:
-			if ((data&0x80)&&!(pc_port[0x61]&0x80)) {
-				timer_set(1/200.0, 0, pc1640_timer);
-			}
 			pc1640.port61=data;
 			if (data==0x30) pc1640.port62=(pc1640.port65&0x10)>>4;
 			else if (data==0x34) pc1640.port62=pc1640.port65&0xf;
-			pc_ppi_portb_w(0,data);
+			pc_sh_speaker(data&3);
+			pc_keyb_set_clock(data&0x40);
 			break;
 		case 4:
 			if ((data & 0x80) != 0) {
-				pc_port[0x60]=data^0x8d;
+				pc1640.port60=data^0x8d;
 			} else {
-				pc_port[0x60]=data;
+				pc1640.port60=data;
 			}
 			break;
 		case 5: 
@@ -138,9 +177,14 @@ public class amstr_pc
 	{
 		int data=0;
 		switch (offset) {
-		case 0: data=pc_port[0x60];break;
-		case 1: 
-			data=pc_port[0x61];
+		case 0:
+			if (pc1640.port61&0x80)
+				data=pc1640.port60;
+			else 
+				data = pc_keyb_read();
+			break;
+		case 1:
+			data=pc1640.port61;
 			break;
 		case 2: 
 			data=pc1640.port62;
@@ -150,9 +194,18 @@ public class amstr_pc
 		return data;
 	} };
 	
+	public static ReadHandlerPtr pc200_port378_r  = new ReadHandlerPtr() { public int handler(int offset)
+	{
+		int data=pc_parallelport1_r(offset);
+		if (offset==1) data=(data&~7)|(input_port_1_r.handler(0)&7);
+		if (offset==2) data=(data&~0xe0)|(input_port_1_r.handler(0)&0xe0);
+		return data;
+	} };
+	
+	
 	public static ReadHandlerPtr pc1640_port378_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-		int data=pc_LPT2_r(offset);
+		int data=pc_parallelport1_r(offset);
 		if (offset==1) data=(data&~7)|(input_port_1_r.handler(0)&7);
 		if (offset==2) {
 			switch (pc1640.dipstate) {
@@ -180,12 +233,14 @@ public class amstr_pc
 	public static ReadHandlerPtr pc1640_port4278_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		if (offset==2) pc1640.dipstate=1;
+		// read parallelport
 		return 0;
 	} };
 	
 	public static ReadHandlerPtr pc1640_port278_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		if ((offset==2)||(offset==0)) pc1640.dipstate=2;
+		// read parallelport
 		return 0;
 	} };
 	

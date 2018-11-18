@@ -1,3 +1,4 @@
 19/11/2018
 ==========
-Intial convertor based on consoleflex convertor 0.37b7
+-Intial convertor based on consoleflex convertor 0.37b7
+-Convert 0.56 mess files

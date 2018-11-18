@@ -4,16 +4,16 @@
  *	Nate Woods
  *
  *
- *		0x000000 - 0x3fffff		RAM/ROM (switches based on overlay)
- *		0x400000 - 0x4fffff		ROM
- *		0x580000 - 0x5fffff		5380 NCR/Symbios SCSI peripherals chip (Mac Plus only)
- *		0x600000 - 0x6fffff		RAM
- *		0x800000 - 0x9fffff		Zilog 8530 SCC (Serial Control Chip) Read
- *		0xa00000 - 0xbfffff		Zilog 8530 SCC (Serial Control Chip) Write
- *		0xc00000 - 0xdfffff		IWM (Integrated Woz Machine; floppy)
- *		0xe80000 - 0xefffff		Rockwell 6522 VIA
- *		0xf00000 - 0xffffef		??? (the ROM appears to be accessing here)
- *		0xfffff0 - 0xffffff		Auto Vector
+ *		0x000000 - 0x3fffff 	RAM/ROM (switches based on overlay)
+ *		0x400000 - 0x4fffff 	ROM
+ *		0x580000 - 0x5fffff 	5380 NCR/Symbios SCSI peripherals chip (Mac Plus only)
+ *		0x600000 - 0x6fffff 	RAM
+ *		0x800000 - 0x9fffff 	Zilog 8530 SCC (Serial Control Chip) Read
+ *		0xa00000 - 0xbfffff 	Zilog 8530 SCC (Serial Control Chip) Write
+ *		0xc00000 - 0xdfffff 	IWM (Integrated Woz Machine; floppy)
+ *		0xe80000 - 0xefffff 	Rockwell 6522 VIA
+ *		0xf00000 - 0xffffef 	??? (the ROM appears to be accessing here)
+ *		0xfffff0 - 0xffffff 	Auto Vector
  *
  *
  *	Interrupts:
@@ -27,7 +27,7 @@
  *			CA2 from 1 Hz clock (RTC)
  *			CB1 from Keyboard Clock
  *			CB2 from Keyboard Data
- *			SR  from Keyboard Data Ready
+ *			SR	from Keyboard Data Ready
  *
  *		SCC:
  *			PB_EXT	from mouse Y circuitry
@@ -41,64 +41,64 @@
 #include "includes/mac.h"
 
 
-static struct MemoryReadAddress mac512ke_readmem[] =
-{
-/*	{ 0x000000, 0x3fffff, MRA_BANK1 },*/	/* ram/rom */
-/*	{ 0x400000, 0x5fffff, MRA_BANK3 },*/ /* rom */
+static MEMORY_READ16_START (mac512ke_readmem)
+
+/*	{ 0x000000, 0x3fffff, MRA16_BANK1 },*/	/* ram/rom */
+/*	{ 0x400000, 0x5fffff, MRA16_BANK3 },*/ /* rom */
 /* for some reason, the system will not work without the next line */
-	{ 0x400000, 0x41ffff, MRA_BANK3 }, /* rom */
-/*	{ 0x600000, 0x6fffff, MRA_BANK2 },*/	/* ram */
+	{ 0x400000, 0x41ffff, MRA16_BANK3 }, /* rom */
+/*	{ 0x600000, 0x6fffff, MRA16_BANK2 },*/	/* ram */
 	{ 0x800000, 0x9fffff, mac_scc_r },
 	{ 0xc00000, 0xdfffff, mac_iwm_r },
 	{ 0xe80000, 0xefffff, mac_via_r },
 	{ 0xfffff0, 0xffffff, mac_autovector_r },
-	{ -1 }	/* end of table */
-};
 
-static struct MemoryWriteAddress mac512ke_writemem[] =
-{
-/*	{ 0x000000, 0x3fffff, MWA_BANK1 },*/ /* ram/rom */
-	{ 0x400000, 0x5fffff, MWA_ROM },
-/*	{ 0x600000, 0x6fffff, MWA_BANK2 },*/ /* ram */
+MEMORY_END
+
+static MEMORY_WRITE16_START (mac512ke_writemem)
+
+/*	{ 0x000000, 0x3fffff, MWA16_BANK1 },*/ /* ram/rom */
+	{ 0x400000, 0x5fffff, MWA16_ROM },
+/*	{ 0x600000, 0x6fffff, MWA16_BANK2 },*/ /* ram */
 	{ 0xa00000, 0xbfffff, mac_scc_w },
 	{ 0xc00000, 0xdfffff, mac_iwm_w },
 	{ 0xe80000, 0xefffff, mac_via_w },
 	{ 0xfffff0, 0xffffff, mac_autovector_w },
-	{ -1 }	/* end of table */
-};
 
-static struct MemoryReadAddress macplus_readmem[] =
-{
-/*	{ 0x000000, 0x3fffff, MRA_BANK1 },*/	/* ram/rom */
-	{ 0x400000, 0x41ffff, MRA_BANK3 }, /* rom */
-	{ 0x420000, 0x43ffff, MRA_BANK4 }, /* rom - mirror */
-	{ 0x440000, 0x45ffff, MRA_BANK5 }, /* rom - mirror */
-	{ 0x460000, 0x47ffff, MRA_BANK6 }, /* rom - mirror */
-	{ 0x480000, 0x49ffff, MRA_BANK7 }, /* rom - mirror */
-	{ 0x4a0000, 0x4bffff, MRA_BANK8 }, /* rom - mirror */
-	{ 0x4c0000, 0x4dffff, MRA_BANK9 }, /* rom - mirror */
-	{ 0x4e0000, 0x4fffff, MRA_BANK10 }, /* rom - mirror */
+MEMORY_END
+
+static MEMORY_READ16_START (macplus_readmem)
+
+/*	{ 0x000000, 0x3fffff, MRA16_BANK1 },*/	/* ram/rom */
+	{ 0x400000, 0x41ffff, MRA16_BANK3 }, /* rom */
+	{ 0x420000, 0x43ffff, MRA16_BANK4 }, /* rom - mirror */
+	{ 0x440000, 0x45ffff, MRA16_BANK5 }, /* rom - mirror */
+	{ 0x460000, 0x47ffff, MRA16_BANK6 }, /* rom - mirror */
+	{ 0x480000, 0x49ffff, MRA16_BANK7 }, /* rom - mirror */
+	{ 0x4a0000, 0x4bffff, MRA16_BANK8 }, /* rom - mirror */
+	{ 0x4c0000, 0x4dffff, MRA16_BANK9 }, /* rom - mirror */
+	{ 0x4e0000, 0x4fffff, MRA16_BANK10 }, /* rom - mirror */
 	{ 0x580000, 0x5fffff, macplus_scsi_r },
-/*	{ 0x600000, 0x6fffff, MRA_BANK2 },*/	/* ram */
+/*	{ 0x600000, 0x6fffff, MRA16_BANK2 },*/	/* ram */
 	{ 0x800000, 0x9fffff, mac_scc_r },
 	{ 0xc00000, 0xdfffff, mac_iwm_r },
 	{ 0xe80000, 0xefffff, mac_via_r },
 	{ 0xfffff0, 0xffffff, mac_autovector_r },
-	{ -1 }	/* end of table */
-};
 
-static struct MemoryWriteAddress macplus_writemem[] =
-{
-/*	{ 0x000000, 0x3fffff, MWA_BANK1 },*/ /* ram/rom */
-	{ 0x400000, 0x4fffff, MWA_ROM },
+MEMORY_END
+
+static MEMORY_WRITE16_START (macplus_writemem)
+
+/*	{ 0x000000, 0x3fffff, MWA16_BANK1 },*/ /* ram/rom */
+	{ 0x400000, 0x4fffff, MWA16_ROM },
 	{ 0x580000, 0x5fffff, macplus_scsi_w },
-/*	{ 0x600000, 0x6fffff, MWA_BANK2 },*/ /* ram */
+/*	{ 0x600000, 0x6fffff, MWA16_BANK2 },*/ /* ram */
 	{ 0xa00000, 0xbfffff, mac_scc_w },
 	{ 0xc00000, 0xdfffff, mac_iwm_w },
 	{ 0xe80000, 0xefffff, mac_via_w },
 	{ 0xfffff0, 0xffffff, mac_autovector_w },
-	{ -1 }	/* end of table */
-};
+
+MEMORY_END
 
 static void mac_init_palette(unsigned char *palette, unsigned short *colortable,const unsigned char *color_prom)
 {
@@ -135,7 +135,7 @@ static struct MachineDriver machine_driver_mac512ke =
 
 	/* video hardware */
 	512, 342, /* screen width, screen height */
-	{ 0, 512-1, 0, 342-1 },			/* visible_area */
+	{ 0, 512-1, 0, 342-1 }, 		/* visible_area */
 
 	0,					/* graphics decode info */
 	2, 2,						/* number of colors, colortable size */
@@ -177,7 +177,7 @@ static struct MachineDriver machine_driver_macplus =
 
 	/* video hardware */
 	512, 342, /* screen width, screen height */
-	{ 0, 512-1, 0, 342-1 },			/* visible_area */
+	{ 0, 512-1, 0, 342-1 }, 		/* visible_area */
 
 	0,					/* graphics decode info */
 	2, 2,						/* number of colors, colortable size */
@@ -368,8 +368,8 @@ INPUT_PORTS_END
 #if 1
 
 ROM_START( mac512ke )
-	ROM_REGION(0x420000,REGION_CPU1) /* for ram, etc */
-	ROM_LOAD_WIDE( "macplus.rom",  0x400000, 0x20000, 0xb2102e8e)
+	ROM_REGION(0x420000,REGION_CPU1,0) /* for ram, etc */
+	ROM_LOAD16_WORD( "macplus.rom",  0x400000, 0x20000, 0xb2102e8e)
 ROM_END
 
 #else
@@ -379,30 +379,30 @@ ROM_END
 #endif
 
 ROM_START( macplus )
-	ROM_REGION(0x420000,REGION_CPU1) /* for ram, etc */
-	ROM_LOAD_WIDE( "macplus.rom",  0x400000, 0x20000, 0xb2102e8e)
+	ROM_REGION(0x420000,REGION_CPU1,0) /* for ram, etc */
+	ROM_LOAD16_WORD( "macplus.rom",  0x400000, 0x20000, 0xb2102e8e)
 ROM_END
 
 static const struct IODevice io_mac512ke[] = {
 	{
 		IO_FLOPPY,			/* type */
 		2,					/* count */
-		"dsk\0img\0",		/* file extensions */
-        NULL,               /* private */
-        NULL,               /* id */
+		"dsk\0img\0",       /* file extensions */
+		IO_RESET_NONE,		/* reset if file changed */
+		NULL,				/* id */
 		mac_floppy_init,	/* init */
 		mac_floppy_exit,	/* exit */
-        NULL,               /* info */
-        NULL,               /* open */
-        NULL,               /* close */
-        NULL,               /* status */
-        NULL,               /* seek */
-        NULL,               /* input */
-        NULL,               /* output */
-        NULL,               /* input_chunk */
-        NULL                /* output_chunk */
-    },
-    { IO_END }
+		NULL,				/* info */
+		NULL,				/* open */
+		NULL,				/* close */
+		NULL,				/* status */
+		NULL,				/* seek */
+		NULL,				/* input */
+		NULL,				/* output */
+		NULL,				/* input_chunk */
+		NULL				/* output_chunk */
+	},
+	{ IO_END }
 };
 
 /* MacPlus should eventually support hard disks, possibly CD-ROMs, etc. */
@@ -410,49 +410,49 @@ static const struct IODevice io_macplus[] = {
 	{
 		IO_FLOPPY,			/* type */
 		2,					/* count */
-		"dsk\0img\0",		/* file extensions */
-        NULL,               /* private */
-        NULL,               /* id */
+		"dsk\0img\0",       /* file extensions */
+		IO_RESET_NONE,		/* reset if file changed */
+		NULL,				/* id */
 		mac_floppy_init,	/* init */
 		mac_floppy_exit,	/* exit */
-        NULL,               /* info */
-        NULL,               /* open */
-        NULL,               /* close */
-        NULL,               /* status */
-        NULL,               /* seek */
-        NULL,               /* input */
-        NULL,               /* output */
-        NULL,               /* input_chunk */
-        NULL                /* output_chunk */
-    },
-    { IO_END }
+		NULL,				/* info */
+		NULL,				/* open */
+		NULL,				/* close */
+		NULL,				/* status */
+		NULL,				/* seek */
+		NULL,				/* input */
+		NULL,				/* output */
+		NULL,				/* input_chunk */
+		NULL				/* output_chunk */
+	},
+	{ IO_END }
 };
 
 /*	   YEAR  NAME	   PARENT	 MACHINE   INPUT	 INIT	   COMPANY	 FULLNAME */
-/*COMPX( 1984, mac128k,  0,        mac128k,  macplus,	 mac128k,  "Apple Computer",  "Macintosh 128k",  0 )
-COMPX( 1984, mac512k,  mac128k,  mac128k,  macplus,	 mac512k,  "Apple Computer",  "Macintosh 512k",  0 )*/
-COMPX( 1986, mac512ke, macplus,  mac512ke, macplus,	 mac512ke, "Apple Computer",  "Macintosh 512ke", 0 )
-COMPX( 1986, macplus,  0,		 macplus,  macplus,	 macplus,  "Apple Computer",  "Macintosh Plus",  0 )
+/*COMPX( 1984, mac128k,  0, 	   mac128k,  macplus,	 mac128k,  "Apple Computer",  "Macintosh 128k",  0 )
+COMPX( 1984, mac512k,  mac128k,  mac128k,  macplus,  mac512k,  "Apple Computer",  "Macintosh 512k",  0 )*/
+COMPX( 1986, mac512ke, macplus,  mac512ke, macplus,  mac512ke, "Apple Computer",  "Macintosh 512ke", 0 )
+COMPX( 1986, macplus,  0,		 macplus,  macplus,  macplus,  "Apple Computer",  "Macintosh Plus",  0 )
 
 #if 0
 
 /* Early Mac2 driver - does not work at all, but enabled me to disassemble the ROMs */
 
-static struct MemoryReadAddress mac2_readmem[] =
-{
+static MEMORY_READ16_START (mac2_readmem)
+
 	{ 0x00000000, 0x007fffff, MRA_RAM },	/* ram */
 	{ 0x00800000, 0x008fffff, MRA_ROM },	/* rom */
 	{ 0x00900000, 0x00ffffff, MRA_NOP },
-	{ -1 }	/* end of table */
-};
 
-static struct MemoryWriteAddress mac2_writemem[] =
-{
+MEMORY_END
+
+static MEMORY_WRITE16_START (mac2_writemem)
+
 	{ 0x00000000, 0x007fffff, MWA_RAM },	/* ram */
 	{ 0x00800000, 0x008fffff, MWA_ROM },	/* rom */
 	{ 0x00900000, 0x00ffffff, MWA_NOP },
-	{ -1 }	/* end of table */
-};
+
+MEMORY_END
 
 static void mac2_init_machine( void )
 {
@@ -478,7 +478,7 @@ static struct MachineDriver machine_driver_mac2 =
 
 	/* video hardware */
 	640, 480, /* screen width, screen height */
-	{ 0, 640-1, 0, 480-1 },			/* visible_area */
+	{ 0, 640-1, 0, 480-1 }, 		/* visible_area */
 
 	0,					/* graphics decode info */
 	2, 2,						/* number of colors, colortable size */
@@ -506,14 +506,15 @@ INPUT_PORTS_START( mac2 )
 INPUT_PORTS_END
 
 ROM_START( mac2 )
-	ROM_REGION(0x00900000,REGION_CPU1) /* for ram, etc */
+	ROM_REGION(0x00900000,REGION_CPU1,0) /* for ram, etc */
 	ROM_LOAD_WIDE( "256k.rom",  0x800000, 0x40000, 0x00000000)
 ROM_END
 
 static const struct IODevice io_mac2[] = {
-    { IO_END }
+	{ IO_END }
 };
 
-COMPX( 1987, mac2,     0,		 mac2,     mac2,     0/*mac2*/,  "Apple Computer",	  "Macintosh II",  GAME_NOT_WORKING )
+COMPX( 1987, mac2,	   0,		 mac2,	   mac2,	 0/*mac2*/,  "Apple Computer",    "Macintosh II",  GAME_NOT_WORKING )
 
 #endif
+

@@ -1,20 +1,27 @@
 /*
 	experimental LISA driver
 
-	Runs most ROM start-up code successfully, but a floppy bug causes boot to fail.
+	Runs most ROM start-up code successfully, and loads the boot file, but it locks shortly
+	afterwards.
 
 	TODO :
-	* debug floppy controller emulation (indispensable to boot)
-	* fix COPS support (what I assumed to be COPS reset line is NO reset line)
+	* fix floppy write bug
+	* *** Boot and run LisaTest !!! ***
+	* finish MMU (does not switch to bank 0 on 68k trap)
+	* support hard disk to boot office system
 	* finish keyboard/mouse support
 	* finish clock support
 	* write SCC support
-	* finish sound support (involves adding new features to the 6522 VIA core)
+	* finalize sound support (involves adding new features to the 6522 VIA core)
 	* fix warm-reset (I think I need to use a callback when 68k RESET instruction is called)
 	* write support for additionnal hardware (hard disk, etc...)
-	* emulate Macintosh XL
 	* emulate LISA1 (?)
 	* optimize MMU emulation !
+
+	DONE (just a reminder to uplift my spirit) :
+	* the lion's share of MMU (spring 2000)
+	* video hardware (except contrast control) (spring 2000)
+	* LISA2/Mac XL floppy hardware (november 2000)
 
 	Credits :
 	* the lisaemu project (<http://www.sundernet.com/>) has gathered much hardware information
@@ -35,6 +42,7 @@ public class lisa
 {
 	
 	
+	
 	/*
 		pointers with RAM & ROM location
 	*/
@@ -47,8 +55,8 @@ public class lisa
 	#define RAM_OFFSET 0x004000
 	#define ROM_OFFSET 0x000000
 	
-	/* 1kb of RAM for 6504 floppy disk controller (shared with 68000), and 4kb of ROM (8kb,
-	actually, but only one 4kb bank is selected, according to the drive type (TWIGGY or 3.5'')) */
+	/* 1kb of RAM for 6504 floppy disk controller (shared with 68000), and 4kb of ROM (8kb on some
+	boards, but then only one 4kb bank is selected, according to the drive type (TWIGGY or 3.5'')) */
 	static UINT8 *fdc_ram;
 	static UINT8 *fdc_rom;
 	
@@ -99,8 +107,8 @@ public class lisa
 	static UINT16 mem_err_addr_latch;	/* address when parity error occured */
 	static int parity_error_pending;	/* parity error interrupt pending */
 	
-	static int bad_parity_count;	/* number of RAM bytes which have wrong parity */
-	static UINT8 *bad_parity_table;	/* array : 1 bit set for each RAM byte with wrong parity */
+	static int bad_parity_count;	/* total number of bytes in RAM which have wrong parity */
+	static UINT8 *bad_parity_table;	/* array : 1 bit set for each byte in RAM with wrong parity */
 	
 	
 	/*
@@ -119,12 +127,12 @@ public class lisa
 		a hard disk
 	*/
 	
-	static int COPS_via_in_b(int offset);
-	static void COPS_via_out_a(int offset, int val);
-	static void COPS_via_out_b(int offset, int val);
-	static void COPS_via_out_ca2(int offset, int val);
-	static void COPS_via_out_cb2(int offset, int val);
-	static int parallel_via_in_b(int offset);
+	static READ_HANDLER(COPS_via_in_b);
+	static WRITE_HANDLER(COPS_via_out_a);
+	static WRITE_HANDLER(COPS_via_out_b);
+	static WRITE_HANDLER(COPS_via_out_ca2);
+	static WRITE_HANDLER(COPS_via_out_cb2);
+	static READ_HANDLER(parallel_via_in_b);
 	
 	static int KBIR;	/* COPS VIA interrupt pending */
 	
@@ -163,11 +171,52 @@ public class lisa
 	static int FDIR;
 	static int DISK_DIAG;
 	
+	static int MT1;
+	
+	static int PWM_floppy_motor_speed;
+	
+	/*
+		lisa model identification
+	*/
+	enum
+	{
+		/*lisa1,*/		/* twiggy floppy drive */
+		lisa2,		/* 3.5'' Sony floppy drive */
+		lisa210,	/* modified I/O board, and internal 10Meg drive */
+		mac_xl		/* same as above with modified video */
+	} lisa_model;
+	
+	struct
+	{
+		unsigned int has_fast_timers : 1;	/* I/O board VIAs are clocked at 1.25 MHz (?) instead of .5 MHz (?) (Lisa 2/10, Mac XL) */
+											/* Note that the beep routine in boot ROMs implies that
+											VIA clock is 1.25 times faster with fast timers than with
+											slow timers.  I read the schematics again and again, and
+											I simply don't understand : in one case the VIA is
+											connected to the 68k E clock, which is CPUCK/10, and in
+											another case, to a generated PH2 clock which is CPUCK/4,
+											with additionnal logic to keep it in phase with the 68k
+											memory cycle.  After hearing the beep when MacWorks XL
+											boots, I bet the correct values are .625 MHz and .5 MHz.
+											Maybe the schematics are wrong, and PH2 is CPUCK/8.
+											Maybe the board uses a 6522 variant with different
+											timings. */
+		enum
+		{
+			twiggy,			/* twiggy drives (Lisa 1) */
+			sony_lisa2,		/* 3.5'' drive with LisaLite adapter (Lisa 2) */
+			sony_lisa210	/* 3.5'' drive with modified fdc hardware (Lisa 2/10, Mac XL) */
+		} floppy_hardware : 2;
+		unsigned int has_double_sided_floppy : 1;	/* true on lisa 1 and *hacked* lisa 2/10 / Mac XL */
+		unsigned int has_mac_xl_video : 1;	/* modified video for MacXL */
+	} lisa_features;
 	
 	/*
 		protos
 	*/
 	
+	static READ16_HANDLER ( lisa_IO_r );
+	static WRITE16_HANDLER ( lisa_IO_w );
 	
 	
 	/*
@@ -257,11 +306,13 @@ public class lisa
 	static int fifo_tail;
 	static int mouse_data_offset;	/* current offset for mouse data in FIFO (!) */
 	
-	static int COPS_reset_line;		/* RESET line for COPS (comes from VIA) */
+	static int COPS_force_unplug;		/* force unplug keyboard/mouse line for COPS (comes from VIA) */
 	
 	static void *mouse_timer = NULL;	/* timer called for mouse setup */
 	
 	static int hold_COPS_data;	/* mirrors the state of CA2 - COPS does not send data until it is low */
+	
+	static int NMIcode;
 	
 	/* clock registers */
 	static struct
@@ -278,10 +329,19 @@ public class lisa
 		int seconds1;	/* seconds (BCD : 0-59) */
 		int seconds2;
 		int tenths;		/* tenths of second (BCD : 0-9) */
+	
+		int clock_write_ptr;	/* clock byte to be written next (-1 if clock write disabled) */
+		enum
+		{
+			clock_timer_disable = 0,
+			timer_disable = 1,
+			timer_interrupt = 2,	/* timer underflow generates interrupt */
+			timer_power_on = 3		/* timer underflow turns system on if it is off and gens interrupt */
+		} clock_mode;			/* clock mode */
 	} clock_regs;
 	
 	
-	/* sends data from the FIFO if possible */
+	
 	INLINE void COPS_send_data_if_possible(void)
 	{
 		if ((! hold_COPS_data) && fifo_size && (! COPS_Ready))
@@ -345,32 +405,40 @@ public class lisa
 		int keybuf;
 		UINT8 keycode;
 	
-		for (i=0; i<8; i++)
-		{
-			keybuf = readinputport(i+2);
+		if (! COPS_force_unplug)
+			for (i=0; i<8; i++)
+			{
+				keybuf = readinputport(i+2);
 	
-			if (keybuf != key_matrix[i])
-			{	/* if state has changed, find first bit which has changed */
-				/*logerror("keyboard state changed, %d %X\n", i, keybuf);*/
+				if (keybuf != key_matrix[i])
+				{	/* if state has changed, find first bit which has changed */
+					/*logerror("keyboard state changed, %d %X\n", i, keybuf);*/
 	
-				for (j=0; j<16; j++)
-				{
-					if (((keybuf ^ key_matrix[i]) >> j) & 1)
+					for (j=0; j<16; j++)
 					{
-						/* update key_matrix */
-						key_matrix[i] = (key_matrix[i] & ~ (1 << j)) | (keybuf & (1 << j));
+						if (((keybuf ^ key_matrix[i]) >> j) & 1)
+						{
+							/* update key_matrix */
+							key_matrix[i] = (key_matrix[i] & ~ (1 << j)) | (keybuf & (1 << j));
 	
-						/* create key code */
-						keycode = (i << 4) | j;
-						if (keybuf & (1 << j))
-						{	/* key down */
-							keycode |= 0x80;
+							/* create key code */
+							keycode = (i << 4) | j;
+							if (keybuf & (1 << j))
+							{	/* key down */
+								keycode |= 0x80;
+							}
+	#if 0
+							if (keycode == NMIcode)
+							{	/* generate NMI interrupt */
+								cpu_set_irq_line(0, M68K_IRQ_7, PULSE_LINE);
+								cpu_irq_line_vector_w(0, M68K_IRQ_7, M68K_INT_ACK_AUTOVECTOR);
+							}
+	#endif
+							COPS_queue_data(& keycode, 1);
 						}
-						COPS_queue_data(& keycode, 1);
 					}
 				}
 			}
-		}
 	}
 	
 	/* handle mouse moves */
@@ -381,6 +449,9 @@ public class lisa
 	
 		int diff_x = 0, diff_y = 0;
 		int new_mx, new_my;
+	
+		/*if (COPS_force_unplug != 0)
+			return;*/	/* ???? */
 	
 		new_mx = readinputport(0);
 		new_my = readinputport(1);
@@ -483,57 +554,110 @@ public class lisa
 			switch ((command & 0xF0) >> 4)
 			{
 			case 0x1:	/* write clock data */
+				if (clock_regs.clock_write_ptr != -1)
+				{
+					switch (clock_regs.clock_write_ptr)
+					{
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+						/* alarm */
+						clock_regs.alarm &= ~ (0xf << (4 * (4 - clock_regs.clock_write_ptr)));
+						clock_regs.alarm |= immediate << (4 * (4 - clock_regs.clock_write_ptr));
+						break;
+					case 5:
+						/* year */
+						clock_regs.years = immediate;
+						break;
+					case 6:
+						/* day */
+						clock_regs.days1 = immediate;
+						break;
+					case 7:
+						/* day */
+						clock_regs.days2 = immediate;
+						break;
+					case 8:
+						/* day */
+						clock_regs.days3 = immediate;
+						break;
+					case 9:
+						/* hours */
+						clock_regs.hours1 = immediate;
+						break;
+					case 10:
+						/* hours */
+						clock_regs.hours2 = immediate;
+						break;
+					case 11:
+						/* minutes */
+						clock_regs.minutes1 = immediate;
+						break;
+					case 12:
+						/* minutes */
+						clock_regs.minutes1 = immediate;
+						break;
+					case 13:
+						/* seconds */
+						clock_regs.seconds1 = immediate;
+						break;
+					case 14:
+						/* seconds */
+						clock_regs.seconds2 = immediate;
+						break;
+					case 15:
+						/* tenth */
+						clock_regs.tenths = immediate;
+						break;
+					}
+					clock_regs.clock_write_ptr++;
+					if (clock_regs.clock_write_ptr == 16)
+						clock_regs.clock_write_ptr = -1;
+				}
 	
 				break;
 	
 			case 0x2:	/* set clock mode */
-	#if 0
 				if ((immediate & 0x8) != 0)
 				{	/* start setting the clock */
+					clock_regs.clock_write_ptr = 0;
+				}
+				else
+				{	/* clock write disabled */
+					clock_regs.clock_write_ptr = -1;
 				}
 	
 				if (! (immediate & 0x4))
 				{	/* enter sleep mode */
+					/* ... */
 				}
 				else
 				{	/* wake up */
+					/* should never happen */
 				}
 	
-				switch (immediate & 0x3)
-				{
-				case 0x0:	/* clock/timer disable */
-	
-					break;
-	
-				case 0x1:	/* timer disable */
-	
-					break;
-	
-				case 0x2:	/* timer underflow generates interrupt */
-	
-					break;
-	
-				case 0x3:	/* timer underflow turns system on if it is off and gens interrupt */
-	
-					break;
-				}
-	#endif
+				clock_regs.clock_mode = immediate & 0x3;
 				break;
 	
+	#if 0
+			/* LED commands - not implemented in production LISAs */
 			case 0x3:	/* write 4 keyboard LEDs */
-	
+				keyboard_leds = (keyboard_leds & 0x0f) | (immediate << 4);
 				break;
 	
 			case 0x4:	/* write next 4 keyboard LEDs */
-	
+				keyboard_leds = (keyboard_leds & 0xf0) | immediate;
 				break;
+	#endif
 	
 			case 0x5:	/* set high nibble of NMI character to nnnn */
-	
+				NMIcode = (NMIcode & 0x0f) | (immediate << 4);
 				break;
 	
 			case 0x6:	/* set low nibble of NMI character to nnnn */
-	
+				NMIcode = (NMIcode & 0xf0) | immediate;
 				break;
 	
 			case 0x7:	/* send mouse command */
@@ -610,42 +734,47 @@ public class lisa
 			timer_remove(mouse_timer);
 			mouse_timer = NULL;
 		}
+	}
 	
+	static void unplug_keyboard(void)
+	{
+		UINT8 cmd[2] =
 		{
-			UINT8 cmd1[2] =
-			{
-				0x80,	/* RESET code */
-				0xFD	/* keyboard unplugged */
-			};
+			0x80,	/* RESET code */
+			0xFD	/* keyboard unplugged */
+		};
 	
-			COPS_queue_data(cmd1, 2);
-		}
+		COPS_queue_data(cmd, 2);
+	}
 	
-		{
-			UINT8 cmd2[2] =
-			{
-				0x80,	/* RESET code */
-				0x30	/* keyboard ID - US for now */
-			};
 	
-			COPS_queue_data(cmd2, 2);
-		}
-	
+	static void plug_keyboard(void)
+	{
 		/*
-			keyboard ID according to ROMs
+			possible keyboard IDs according to Lisa Hardware Manual and boot ROM source code
 	
-			2 MSBs : "mfg code"
+			2 MSBs : "mfg code" (. 0x80 for Keytronics, 0x00 for "APD")
 			6 LSBs :
 				0x0x : "old US keyboard"
+				0x3f : US keyboard
 				0x3d : Canadian keyboard
-				0x3x : US keyboard
 				0x2f : UK
 				0x2e : German
 				0x2d : French
 				0x27 : Swiss-French
 				0x26 : Swiss-German
+				unknown : spanish, US dvorak, italian & swedish
 		*/
+	
+		UINT8 cmd[2] =
+		{
+			0x80,	/* RESET code */
+			0x3f	/* keyboard ID - US for now */
+		};
+	
+		COPS_queue_data(cmd, 2);
 	}
+	
 	
 	/* called at power-up */
 	static public static InitDriverPtr init_COPS = new InitDriverPtr() { public void handler() 
@@ -654,19 +783,6 @@ public class lisa
 	
 		/* read command every ms (don't know the real value) */
 		timer_pulse(TIME_IN_MSEC(1), 0, set_COPS_ready);
-	
-		clock_regs.alarm = 0xfffffL;
-		clock_regs.years = 0;
-		clock_regs.days1 = 0;
-		clock_regs.days2 = 0;
-		clock_regs.days3 = 1;
-		clock_regs.hours1 = 0;
-		clock_regs.hours2 = 0;
-		clock_regs.minutes1 = 0;
-		clock_regs.minutes2 = 0;
-		clock_regs.seconds1 = 0;
-		clock_regs.seconds2 = 0;
-		clock_regs.tenths = 0;
 	
 		reset_COPS();
 	} };
@@ -680,14 +796,14 @@ public class lisa
 		CA1 (I) : COPS sending valid data
 		CA2 (O) : VIA . COPS handshake
 	*/
-	static void COPS_via_out_a(int offset, int val)
+	static WRITE_HANDLER(COPS_via_out_a)
 	{
-		COPS_command = val;
+		COPS_command = data;
 	}
 	
-	static void COPS_via_out_ca2(int offset, int val)
+	static WRITE_HANDLER(COPS_via_out_ca2)
 	{
-		hold_COPS_data = val;
+		hold_COPS_data = data;
 	
 		/*logerror("COPS CA2 line state : %d\n", val);*/
 	
@@ -709,7 +825,7 @@ public class lisa
 		CB1 : not used
 		CB2 (O) : sound output
 	*/
-	static int COPS_via_in_b(int offset)
+	static READ_HANDLER(COPS_via_in_b)
 	{
 		int val = 0;
 	
@@ -722,20 +838,33 @@ public class lisa
 		return val;
 	}
 	
-	static void COPS_via_out_b(int offset, int val)
+	static WRITE_HANDLER(COPS_via_out_b)
 	{
-		if ((val & 0x01) != 0)
-			COPS_reset_line = FALSE;
-		else if (! COPS_reset_line)
+		/* pull-up */
+		data |= (~ via_read(0, VIA_DDRA)) & 0x01;
+	
+		if ((data & 0x01) != 0)
 		{
-			COPS_reset_line = TRUE;
-			reset_COPS();
+			if (COPS_force_unplug != 0)
+			{
+				COPS_force_unplug = FALSE;
+				plug_keyboard();
+			}
+		}
+		else
+		{
+			if (! COPS_force_unplug)
+			{
+				COPS_force_unplug = TRUE;
+				unplug_keyboard();
+				//reset_COPS();
+			}
 		}
 	}
 	
-	static void COPS_via_out_cb2(int offset, int val)
+	static WRITE_HANDLER(COPS_via_out_cb2)
 	{
-		speaker_level_w(0, val);
+		speaker_level_w(0, data);
 	}
 	
 	static void COPS_via_irq_func(int val)
@@ -767,7 +896,7 @@ public class lisa
 		CB1 : not used
 		CB2 (I) : current parity latch value
 	*/
-	static int parallel_via_in_b(int offset)
+	static READ_HANDLER(parallel_via_in_b)
 	{
 		int val = 0;
 	
@@ -791,7 +920,7 @@ public class lisa
 	
 	public static VhStartPtr lisa_vh_start = new VhStartPtr() { public int handler() 
 	{
-		size_t videoram_size[0] = (720 * 360 / 8);
+		size_t videoram_size[0] = 32760;	/*max(720*364, 608*431)/8*/
 	
 		old_display = (UINT16 *) malloc(videoram_size[0]);
 		if (! old_display)
@@ -808,20 +937,28 @@ public class lisa
 		free(old_display);
 	} };
 	
-	public static VhUpdatePtr lisa_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	/*
+		TODO : use draw_scanline()...
+		"draw_scanline(bitmap, 0, y, (lisa_features.has_mac_xl_video) ? 608 : 720, buf, NULL, -1)"
+	*/
+	void lisa_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		UINT16	data;
 		UINT16	*old;
 		UINT8	*v;
 		int		fg, bg, x, y;
 	
+		/* resolution is 720*364 on lisa, vs 608*431 on mac XL */
+		int resx = (lisa_features.has_mac_xl_video) ? 38 : 45;		/* width/16 */
+		int resy = (lisa_features.has_mac_xl_video) ? 431 : 364;	/* height */
+	
 		v = videoram_ptr;
 		bg = Machine.pens[0];
 		fg = Machine.pens[1];
 		old = old_display;
 	
-		for (y = 0; y < 360; y++) {
-			for ( x = 0; x < 45; x++ ) {
+		for (y = 0; y < resy; y++) {
+			for ( x = 0; x < resx; x++ ) {
 				data = READ_WORD( v );
 				if (full_refresh || (data != *old)) {
 					plot_pixel( bitmap, ( x << 4 ) + 0x00, y, ( data & 0x8000 ) ? fg : bg );
@@ -846,18 +983,17 @@ public class lisa
 				old++;
 			}
 		}
-	} };
+	}
 	
 	
 	static OPBASE_HANDLER (lisa_OPbaseoverride)
 	{
-		offs_t answer;
-	
 		/* upper 7 bits . segment # */
 		int segment = (address >> 17) & 0x7f;
 	
 		int the_seg = seg;
 	
+		address &= 0xffffff;
 		/*logerror("logical address%lX\n", address);*/
 	
 	
@@ -871,7 +1007,7 @@ public class lisa
 			{
 				if ((address & 0x008000) != 0)
 				{	/* MMU register : BUS error ??? */
-					answer = 0;
+					logerror("illegal opbase address%lX\n", address);
 				}
 				else
 				{	/* system ROMs */
@@ -896,10 +1032,10 @@ public class lisa
 	
 			case RAM_r:
 			case RAM_rw:
-				if (mapped_address > mmu_regs[the_seg][segment].slim)
+				if (seg_offset > mmu_regs[the_seg][segment].slim)
 				{
 					/* out of segment limits : bus error */
-	
+					logerror("illegal opbase address%lX\n", address);
 				}
 				OP_ROM = OP_RAM = lisa_ram_ptr + mapped_address - address;
 				/*logerror("RAM\n");*/
@@ -910,7 +1046,7 @@ public class lisa
 			case IO:			/* I/O : bus error ??? */
 			case invalid:		/* unmapped segment */
 				/* bus error */
-	
+				logerror("illegal opbase address%lX\n", address);
 				break;
 	
 			case special_IO:
@@ -935,16 +1071,147 @@ public class lisa
 	
 	int lisa_floppy_init(int id)
 	{
-		return iwm_lisa_floppy_init(id, IWM_FLOPPY_ALLOW400K /*| IWM_FLOPPY_ALLOW800K*/);
+		/*if (lisa_features.lisa_floppy_hardware == twiggy)
+			return twiggy_floppy_init(id);
+		else*/
+			return sony_floppy_init(id, (lisa_features.has_double_sided_floppy)
+											? SONY_FLOPPY_ALLOW400K | SONY_FLOPPY_ALLOW800K
+											: SONY_FLOPPY_ALLOW400K | SONY_FLOPPY_EXT_SPEED_CONTROL);
 	}
 	
 	void lisa_floppy_exit(int id)
 	{
-		iwm_lisa_floppy_exit(id);
+		/*if (lisa_features.lisa_floppy_hardware == twiggy)
+			return twiggy_floppy_exit(id);
+		else*/
+			sony_floppy_exit(id);
 	}
 	
+	/* should save PRAM to file */
+	/* TODO : save time difference with host clock, set default date, etc */
+	public static nvramPtr lisa_nvram_handler  = new nvramPtr() { public void handler(Object file, int read_or_write) 
+	{
+		UINT8 *l_fdc_ram = memory_region(REGION_CPU2) + FDC_RAM_OFFSET;	/* fdc_ram is not necessarily set yet */
 	
-	void lisa_init_machine()
+	
+		if (read_or_write != 0)
+		{
+			if (file != 0)
+			{
+	#if 0
+				logerror("Writing PRAM to file\n");
+	#endif
+				osd_fwrite(file, l_fdc_ram, 1024);
+			}
+		}
+		else
+		{
+			if (file != 0)
+			{
+	#if 0
+				logerror("Reading PRAM from file\n");
+	#endif
+				osd_fread(file, l_fdc_ram, 1024);
+			}
+			else
+			{
+	#if 0
+				logerror("trashing PRAM\n");
+	#endif
+				memset(l_fdc_ram, 0, 1024);
+			}
+	
+			{
+				/* Now we copy the host clock into the Lisa clock */
+				/* All these functions should be ANSI */
+				time_t cur_time = time(NULL);
+				struct tm expanded_time = *localtime(& cur_time);
+	
+				clock_regs.alarm = 0xfffffL;
+				/* The clock count starts on 1st January 1980 */
+				clock_regs.years = (expanded_time.tm_year - 1980) & 0xf;
+				clock_regs.days1 = (expanded_time.tm_yday + 1) / 100;
+				clock_regs.days2 = ((expanded_time.tm_yday + 1) / 10) % 10;
+				clock_regs.days3 = (expanded_time.tm_yday + 1) % 10;
+				clock_regs.hours1 = expanded_time.tm_hour / 10;
+				clock_regs.hours2 = expanded_time.tm_hour % 10;
+				clock_regs.minutes1 = expanded_time.tm_min / 10;
+				clock_regs.minutes2 = expanded_time.tm_min % 10;
+				clock_regs.seconds1 = expanded_time.tm_sec / 10;
+				clock_regs.seconds2 = expanded_time.tm_sec % 10;
+				clock_regs.tenths = 0;
+			}
+			clock_regs.clock_mode = timer_disable;
+			clock_regs.clock_write_ptr = -1;
+		}
+	
+	
+	#if 0
+		UINT32 temp32;
+		SINT8 temp8;
+		temp32 = (clock_regs.alarm << 12) | (clock_regs.years << 8) | (clock_regs.days1 << 4)
+		        | clock_regs.days2;
+	
+		temp32 = (clock_regs.days3 << 28) | (clock_regs.hours1 << 24) | (clock_regs.hours2 << 20)
+		        | (clock_regs.minutes1 << 16) | (clock_regs.minutes2 << 12)
+		        | (clock_regs.seconds1 << 8) | (clock_regs.seconds2 << 4) | clock_regs.tenths;
+	
+		temp8 = clock_mode;			/* clock mode */
+	
+		temp8 = clock_regs.clock_write_ptr;	/* clock byte to be written next (-1 if clock write disabled) */
+	#endif
+	} };
+	
+	/*public static InitDriverPtr init_lisa1 = new InitDriverPtr() { public void handler() 
+	{
+		lisa_model = lisa1;
+		lisa_features.has_fast_timers = 0;
+		lisa_features.floppy_hardware = twiggy;
+		lisa_features.has_double_sided_floppy = 1;
+		lisa_features.has_mac_xl_video = 0;
+	} };*/
+	
+	public static InitDriverPtr init_lisa2 = new InitDriverPtr() { public void handler() 
+	{
+		lisa_model = lisa2;
+		lisa_features.has_fast_timers = 0;
+		lisa_features.floppy_hardware = sony_lisa2;
+		lisa_features.has_double_sided_floppy = 0;
+		lisa_features.has_mac_xl_video = 0;
+	} };
+	
+	public static InitDriverPtr init_lisa210 = new InitDriverPtr() { public void handler() 
+	{
+		lisa_model = lisa210;
+		lisa_features.has_fast_timers = 1;
+		lisa_features.floppy_hardware = sony_lisa210;
+		lisa_features.has_double_sided_floppy = 0;
+		lisa_features.has_mac_xl_video = 0;
+	} };
+	
+	public static InitDriverPtr init_mac_xl = new InitDriverPtr() { public void handler() 
+	{
+		lisa_model = mac_xl;
+		lisa_features.has_fast_timers = 1;
+		lisa_features.floppy_hardware = sony_lisa210;
+		lisa_features.has_double_sided_floppy = 0;
+		lisa_features.has_mac_xl_video = 1;
+	} };
+	
+	static void lisa2_set_iwm_enable_lines(int enable_mask)
+	{
+		/* E1 & E2 is connected to the Sony SEL line (?) */
+		/*logerror("new sel line state %d\n", (enable_mask) ? 0 : 1);*/
+		sony_set_sel_line((enable_mask) ? 0 : 1);
+	}
+	
+	static void lisa210_set_iwm_enable_lines(int enable_mask)
+	{
+		/* E2 is connected to the Sony enable line (?) */
+		sony_set_enable_lines(enable_mask >> 1);
+	}
+	
+	public static InitMachinePtr lisa_init_machine = new InitMachinePtr() { public void handler() 
 	{
 		lisa_ram_ptr = memory_region(REGION_CPU1) + RAM_OFFSET;
 		lisa_rom_ptr = memory_region(REGION_CPU1) + ROM_OFFSET;
@@ -954,10 +1221,10 @@ public class lisa
 	
 		videoROM_ptr = memory_region(REGION_GFX1);
 	
-		cpu_setOPbaseoverride(0, lisa_OPbaseoverride);
-		cpu_setOPbaseoverride(1, lisa_fdc_OPbaseoverride);
+		memory_set_opbase_handler(0, lisa_OPbaseoverride);
+		memory_set_opbase_handler(1, lisa_fdc_OPbaseoverride);
 	
-		/* int MMU */
+		/* init MMU */
 	
 		setup = TRUE;
 	
@@ -984,17 +1251,51 @@ public class lisa
 		/* reset COPS keyboard/mouse controller */
 		init_COPS();
 	
-		/* configure via */
+		/* configure vias */
 		via_config(0, & lisa_via6522_intf[0]);
-		via_set_clock(0, 1000000);	/* 6522 = 1 Mhz, 6522a = 2 Mhz */
+		via_set_clock(0, lisa_features.has_fast_timers ? 1250000 : 500000);	/* one of these values must be wrong : see note after description of the has_fast_timers field */
 		via_config(1, & lisa_via6522_intf[1]);
-		via_set_clock(1, 1000000);	/* 6522 = 1 Mhz, 6522a = 2 Mhz */
+		via_set_clock(1, lisa_features.has_fast_timers ? 1250000 : 500000);	/* one of these values must be wrong : see note after description of the has_fast_timers field */
 	
 		via_reset();
 		COPS_via_out_ca2(0, 0);	/* VIA core forgets to do so */
 	
 		/* initialize floppy */
-		iwm_lisa_init();
+		{
+			iwm_interface intf =
+			{
+				sony_set_lines,
+				sony_set_enable_lines,
+	
+				sony_read_data,
+				sony_write_data,
+				sony_read_status
+			};
+	
+			if (lisa_features.floppy_hardware == sony_lisa2)
+			{
+				intf.set_enable_lines = lisa2_set_iwm_enable_lines;
+			}
+			if (lisa_features.floppy_hardware == sony_lisa210)
+			{
+				intf.set_enable_lines = lisa210_set_iwm_enable_lines;
+			}
+	
+			iwm_init(& intf);
+	
+			if (lisa_features.floppy_hardware == sony_lisa2)
+				sony_set_enable_lines(1);	/* on lisa2, drive unit 1 is always selected (?) */
+		}
+	} };
+	
+	void lisa_exit_machine(void)
+	{
+		if (mouse_timer != 0)
+		{
+			/* disable mouse timer . disable mouse */
+			timer_remove(mouse_timer);
+			mouse_timer = NULL;
+		}
 	}
 	
 	public static InterruptPtr lisa_interrupt = new InterruptPtr() { public int handler() 
@@ -1005,65 +1306,78 @@ public class lisa
 		{	/* increment clock every 1/10s */
 			frame_count = 0;
 	
-			if ((++clock_regs.tenths) == 10)
+			if (clock_regs.clock_mode != clock_timer_disable)
 			{
-				clock_regs.tenths = 0;
-	
-				if (clock_regs.alarm == 0)
+				if ((++clock_regs.tenths) == 10)
 				{
-					/* interrupt... */
-					clock_regs.alarm = 0xfffffL;
-				}
-				else
-				{
-					clock_regs.alarm--;
-				}
+					clock_regs.tenths = 0;
 	
-				if ((++clock_regs.seconds2) == 10)
-				{
-					clock_regs.seconds2 = 0;
-	
-					if ((++clock_regs.seconds1) == 6)
+					if (clock_regs.clock_mode != timer_disable)
 					{
-						clock_regs.seconds1 = 0;
-	
-						if ((++clock_regs.minutes2) == 10)
+						if (clock_regs.alarm == 0)
 						{
-							clock_regs.minutes2 = 0;
-	
-							if ((++clock_regs.minutes1) == 6)
+							/* generate reset (should cause a VIA interrupt...) */
+							UINT8 cmd[2] =
 							{
-								clock_regs.minutes1 = 0;
+								0x80,	/* RESET code */
+								0xFC	/* timer time-out */
+							};
+							COPS_queue_data(cmd, 2);
 	
-								if ((++clock_regs.hours2) == 10)
+							clock_regs.alarm = 0xfffffL;
+						}
+						else
+						{
+							clock_regs.alarm--;
+						}
+					}
+	
+					if ((++clock_regs.seconds2) == 10)
+					{
+						clock_regs.seconds2 = 0;
+	
+						if ((++clock_regs.seconds1) == 6)
+						{
+							clock_regs.seconds1 = 0;
+	
+							if ((++clock_regs.minutes2) == 10)
+							{
+								clock_regs.minutes2 = 0;
+	
+								if ((++clock_regs.minutes1) == 6)
 								{
-									clock_regs.hours2 = 0;
+									clock_regs.minutes1 = 0;
 	
-									clock_regs.hours1++;
-								}
-	
-								if ((clock_regs.hours1*10 + clock_regs.hours2) == 24)
-								{
-									clock_regs.hours1 = clock_regs.hours2 = 0;
-	
-									if ((++clock_regs.days3) == 10)
+									if ((++clock_regs.hours2) == 10)
 									{
-										clock_regs.days3 = 0;
+										clock_regs.hours2 = 0;
 	
-										if ((++clock_regs.days2) == 10)
-										{
-											clock_regs.days2 = 0;
-	
-											clock_regs.days1++;
-										}
+										clock_regs.hours1++;
 									}
 	
-									if ((clock_regs.days1*100 + clock_regs.days2*10 + clock_regs.days3) ==
-										((clock_regs.years % 4) ? 366 : 367))
+									if ((clock_regs.hours1*10 + clock_regs.hours2) == 24)
 									{
-										clock_regs.days1 = clock_regs.days2 = clock_regs.days3 = 0;
+										clock_regs.hours1 = clock_regs.hours2 = 0;
 	
-										clock_regs.years = (clock_regs.years + 1) & 0xf;
+										if ((++clock_regs.days3) == 10)
+										{
+											clock_regs.days3 = 0;
+	
+											if ((++clock_regs.days2) == 10)
+											{
+												clock_regs.days2 = 0;
+	
+												clock_regs.days1++;
+											}
+										}
+	
+										if ((clock_regs.days1*100 + clock_regs.days2*10 + clock_regs.days3) ==
+											((clock_regs.years % 4) ? 366 : 367))
+										{
+											clock_regs.days1 = clock_regs.days2 = clock_regs.days3 = 0;
+	
+											clock_regs.years = (clock_regs.years + 1) & 0xf;
+										}
 									}
 								}
 							}
@@ -1083,6 +1397,61 @@ public class lisa
 		return 0;
 	} };
 	
+	/*
+		Lots of fun with the Lisa fdc hardware
+	
+		The iwm floppy select line is connected to the drive SEL line in Lisa2 (which is why Lisa 2
+		cannot support 2 floppy drives)...
+	*/
+	
+	INLINE void lisa_fdc_ttl_glue_access(offs_t offset)
+	{
+		switch ((offset & 0x000E) >> 1)
+		{
+		case 0:
+			/*stop = offset & 1;*/	/* stop/run motor pulse generation */
+			break;
+		case 2:
+			/*MT0 = offset & 1;*/	/* ???? */
+			break;
+		case 3:
+			/* enable/disable the motor on Lisa 1 */
+			/* can disable the motor on Lisa 2/10, too (although it is not useful) */
+			/* On lisa 2, commands the loading of the speed register on lisalite board */
+			if (lisa_features.floppy_hardware == sony_lisa2)
+			{
+				int oldMT1 = MT1;
+				MT1 = offset & 1;
+				if (MT1 && ! oldMT1)
+				{
+					PWM_floppy_motor_speed = (PWM_floppy_motor_speed << 1) & 0xff;
+					if (iwm_get_lines() & IWM_PH0)
+						PWM_floppy_motor_speed |= 1;
+					sony_set_speed(((256-PWM_floppy_motor_speed) * 1.3) + 237);
+				}
+			}
+			/*else
+				MT1 = offset & 1;*/
+			break;
+		case 4:
+			/*DIS = offset & 1;*/	/* forbids access from the 68000 to our RAM */
+			break;
+		case 5:
+			/*HDS = offset & 1;*/		/* head select (. disk side) on twiggy */
+			/*if (lisa_features.floppy_hardware == twiggy)
+				twiggy_set_head_line(offset & 1);
+			else*/ if (lisa_features.floppy_hardware == sony_lisa210)
+				sony_set_sel_line(offset & 1);
+			break;
+		case 6:
+			DISK_DIAG = offset & 1;
+			break;
+		case 7:
+			FDIR = offset & 1;	/* Interrupt request to 68k */
+			lisa_field_interrupts();
+			break;
+		}
+	}
 	
 	READ_HANDLER ( lisa_fdc_io_r )
 	{
@@ -1091,45 +1460,20 @@ public class lisa
 		switch ((offset & 0x0030) >> 4)
 		{
 		case 0:	/* IWM */
-			answer = iwm_lisa_r(offset);
+			answer = /*iwm_lisa_r*/iwm_r(offset);
 			break;
 	
 		case 1:	/* TTL glue */
-			switch ((offset & 0x000E) >> 1)
-			{
-			case 0:
-				/*stop = offset & 1;*/	/* ???? */
-				break;
-			case 2:
-				/*MT0 = offset & 1;*/	/* ???? */
-				break;
-			case 3:
-				/*MT1 = offset & 1;*/	/* ???? */
-				break;
-			case 4:
-				/*DIS = offset & 1;*/	/* ???? */
-				break;
-			case 5:
-				/*HDS = offset & 1;*/		/* head select (. disk side) */
-				iwm_lisa_set_head_line(offset & 1);
-				break;
-			case 6:
-				DISK_DIAG = offset & 1;
-				break;
-			case 7:
-				FDIR = offset & 1;	/* Interrupt request to 68k */
-				lisa_field_interrupts();
-				break;
-			}
-			answer =  0;	/* ??? */
+			lisa_fdc_ttl_glue_access(offset);
+			answer = 0;	/* ??? */
 			break;
 	
 		case 2:	/* pulses the PWM LOAD line (mistake !) */
-			answer =  0;	/* ??? */
+			answer = 0;	/* ??? */
 			break;
 	
 		case 3:	/* not used */
-			answer =  0;	/* ??? */
+			answer = 0;	/* ??? */
 			break;
 		}
 	
@@ -1141,40 +1485,19 @@ public class lisa
 		switch ((offset & 0x0030) >> 4)
 		{
 		case 0:	/* IWM */
-			iwm_lisa_w(offset, data);
+			/*iwm_lisa_w*/iwm_w(offset, data);
 			break;
 	
 		case 1:	/* TTL glue */
-			switch ((offset & 0x000E) >> 1)
-			{
-			case 0:
-				/*stop = offset & 1;*/	/* stop/run a clock (same as PWM LOAD -  never used) */
-				break;
-			case 2:
-				/*MT0 = offset & 1;*/	/* ???? */
-				break;
-			case 3:
-				/*MT1 = offset & 1;*/	/* enable/disable the clock compare (same as PWM LOAD) */
-				break;
-			case 4:
-				/*DIS = offset & 1;*/	/* ???? */
-				break;
-			case 5:
-				/*HDS = offset & 1;*/		/* head select (. disk side) */
-				iwm_lisa_set_head_line(offset & 1);
-				break;
-			case 6:
-				DISK_DIAG = offset & 1;
-				break;
-			case 7:
-				FDIR = offset & 1;	/* Interrupt request to 68k */
-				lisa_field_interrupts();
-				break;
-			}
+			lisa_fdc_ttl_glue_access(offset);
 			break;
 	
-		case 2:	/* pulses the PWM LOAD line (never used) */
-			/* reload a clock with value written */
+		case 2:	/* writes the PWM register */
+			/* the written value is used to generate the motor speed control signal */
+			/*if (lisa_features.floppy_hardware == twiggy)
+				twiggy_set_speed((256-data) * ??? + ???);
+			else*/ if (lisa_features.floppy_hardware == sony_lisa210)
+				sony_set_speed(((256-data) * 1.3) + 237);
 			break;
 	
 		case 3:	/* not used */
@@ -1198,6 +1521,22 @@ public class lisa
 			return fdc_rom[offset & 0x0fff];
 	}
 	
+	READ_HANDLER ( lisa210_fdc_r )
+	{
+		if (! (offset & 0x1000))
+		{
+			if (! (offset & 0x0400))
+				if (! (offset & 0x0800))
+					return fdc_ram[offset & 0x03ff];
+				else
+					return lisa_fdc_io_r(offset & 0x03ff);
+			else
+				return 0;	/* ??? */
+		}
+		else
+			return fdc_rom[offset & 0x0fff];
+	}
+	
 	WRITE_HANDLER ( lisa_fdc_w )
 	{
 		if (! (offset & 0x1000))
@@ -1205,16 +1544,28 @@ public class lisa
 			if (! (offset & 0x0800))
 			{
 				if (! (offset & 0x0400))
-					fdc_ram[offset & 0x0fff] = data;
+					fdc_ram[offset & 0x03ff] = data;
 				else
 					lisa_fdc_io_w(offset & 0x03ff, data);
 			}
-	
 		}
 	}
 	
+	WRITE_HANDLER ( lisa210_fdc_w )
+	{
+		if (! (offset & 0x1000))
+		{
+			if (! (offset & 0x0400))
+			{
+				if (! (offset & 0x0800))
+					fdc_ram[offset & 0x03ff] = data;
+				else
+					lisa_fdc_io_w(offset & 0x03ff, data);
+			}
+		}
+	}
 	
-	READ_HANDLER ( lisa_r )
+	READ16_HANDLER ( lisa_r )
 	{
 		int answer=0;
 	
@@ -1222,23 +1573,23 @@ public class lisa
 		int the_seg = seg;
 	
 		/* upper 7 bits . segment # */
-		int segment = (offset >> 17) & 0x7f;
+		int segment = (offset >> 16) & 0x7f;
 	
 	
 		/*logerror("read, logical address%lX\n", offset);*/
 	
 		if (setup != 0)
 		{	/* special setup mode */
-			if ((offset & 0x004000) != 0)
+			if ((offset & 0x002000) != 0)
 			{
 				the_seg = 0;	/* correct ??? */
 			}
 			else
 			{
-				if ((offset & 0x008000) != 0)
+				if ((offset & 0x004000) != 0)
 				{	/* read MMU register */
 					/*logerror("read from segment registers (%X:%X) ", the_seg, segment);*/
-					if ((offset & 0x000008) != 0)
+					if ((offset & 0x000004) != 0)
 					{	/* sorg register */
 						answer = real_mmu_regs[the_seg][segment].sorg;
 						/*logerror("sorg, data = %X\n", answer);*/
@@ -1251,7 +1602,7 @@ public class lisa
 				}
 				else
 				{	/* system ROMs */
-					answer = READ_WORD(lisa_rom_ptr + (offset & 0x003fff));
+					answer = ((UINT16*)lisa_rom_ptr)[offset & 0x001fff];
 	
 					/*logerror("dst address in ROM (setup mode)\n");*/
 				}
@@ -1262,7 +1613,7 @@ public class lisa
 	
 		{
 			/* offset in segment */
-			int seg_offset = offset & 0x01ffff;
+			int seg_offset = (offset & 0x00ffff) << 1;
 	
 			/* add revelant origin . address */
 			offs_t address = (mmu_regs[the_seg][segment].sorg + seg_offset) & 0x1fffff;
@@ -1308,7 +1659,7 @@ public class lisa
 				break;
 	
 			case IO:
-				answer = lisa_IO_r(address & 0x00ffff);
+				answer = lisa_IO_r((address & 0x00ffff) >> 1, mem_mask);
 				break;
 	
 			case invalid:		/* unmapped segment */
@@ -1342,19 +1693,59 @@ public class lisa
 	#else
 					/* kludge */
 					/* this code assumes the program always tries to read consecutive bytes */
+	#if 0
 					int time_in_frame = cpu_getcurrentcycles();
 					static int videoROM_address = 0;
 	
 					videoROM_address = (videoROM_address + 1) & 0x7f;
-					/* the BOOT test ROM only reads 56 bits, so there must be some wrap-around for
+					/* the BOOT ROM only reads 56 bits, so there must be some wrap-around for
 					videoROM_address <= 56 */
-					if (videoROM_address == 56)
+					/* pixel clock 20MHz, memory access rate 1.25MHz, horizontal clock 22.7kHz
+					according to Apple, which must stand for 1.25MHz/55 = 22727kHz, vertical
+					clock approximately 60Hz, which means there are about 380 lines, including VBlank */
+					if (videoROM_address == 55)
 						videoROM_address = 0;
 	
 					if ((time_in_frame >= 70000) && (time_in_frame <= 74000))	/* these values are approximative */
 					{	/* if VSyncing, read ROM 2nd half ? */
 						videoROM_address |= 0x80;
 					}
+	#else
+					int time_in_frame = cpu_getscanline();
+					static int videoROM_address = 0;
+	
+					videoROM_address = (videoROM_address + 1) & 0x7f;
+					/* the BOOT ROM only reads 56 bits, so there must be some wrap-around for
+					videoROM_address <= 56 */
+					/* pixel clock 20MHz, memory access rate 1.25MHz, horizontal clock 22.7kHz
+					according to Apple, which must stand for 1.25MHz/55 = 22727kHz, vertical
+					clock approximately 60Hz, which means there are about 380 lines, including VBlank */
+					/* The values are different on the Mac XL, and I don't know the correct values
+					for sure. */
+					if (videoROM_address == ((lisa_features.has_mac_xl_video) ? 48/* ??? */ : 55))
+						videoROM_address = 0;
+	
+					/* Something appears to be wrong with the timings, since we expect to read the
+					2nd half when v-syncing, i.e. for lines beyond the 431th or 364th one (provided
+					there are no additionnal margins).
+					This is caused by the fact that 68k timings are wrong (memory accesses are
+					interlaced with the video hardware, which is not emulated). */
+					if (lisa_features.has_mac_xl_video)
+					{
+						if ((time_in_frame >= 374) && (time_in_frame <= 392))	/* these values have not been tested */
+						{	/* if VSyncing, read ROM 2nd half ? */
+							videoROM_address |= 0x80;
+						}
+					}
+					else
+					{
+						if ((time_in_frame >= 319) && (time_in_frame <= 338))	/* these values are approximative */
+						{	/* if VSyncing, read ROM 2nd half ? */
+							videoROM_address |= 0x80;
+						}
+					}
+	#endif
+	
 	#endif
 	
 					answer = videoROM_ptr[videoROM_address] << 8;
@@ -1370,27 +1761,27 @@ public class lisa
 		return answer;
 	}
 	
-	WRITE_HANDLER ( lisa_w )
+	WRITE16_HANDLER ( lisa_w )
 	{
 		/* segment register set */
 		int the_seg = seg;
 	
 		/* upper 7 bits . segment # */
-		int segment = (offset >> 17) & 0x7f;
+		int segment = (offset >> 16) & 0x7f;
 	
 	
 		if (setup != 0)
 		{
-			if ((offset & 0x004000) != 0)
+			if ((offset & 0x002000) != 0)
 			{
 				the_seg = 0;	/* correct ??? */
 			}
 			else
 			{
-				if ((offset & 0x008000) != 0)
+				if ((offset & 0x004000) != 0)
 				{	/* write to MMU register */
 					/*logerror("write to segment registers (%X:%X) ", the_seg, segment);*/
-					if ((offset & 0x000008) != 0)
+					if ((offset & 0x000004) != 0)
 					{	/* sorg register */
 						/*logerror("sorg, data = %X\n", data);*/
 						real_mmu_regs[the_seg][segment].sorg = data;
@@ -1449,7 +1840,7 @@ public class lisa
 	
 		{
 			/* offset in segment */
-			int seg_offset = offset & 0x01ffff;
+			int seg_offset = (offset & 0x00ffff) << 1;
 	
 			/* add revelant origin . address */
 			offs_t address = (mmu_regs[the_seg][segment].sorg + seg_offset) & 0x1fffff;
@@ -1463,15 +1854,17 @@ public class lisa
 					/* out of segment limits : bus error */
 	
 				}
-				COMBINE_WORD_MEM(lisa_ram_ptr + address, data);
+				COMBINE_DATA((UINT16 *) (lisa_ram_ptr + address));
 				if (diag2 != 0)
 				{
-					if (! (data & 0x00ff0000))
+					if ((ACCESSING_LSB)
+						&& ! (bad_parity_table[address >> 3] & (0x1 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] |= 0x1 << (address & 0x7);
 						bad_parity_count++;
 					}
-					if (! (data & 0xff000000))
+					if ((ACCESSING_MSB)
+						&& ! (bad_parity_table[address >> 3] & (0x2 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] |= 0x2 << (address & 0x7);
 						bad_parity_count++;
@@ -1479,13 +1872,13 @@ public class lisa
 				}
 				else if (bad_parity_table[address >> 3] & (0x3 << (address & 0x7)))
 				{
-					if ((! (data & 0x00ff0000))
+					if ((ACCESSING_LSB)
 						&& (bad_parity_table[address >> 3] & (0x1 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] &= ~ (0x1 << (address & 0x7));
 						bad_parity_count--;
 					}
-					if ((! (data & 0xff000000))
+					if ((ACCESSING_MSB)
 						&& (bad_parity_table[address >> 3] & (0x2 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] &= ~ (0x2 << (address & 0x7));
@@ -1500,15 +1893,17 @@ public class lisa
 					/* out of segment limits : bus error */
 	
 				}
-				COMBINE_WORD_MEM(lisa_ram_ptr + address, data);
+				COMBINE_DATA((UINT16 *) (lisa_ram_ptr + address));
 				if (diag2 != 0)
 				{
-					if (! (data & 0x00ff0000))
+					if ((ACCESSING_LSB)
+						&& ! (bad_parity_table[address >> 3] & (0x1 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] |= 0x1 << (address & 0x7);
 						bad_parity_count++;
 					}
-					if (! (data & 0xff000000))
+					if ((ACCESSING_MSB)
+						&& ! (bad_parity_table[address >> 3] & (0x2 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] |= 0x2 << (address & 0x7);
 						bad_parity_count++;
@@ -1516,13 +1911,13 @@ public class lisa
 				}
 				else if (bad_parity_table[address >> 3] & (0x3 << (address & 0x7)))
 				{
-					if ((! (data & 0x00ff0000))
+					if ((ACCESSING_LSB)
 						&& (bad_parity_table[address >> 3] & (0x1 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] &= ~ (0x1 << (address & 0x7));
 						bad_parity_count--;
 					}
-					if ((! (data & 0xff000000))
+					if ((ACCESSING_MSB)
 						&& (bad_parity_table[address >> 3] & (0x2 << (address & 0x7))))
 					{
 						bad_parity_table[address >> 3] &= ~ (0x2 << (address & 0x7));
@@ -1532,7 +1927,7 @@ public class lisa
 				break;
 	
 			case IO:
-				lisa_IO_w(address, data);
+				lisa_IO_w((address & 0x00ffff) >> 1, data, mem_mask);
 				break;
 	
 			case RAM_stack_r:	/* read-only */
@@ -1571,11 +1966,66 @@ public class lisa
 	*                                                                                      *
 	\**************************************************************************************/
 	
-	public static ReadHandlerPtr lisa_IO_r  = new ReadHandlerPtr() { public int handler(int offset)
+	INLINE void cpu_board_control_access(offs_t offset)
+	{
+		switch ((offset & 0x03ff) << 1)
+		{
+		case 0x0002:	/* Set DIAG1 Latch */
+		case 0x0000:	/* Reset DIAG1 Latch */
+			break;
+		case 0x0006:	/* Set Diag2 Latch */
+			diag2 = TRUE;
+			break;
+		case 0x0004:	/* ReSet Diag2 Latch */
+			diag2 = FALSE;
+			break;
+		case 0x000A:	/* SEG1 Context Selection bit SET */
+			/*logerror("seg bit 0 set\n");*/
+			seg |= 1;
+			break;
+		case 0x0008:	/* SEG1 Context Selection bit RESET */
+			/*logerror("seg bit 0 clear\n");*/
+			seg &= ~1;
+			break;
+		case 0x000E:	/* SEG2 Context Selection bit SET */
+			/*logerror("seg bit 1 set\n");*/
+			seg |= 2;
+			break;
+		case 0x000C:	/* SEG2 Context Selection bit RESET */
+			/*logerror("seg bit 1 clear\n");*/
+			seg &= ~2;
+			break;
+		case 0x0010:	/* SETUP register SET */
+			setup = TRUE;
+			break;
+		case 0x0012:	/* SETUP register RESET */
+			setup = FALSE;
+			break;
+		case 0x001A:	/* Enable Vertical Retrace Interrupt */
+			VTMSK = TRUE;
+			break;
+		case 0x0018:	/* Disable Vertical Retrace Interrupt */
+			VTMSK = FALSE;
+			set_VTIR(FALSE);
+			break;
+		case 0x0016:	/* Enable Soft Error Detect. */
+		case 0x0014:	/* Disable Soft Error Detect. */
+			break;
+		case 0x001E:	/* Enable Hard Error Detect */
+			test_parity = TRUE;
+			break;
+		case 0x001C:	/* Disable Hard Error Detect */
+			test_parity = FALSE;
+			set_parity_error_pending(FALSE);
+			break;
+		}
+	}
+	
+	static READ16_HANDLER ( lisa_IO_r )
 	{
 		int answer=0;
 	
-		switch ((offset & 0xe000) >> 13)
+		switch ((offset & 0x7000) >> 12)
 		{
 		case 0x0:
 			/* Slot 0 Low */
@@ -1602,17 +2052,18 @@ public class lisa
 			break;
 	
 		case 0x6:
-			if (! (offset & 0x1000))
+			if (! (offset & 0x800))
 			{
-				if (! (offset & 0x0800))
+				if (! (offset & 0x400))
 				{
-					answer = fdc_ram[(offset >> 1) & 0x03ff] & 0xff;	/* right ??? */
+					/*if (ACCESSING_LSB != 0)*/	/* Geez, who cares ? */
+						answer = fdc_ram[offset & 0x03ff] & 0xff;	/* right ??? */
 				}
 			}
 			else
 			{
 				/* I/O Board Devices */
-				switch ((offset & 0x0c00) >> 10)
+				switch ((offset & 0x0600) >> 9)
 				{
 				case 0:	/* serial ports control */
 					/*SCCBCTL	        .EQU    $FCD241	        ;SCC channel B control
@@ -1622,12 +2073,14 @@ public class lisa
 	
 				case 2:	/* parallel port */
 					/* 1 VIA located at 0xD901 */
-					return via_read(1, (offset >> 3) & 0xf);
+					if (ACCESSING_LSB != 0)
+						return via_read(1, (offset >> 2) & 0xf);
 					break;
 	
 				case 3:	/* keyboard/mouse cops via */
 					/* 1 VIA located at 0xDD81 */
-					return via_read(0, (offset >> 1) & 0xf);
+					if (ACCESSING_LSB != 0)
+						return via_read(0, offset & 0xf);
 					break;
 				}
 			}
@@ -1635,60 +2088,10 @@ public class lisa
 	
 		case 0x7:
 			/* CPU Board Devices */
-			switch ((offset & 0x1800) >> 11)
+			switch ((offset & 0x0C00) >> 10)
 			{
 			case 0x0:	/* cpu board control */
-				switch (offset & 0x07ff)
-				{
-				case 0x0002:	/* Set DIAG1 Latch */
-				case 0x0000:	/* Reset DIAG1 Latch */
-					break;
-				case 0x0006:	/* Set Diag2 Latch */
-					diag2 = TRUE;
-					break;
-				case 0x0004:	/* ReSet Diag2 Latch */
-					diag2 = FALSE;
-					break;
-				case 0x000A:	/* SEG1 Context Selection bit SET */
-					/*logerror("seg bit 0 set\n");*/
-					seg |= 1;
-					break;
-				case 0x0008:	/* SEG1 Context Selection bit RESET */
-					/*logerror("seg bit 0 clear\n");*/
-					seg &= ~1;
-					break;
-				case 0x000E:	/* SEG2 Context Selection bit SET */
-					/*logerror("seg bit 1 set\n");*/
-					seg |= 2;
-					break;
-				case 0x000C:	/* SEG2 Context Selection bit RESET */
-					/*logerror("seg bit 1 clear\n");*/
-					seg &= ~2;
-					break;
-				case 0x0010:	/* SETUP register SET */
-					setup = TRUE;
-					break;
-				case 0x0012:	/* SETUP register RESET */
-					setup = FALSE;
-					break;
-				case 0x001A:	/* Enable Vertical Retrace Interrupt */
-					VTMSK = TRUE;
-					break;
-				case 0x0018:	/* Disable Vertical Retrace Interrupt */
-					VTMSK = FALSE;
-					set_VTIR(FALSE);
-					break;
-				case 0x0016:	/* Enable Soft Error Detect. */
-				case 0x0014:	/* Disable Soft Error Detect. */
-					break;
-				case 0x001E:	/* Enable Hard Error Detect */
-					test_parity = TRUE;
-					break;
-				case 0x001C:	/* Disable Hard Error Detect */
-					test_parity = FALSE;
-					set_parity_error_pending(FALSE);
-					break;
-				}
+				cpu_board_control_access(offset & 0x03ff);
 				break;
 	
 			case 0x1:	/* Video Address Latch */
@@ -1712,11 +2115,11 @@ public class lisa
 		}
 	
 		return answer;
-	} };
+	}
 	
-	public static WriteHandlerPtr lisa_IO_w = new WriteHandlerPtr() {public void handler(int offset, int data)
+	static WRITE16_HANDLER ( lisa_IO_w )
 	{
-		switch ((offset & 0xe000) >> 13)
+		switch ((offset & 0x7000) >> 12)
 		{
 		case 0x0:
 			/* Slot 0 Low */
@@ -1743,31 +2146,31 @@ public class lisa
 			break;
 	
 		case 0x6:
-			if (! (offset & 0x1000))
+			if (! (offset & 0x0800))
 			{
 				/* Floppy Disk Controller shared RAM */
-				if (! (offset & 0x0800))
+				if (! (offset & 0x0400))
 				{
-					if (! (data & 0x00ff0000))
-						fdc_ram[(offset >> 1) & 0x03ff] = data & 0xff;
+					if (ACCESSING_LSB != 0)
+						fdc_ram[offset & 0x03ff] = data & 0xff;
 				}
 			}
 			else
 			{
 				/* I/O Board Devices */
-				switch ((offset & 0x0c00) >> 10)
+				switch ((offset & 0x0600) >> 9)
 				{
 				case 0:	/* serial ports control */
 					break;
 	
 				case 2:	/* paralel port */
-					if (! (data & 0x00ff0000))
-						via_write(1, (offset >> 3) & 0xf, data & 0xff);
+					if (ACCESSING_LSB != 0)
+						via_write(1, (offset >> 2) & 0xf, data & 0xff);
 					break;
 	
 				case 3:	/* keyboard/mouse cops via */
-					if (! (data & 0x00ff0000))
-						via_write(0, (offset >> 1) & 0xf, data & 0xff);
+					if (ACCESSING_LSB != 0)
+						via_write(0, offset & 0xf, data & 0xff);
 					break;
 				}
 			}
@@ -1775,60 +2178,15 @@ public class lisa
 	
 		case 0x7:
 			/* CPU Board Devices */
-			switch ((offset & 0x1800) >> 11)
+			switch ((offset & 0x0C00) >> 10)
 			{
 			case 0x0:	/* cpu board control */
-				switch (offset & 0x07ff)
-				{
-				case 0x0002:	/* Set DIAG1 Latch */
-				case 0x0000:	/* Reset DIAG1 Latch */
-					break;
-				case 0x0006:	/* Set Diag2 Latch */
-					diag2 = TRUE;
-					break;
-				case 0x0004:	/* ReSet Diag2 Latch */
-					diag2 = FALSE;
-					break;
-				case 0x000A:	/* SEG1 Context Selection bit SET */
-					seg |= 1;
-					break;
-				case 0x0008:	/* SEG1 Context Selection bit RESET */
-					seg &= ~1;
-					break;
-				case 0x000E:	/* SEG2 Context Selection bit SET */
-					seg |= 2;
-					break;
-				case 0x000C:	/* SEG2 Context Selection bit RESET */
-					seg &= ~2;
-					break;
-				case 0x0010:	/* SETUP register SET */
-					setup = TRUE;
-					break;
-				case 0x0012:	/* SETUP register RESET */
-					setup = FALSE;
-					break;
-				case 0x001A:	/* Enable Vertical Retrace Interrupt */
-					VTMSK = TRUE;
-					break;
-				case 0x0018:	/* Disable Vertical Retrace Interrupt */
-					VTMSK = FALSE;
-					break;
-				case 0x0016:	/* Enable Soft Error Detect. */
-				case 0x0014:	/* Disable Soft Error Detect. */
-					break;
-				case 0x001E:	/* Enable Hard Error Detect */
-					test_parity = TRUE;
-					break;
-				case 0x001C:	/* Disable Hard Error Detect */
-					test_parity = FALSE;
-					set_parity_error_pending(FALSE);
-					break;
-				}
+				cpu_board_control_access(offset & 0x03ff);
 				break;
 	
 			case 0x1:	/* Video Address Latch */
 				/*logerror("video address latch write offs=%X, data=%X\n", offset, data);*/
-				COMBINE_WORD_MEM(& video_address_latch, data);
+				COMBINE_DATA(& video_address_latch);
 				videoram_ptr = lisa_ram_ptr + ((video_address_latch << 7) & 0x1f8000);
 				/*logerror("video address latch %X . base address %X\n", video_address_latch,
 								(video_address_latch << 7) & 0x1f8000);*/
@@ -1836,7 +2194,7 @@ public class lisa
 			}
 			break;
 		}
-	} };
+	}
 	
 	
 }

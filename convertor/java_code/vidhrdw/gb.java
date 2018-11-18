@@ -21,7 +21,7 @@ public class gb
 	
 	INLINE void gb_update_sprites (void)
 	{
-		struct osd_bitmap *bitmap = Machine.scrbitmap;
+		struct mame_bitmap *bitmap = Machine.scrbitmap;
 		UINT8 height, tilemask, line, *oam;
 		int i, yindex;
 	
@@ -120,7 +120,7 @@ public class gb
 	
 	void gb_refresh_scanline (void)
 	{
-		struct osd_bitmap *bitmap = Machine.scrbitmap;
+		struct mame_bitmap *bitmap = Machine.scrbitmap;
 		UINT8 *zbuf = bg_zbuf;
 		int l = 0, yindex = CURLINE;
 	
@@ -240,7 +240,7 @@ public class gb
 		generic_vh_stop();
 	} };
 	
-	void gb_vh_screen_refresh(struct osd_bitmap *bitmap, int full_refresh)
+	void gb_vh_screen_refresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 	}

@@ -72,6 +72,7 @@ package systems;
 public class vtech2
 {
 	
+	
 	#define VERBOSE 0
 	
 	#if VERBOSE
@@ -80,65 +81,30 @@ public class vtech2
 	#define LOG(x)	/* x */
 	#endif
 	
-	/* from mame.c */
-	extern int bitmap_dirty;
+	static MEMORY_READ_START( readmem )
+		{ 0x00000, 0x03fff, MRA_BANK1 },
+		{ 0x04000, 0x07fff, MRA_BANK2 },
+		{ 0x08000, 0x0bfff, MRA_BANK3 },
+		{ 0x0c000, 0x0ffff, MRA_BANK4 },
+	MEMORY_END
 	
-	/* from machine/laser350.c */
-	extern int laser_latch;
+	static MEMORY_WRITE_START( writemem )
+		{ 0x00000, 0x03fff, MWA_BANK1 },
+		{ 0x04000, 0x07fff, MWA_BANK2 },
+		{ 0x08000, 0x0bfff, MWA_BANK3 },
+		{ 0x0c000, 0x0ffff, MWA_BANK4 },
+	MEMORY_END
 	
-	extern extern extern extern extern 
-	extern int laser_rom_id(int id);
-	extern int laser_rom_init(int id);
-	extern void laser_rom_exit(int id);
+	static PORT_READ_START( readport )
+		{ 0x10, 0x1f, laser_fdc_r },
+	PORT_END
 	
-	extern int laser_floppy_id(int id);
-	extern int laser_floppy_init(int id);
-	extern void laser_floppy_exit(int id);
-	
-	extern int laser_cassette_id(int id);
-	extern int laser_cassette_init(int id);
-	extern void laser_cassette_exit(int id);
-	
-	extern READ_HANDLER ( laser_fdc_r );
-	extern WRITE_HANDLER ( laser_fdc_w );
-	extern WRITE_HANDLER ( laser_bank_select_w );
-	
-	/* from vidhrdw/laser350.c */
-	extern extern extern extern WRITE_HANDLER ( laser_bg_mode_w );
-	extern WRITE_HANDLER ( laser_two_color_w );
-	
-	static MemoryReadAddress readmem[] =
-	{
-		new MemoryReadAddress( 0x00000, 0x03fff, MRA_BANK1 ),
-		new MemoryReadAddress( 0x04000, 0x07fff, MRA_BANK2 ),
-		new MemoryReadAddress( 0x08000, 0x0bfff, MRA_BANK3 ),
-		new MemoryReadAddress( 0x0c000, 0x0ffff, MRA_BANK4 ),
-		new MemoryReadAddress( -1 )  /* end of table */
-	};
-	
-	static MemoryWriteAddress writemem[] =
-	{
-		new MemoryWriteAddress( 0x00000, 0x03fff, MWA_BANK1 ),
-		new MemoryWriteAddress( 0x04000, 0x07fff, MWA_BANK2 ),
-		new MemoryWriteAddress( 0x08000, 0x0bfff, MWA_BANK3 ),
-		new MemoryWriteAddress( 0x0c000, 0x0ffff, MWA_BANK4 ),
-	    new MemoryWriteAddress( -1 )  /* end of table */
-	};
-	
-	static IOReadPort readport[] =
-	{
-		new IOReadPort( 0x10, 0x1f, laser_fdc_r ),
-	    new IOReadPort( -1 )
-	};
-	
-	static IOWritePort writeport[] =
-	{
-		new IOWritePort( 0x10, 0x1f, laser_fdc_w ),
-		new IOWritePort( 0x40, 0x43, laser_bank_select_w ),
-		new IOWritePort( 0x44, 0x44, laser_bg_mode_w ),
-		new IOWritePort( 0x45, 0x45, laser_two_color_w ),
-	    new IOWritePort( -1 )
-	};
+	static PORT_WRITE_START( writeport )
+		{ 0x10, 0x1f, laser_fdc_w },
+		{ 0x40, 0x43, laser_bank_select_w },
+		{ 0x44, 0x44, laser_bg_mode_w },
+		{ 0x45, 0x45, laser_two_color_w },
+	PORT_END
 	
 	static InputPortPtr input_ports_laser350 = new InputPortPtr(){ public void handler() { 
 		PORT_START();  /* IN0 KEY ROW 0 */
@@ -669,30 +635,30 @@ public class vtech2
 	);
 	
 	static RomLoadPtr rom_laser350 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x40000,REGION_CPU1);
+		ROM_REGION(0x40000,REGION_CPU1,0);
 		ROM_LOAD("laserv3.rom", 0x00000, 0x08000, 0x9bed01f7);
-		ROM_REGION(0x00800,REGION_GFX1);
+		ROM_REGION(0x00800,REGION_GFX1,0);
 		ROM_LOAD("laser.fnt",   0x00000, 0x00800, 0xed6bfb2a);
-		ROM_REGION(0x00100,REGION_GFX2);
+		ROM_REGION(0x00100,REGION_GFX2,0);
 	    /* initialized in init_laser */
 	ROM_END(); }}; 
 	
 	
 	static RomLoadPtr rom_laser500 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x40000,REGION_CPU1);
+		ROM_REGION(0x40000,REGION_CPU1,0);
 		ROM_LOAD("laserv3.rom", 0x00000, 0x08000, 0x9bed01f7);
-		ROM_REGION(0x00800,REGION_GFX1);
+		ROM_REGION(0x00800,REGION_GFX1,0);
 		ROM_LOAD("laser.fnt",   0x00000, 0x00800, 0xed6bfb2a);
-		ROM_REGION(0x00100,REGION_GFX2);
+		ROM_REGION(0x00100,REGION_GFX2,0);
 		/* initialized in init_laser */
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_laser700 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x40000,REGION_CPU1);
+		ROM_REGION(0x40000,REGION_CPU1,0);
 		ROM_LOAD("laserv3.rom", 0x00000, 0x08000, 0x9bed01f7);
-		ROM_REGION(0x00800,REGION_GFX1);
+		ROM_REGION(0x00800,REGION_GFX1,0);
 		ROM_LOAD("laser.fnt",   0x00000, 0x00800, 0xed6bfb2a);
-		ROM_REGION(0x00100,REGION_GFX2);
+		ROM_REGION(0x00100,REGION_GFX2,0);
 		/* initialized in init_laser */
 	ROM_END(); }}; 
 	
@@ -709,7 +675,7 @@ public class vtech2
 			1,					/* count */
 			"rom\0",            /* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-	        laser_rom_id,       /* id */
+	        0,
 			laser_rom_init, 	/* init */
 			laser_rom_exit, 	/* exit */
 	        NULL,               /* info */
@@ -723,13 +689,13 @@ public class vtech2
 	        NULL,               /* input_chunk */
 	        NULL                /* output_chunk */
 	    },
-		IO_CASSETTE_WAVE(1,"wav\0cas\0",laser_cassette_id,laser_cassette_init,laser_cassette_exit),
+		IO_CASSETTE_WAVE(1,"wav\0cas\0",0,laser_cassette_init,laser_cassette_exit),
 		{
 			IO_FLOPPY,			/* type */
 			2,					/* count */
 			"dsk\0",            /* file extensions */
 			IO_RESET_NONE,		/* reset if file changed */
-	        laser_floppy_id,    /* id */
+	        0,
 			laser_floppy_init,	/* init */
 			laser_floppy_exit,	/* exit */
 	        NULL,               /* info */
@@ -755,4 +721,15 @@ public class vtech2
 	COMP( 1984?, laser500, laser350, laser500, laser500, laser,    "Video Technology",  "Laser 500" )
 	COMP( 1984?, laser700, laser350, laser700, laser500, laser,    "Video Technology",  "Laser 700" )
 	
+	#ifdef RUNTIME_LOADER
+	extern void vtech2_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"laser350")==0) drivers[i]=&driver_laser350;
+			if ( strcmp(drivers[i].name,"laser500")==0) drivers[i]=&driver_laser500;
+			if ( strcmp(drivers[i].name,"laser700")==0) drivers[i]=&driver_laser700;
+		}
+	}
+	#endif
 }

@@ -1,7 +1,8 @@
 /***************************************************************************
 	commodore b series computer
 
-    peter.trauner@jk.uni-linz.ac.at
+	PeT mess@utanet.at
+
 	documentation
 	 vice emulator
      www.funet.fi
@@ -157,6 +158,7 @@ when problems start with -log and look into error.log file
  */
 
 #include "driver.h"
+#include "vidhrdw/generic.h"
 #include "cpu/m6502/m6509.h"
 
 #define VERBOSE_DBG 0
@@ -166,14 +168,13 @@ when problems start with -log and look into error.log file
 #include "includes/vic6567.h"
 #include "includes/crtc6845.h"
 #include "includes/sid6581.h"
-#include "includes/c1551.h"
+#include "includes/cbmserb.h"
 #include "includes/vc1541.h"
 #include "includes/vc20tape.h"
 
 #include "includes/cbmb.h"
 
-static struct MemoryReadAddress cbmb_readmem[] =
-{
+static MEMORY_READ_START( cbmb_readmem )
 	{0x00000, 0x00000, m6509_read_00000 },
 	{0x00001, 0x00001, m6509_read_00001 },
 	{0x00002, 0x0ffff, MRA_RAM},
@@ -232,7 +233,7 @@ static struct MemoryReadAddress cbmb_readmem[] =
 	{0xf8000, 0xfbfff, MRA_ROM },
 	/*	{0xfc000, 0xfcfff, MRA_ROM }, */
 	{0xfd000, 0xfd7ff, MRA_ROM },
-	{0xfd800, 0xfd8ff, crtc6845_port_r },
+	{0xfd800, 0xfd8ff, crtc6845_0_port_r },
 	/* disk units */
 	{0xfda00, 0xfdaff, sid6581_0_port_r },
 	/* db00 coprocessor */
@@ -241,11 +242,9 @@ static struct MemoryReadAddress cbmb_readmem[] =
 	{0xfde00, 0xfdeff, tpi6525_0_port_r},
 	{0xfdf00, 0xfdfff, tpi6525_1_port_r},
 	{0xfe000, 0xfffff, MRA_ROM },
-	MEMORY_TABLE_END
-};
+MEMORY_END
 
-static struct MemoryWriteAddress cbmb_writemem[] =
-{
+static MEMORY_WRITE_START( cbmb_writemem )
 	{0x00000, 0x00000, m6509_write_00000, &cbmb_memory },
 	{0x00001, 0x00001, m6509_write_00001 },
 	{0x00002, 0x0ffff, MWA_NOP },
@@ -299,8 +298,8 @@ static struct MemoryWriteAddress cbmb_writemem[] =
 	{0xf4000, 0xf5fff, MWA_ROM },
 	{0xf6000, 0xf7fff, MWA_ROM },
 	{0xf8000, 0xfbfff, MWA_ROM, &cbmb_basic },
-	{0xfd000, 0xfd7ff, crtc6845_videoram_w, &cbmb_videoram }, /* VIDEORAM */
-	{0xfd800, 0xfd8ff, crtc6845_port_w },
+	{0xfd000, 0xfd7ff, videoram_w, &videoram,&videoram_size }, /* VIDEORAM */
+	{0xfd800, 0xfd8ff, crtc6845_0_port_w },
 	/* disk units */
 	{0xfda00, 0xfdaff, sid6581_0_port_w},
 	/* db00 coprocessor */
@@ -309,12 +308,9 @@ static struct MemoryWriteAddress cbmb_writemem[] =
 	{0xfde00, 0xfdeff, tpi6525_0_port_w},
 	{0xfdf00, 0xfdfff, tpi6525_1_port_w},
 	{0xfe000, 0xfffff, MWA_ROM, &cbmb_kernal },
-	{0x100000, 0x101fff, MWA_ROM, &cbmb_chargen },
-	MEMORY_TABLE_END
-};
+MEMORY_END
 
-static struct MemoryReadAddress cbm500_readmem[] =
-{
+static MEMORY_READ_START( cbm500_readmem )
 	{0x00000, 0x00000, m6509_read_00000 },
 	{0x00001, 0x00001, m6509_read_00001 },
 	{0x00002, 0x0ffff, MRA_RAM},
@@ -383,11 +379,9 @@ static struct MemoryReadAddress cbm500_readmem[] =
 	{0xfde00, 0xfdeff, tpi6525_0_port_r},
 	{0xfdf00, 0xfdfff, tpi6525_1_port_r},
 	{0xfe000, 0xfffff, MRA_ROM },
-	MEMORY_TABLE_END
-};
+MEMORY_END
 
-static struct MemoryWriteAddress cbm500_writemem[] =
-{
+static MEMORY_WRITE_START( cbm500_writemem )
 	{0x00000, 0x00000, m6509_write_00000, &cbmb_memory },
 	{0x00001, 0x00001, m6509_write_00001 },
 	{0x00002, 0x0ffff, MWA_RAM },
@@ -452,9 +446,7 @@ static struct MemoryWriteAddress cbm500_writemem[] =
 	{0xfde00, 0xfdeff, tpi6525_0_port_w},
 	{0xfdf00, 0xfdfff, tpi6525_1_port_w},
 	{0xfe000, 0xfffff, MWA_ROM, &cbmb_kernal },
-	{0x100000, 0x100fff, MWA_ROM, &cbmb_chargen },
-	MEMORY_TABLE_END
-};
+MEMORY_END
 
 #define DIPS_HELPER(bit, name, keycode) \
    PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, IP_JOY_NONE)
@@ -697,22 +689,8 @@ static unsigned short cbmb_colortable[] = {
 
 static struct GfxLayout cbm600_charlayout =
 {
-	8,8,
-	512,                                    /* 256 characters */
-	1,                      /* 1 bits per pixel */
-	{ 0 },                  /* no bitplanes; 1 bit per pixel */
-	/* x offsets */
-	{ 0,1,2,3,4,5,6,7 },
-	/* y offsets */
-	{ 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
-	},
-	8*16
-};
-
-static struct GfxLayout cbm700_charlayout =
-{
-	8,14,
-	512,                                    /* 256 characters */
+	8,16,
+	256,                                    /* 256 characters */
 	1,                      /* 1 bits per pixel */
 	{ 0 },                  /* no bitplanes; 1 bit per pixel */
 	/* x offsets */
@@ -724,13 +702,30 @@ static struct GfxLayout cbm700_charlayout =
 	8*16
 };
 
+static struct GfxLayout cbm700_charlayout =
+{
+	9,16,
+	256,                                    /* 256 characters */
+	1,                      /* 1 bits per pixel */
+	{ 0 },                  /* no bitplanes; 1 bit per pixel */
+	/* x offsets */
+	{ 0,1,2,3,4,5,6,7,7 }, // 8.column will be cleared in cbm700_vh_start
+	/* y offsets */
+	{ 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+	  8*8, 9*8, 10*8, 11*8, 12*8, 13*8, 14*8, 15*8
+	},
+	8*16
+};
+
 static struct GfxDecodeInfo cbm600_gfxdecodeinfo[] = {
-	{ 1, 0x0000, &cbm600_charlayout, 0, 2 },
+	{ 1, 0x0000, &cbm600_charlayout, 0, 1 },
+	{ 1, 0x1000, &cbm600_charlayout, 0, 1 },
     { -1 } /* end of array */
 };
 
 static struct GfxDecodeInfo cbm700_gfxdecodeinfo[] = {
-	{ 1, 0x0000, &cbm700_charlayout, 0, 2 },
+	{ 1, 0x0000, &cbm700_charlayout, 0, 1 },
+	{ 1, 0x1000, &cbm700_charlayout, 0, 1 },
     { -1 } /* end of array */
 };
 
@@ -746,54 +741,61 @@ static void cbm700_init_palette (unsigned char *sys_palette, unsigned short *sys
 }
 
 ROM_START (cbm610)
-	ROM_REGION (0x100000, REGION_CPU1)
+	ROM_REGION (0x100000, REGION_CPU1, 0)
 	ROM_LOAD ("901243.04a", 0xf8000, 0x2000, 0xb0dcb56d)
 	ROM_LOAD ("901242.04a", 0xfa000, 0x2000, 0xde04ea4f)
 	ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e)
-	ROM_REGION (0x2000, REGION_GFX1)
+	ROM_REGION (0x2000, REGION_GFX1, 0)
     ROM_LOAD ("901237.01", 0x0000, 0x1000, 0x1acf5098)
 ROM_END
 
-#if 0
 ROM_START (cbm620)
-	ROM_REGION (0x100000, REGION_CPU1)
+	ROM_REGION (0x100000, REGION_CPU1, 0)
     ROM_LOAD ("901241.03", 0xf8000, 0x2000, 0x5c1f3347)
     ROM_LOAD ("901240.03", 0xfa000, 0x2000, 0x72aa44e1)
     ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e)
-	ROM_REGION (0x2000, REGION_GFX1)
+	ROM_REGION (0x2000, REGION_GFX1, 0)
     ROM_LOAD ("901237.01", 0x0000, 0x1000, 0x1acf5098)
 ROM_END
-#else
-/* hungarian version */
-ROM_START (cbm620)
-	ROM_REGION (0x100000, REGION_CPU1)
+
+ROM_START (cbm620hu)
+	ROM_REGION (0x100000, REGION_CPU1, 0)
 	ROM_LOAD ("610u60.bin", 0xf8000, 0x4000, 0x8eed0d7e)
 	ROM_LOAD ("kernhun.bin", 0xfe000, 0x2000, 0x0ea8ca4d)
-	ROM_REGION (0x2000, REGION_GFX1)
+	ROM_REGION (0x2000, REGION_GFX1, 0)
 	ROM_LOAD ("charhun.bin", 0x0000, 0x2000, 0x1fb5e596)
 ROM_END
-#endif
 
 ROM_START (cbm710)
-	ROM_REGION (0x100000, REGION_CPU1)
+	ROM_REGION (0x100000, REGION_CPU1, 0)
 	ROM_LOAD ("901243.04a", 0xf8000, 0x2000, 0xb0dcb56d)
 	ROM_LOAD ("901242.04a", 0xfa000, 0x2000, 0xde04ea4f)
 	ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e)
-	ROM_REGION (0x2000, REGION_GFX1)
+	ROM_REGION (0x2000, REGION_GFX1, 0)
     ROM_LOAD ("901232.01", 0x0000, 0x1000, 0x3a350bc3)
 ROM_END
 
 ROM_START (cbm720)
-	ROM_REGION (0x100000, REGION_CPU1)
+	ROM_REGION (0x100000, REGION_CPU1, 0)
     ROM_LOAD ("901241.03", 0xf8000, 0x2000, 0x5c1f3347)
     ROM_LOAD ("901240.03", 0xfa000, 0x2000, 0x72aa44e1)
     ROM_LOAD ("901244.04a", 0xfe000, 0x2000, 0x09a5667e)
-	ROM_REGION (0x2000, REGION_GFX1)
+	ROM_REGION (0x2000, REGION_GFX1, 0)
     ROM_LOAD ("901232.01", 0x0000, 0x1000, 0x3a350bc3)
 ROM_END
 
+ROM_START (cbm720se)
+	ROM_REGION (0x100000, REGION_CPU1, 0)
+    ROM_LOAD ("901241.03", 0xf8000, 0x2000, 0x5c1f3347)
+    ROM_LOAD ("901240.03", 0xfa000, 0x2000, 0x72aa44e1)
+    ROM_LOAD ("901244.03", 0xfe000, 0x2000, 0x87bc142b)
+	ROM_REGION (0x2000, REGION_GFX1, 0)
+    ROM_LOAD ("901233.03", 0x0000, 0x1000, 0x09518b19)
+ROM_END
+
+
 ROM_START (cbm500)
-	ROM_REGION (0x101000, REGION_CPU1)
+	ROM_REGION (0x101000, REGION_CPU1, 0)
 	ROM_LOAD ("901236.02", 0xf8000, 0x2000, 0xc62ab16f)
 	ROM_LOAD ("901235.02", 0xfa000, 0x2000, 0x20b7df33)
 	ROM_LOAD ("901234.02", 0xfe000, 0x2000, 0xf46bbd2b)
@@ -867,6 +869,25 @@ ROM_END
 
 #endif
 
+static SID6581_interface sid_sound_interface =
+{
+	{
+		sid6581_custom_start,
+		sid6581_custom_stop,
+		sid6581_custom_update
+	},
+	1,
+	{
+		{
+			MIXER(50, MIXER_PAN_CENTER),
+			MOS6581,
+			1000000,
+			NULL
+		}
+	}
+};
+
+
 static struct MachineDriver machine_driver_cbm600 =
 {
   /* basic machine hardware */
@@ -877,7 +898,6 @@ static struct MachineDriver machine_driver_cbm600 =
 			cbmb_readmem, cbmb_writemem,
 			0, 0,
 			0, 0,
-			crtc6845_raster_irq, 15625,
 		},
 	},
 	60, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -894,19 +914,19 @@ static struct MachineDriver machine_driver_cbm600 =
 	sizeof (cbmb_colortable) / sizeof(cbmb_colortable[0]),
 	cbm700_init_palette,				   /* convert color prom */
 #ifdef PET_TEST_CODE
-	VIDEO_TYPE_RASTER,
+	VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 #else
-	VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+	VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 #endif
 	0,
-	crtc6845_vh_start,
-	crtc6845_vh_stop,
-	crtc6845_vh_screenrefresh,
+	generic_vh_start,
+	generic_vh_stop,
+	cbmb_vh_screenrefresh,
 
   /* sound hardware */
 	0, 0, 0, 0,
 	{
-		{ SOUND_CUSTOM, &sid6581_sound_interface },
+		{ SOUND_CUSTOM, &sid_sound_interface },
 		{ 0 }
 	}
 };
@@ -921,7 +941,6 @@ static struct MachineDriver machine_driver_cbm600pal =
 			cbmb_readmem, cbmb_writemem,
 			0, 0,
 			0, 0,
-			crtc6845_raster_irq, 15625,
 		},
 	},
 	50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -938,19 +957,19 @@ static struct MachineDriver machine_driver_cbm600pal =
 	sizeof (cbmb_colortable) / sizeof(cbmb_colortable[0]),
 	cbm700_init_palette,				   /* convert color prom */
 #ifdef PET_TEST_CODE
-	VIDEO_TYPE_RASTER,
+	VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 #else
-	VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+	VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 #endif
 	0,
-	crtc6845_vh_start,
-	crtc6845_vh_stop,
-	crtc6845_vh_screenrefresh,
+	generic_vh_start,
+	generic_vh_stop,
+	cbmb_vh_screenrefresh,
 
   /* sound hardware */
 	0, 0, 0, 0,
 	{
-		{ SOUND_CUSTOM, &sid6581_sound_interface },
+		{ SOUND_CUSTOM, &sid_sound_interface },
 		{ 0 }
 	}
 };
@@ -965,7 +984,6 @@ static struct MachineDriver machine_driver_cbm700 =
 			cbmb_readmem, cbmb_writemem,
 			0, 0,
 			0, 0,
-			crtc6845_raster_irq, 353*50,
 		},
 	},
 	50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -981,16 +999,16 @@ static struct MachineDriver machine_driver_cbm700 =
 	sizeof (cbm700_palette) / sizeof (cbm700_palette[0]) / 3,
 	sizeof (cbmb_colortable) / sizeof(cbmb_colortable[0]),
 	cbm700_init_palette,				   /* convert color prom */
-	VIDEO_TYPE_RASTER,
+	VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	0,
-	crtc6845_vh_start,
-	crtc6845_vh_stop,
-	crtc6845_vh_screenrefresh,
+	cbm700_vh_start,
+	generic_vh_stop,
+	cbmb_vh_screenrefresh,
 
   /* sound hardware */
 	0, 0, 0, 0,
 	{
-		{ SOUND_CUSTOM, &sid6581_sound_interface },
+		{ SOUND_CUSTOM, &sid_sound_interface },
 		{ 0 }
 	}
 };
@@ -1030,7 +1048,8 @@ static struct MachineDriver machine_driver_cbm500 =
 	/* sound hardware */
 	0, 0, 0, 0,
 	{
-		{ SOUND_CUSTOM, &sid6581_sound_interface },
+		// ad_converter wired to joystick ports
+		{ SOUND_CUSTOM, &sid_sound_interface },
 		{ 0 }
 	}
 };
@@ -1038,7 +1057,7 @@ static struct MachineDriver machine_driver_cbm500 =
 static const struct IODevice io_cbmb[] =
 {
 	IODEVICE_CBMB_QUICK,
-	IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0", NULL),
+	IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0"),
 	/* monitor OR tape routine in kernal */
 #ifdef PET_TEST_CODE
 	IODEVICE_CBM_DRIVE,
@@ -1049,7 +1068,7 @@ static const struct IODevice io_cbmb[] =
 static const struct IODevice io_cbm500[] =
 {
 	IODEVICE_CBM500_QUICK,
-	IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0", NULL),
+	IODEVICE_CBM_ROM("crt\00010\00020\00040\00060\0"),
 #ifdef PET_TEST_CODE
 	IODEVICE_CBM_DRIVE,
 #endif
@@ -1059,24 +1078,45 @@ static const struct IODevice io_cbm500[] =
 
 #define init_cbm500 cbm500_driver_init
 #define init_cbm600 cbm600_driver_init
+#define init_cbm600hu cbm600hu_driver_init
 #define init_cbm600pal cbm600pal_driver_init
 #define init_cbm700 cbm700_driver_init
 
 #define io_cbm710 io_cbmb
 #define io_cbm720 io_cbmb
+#define io_cbm720se io_cbmb
 #define io_cbm610 io_cbmb
 #define io_cbm620 io_cbmb
+#define io_cbm620hu io_cbmb
 
 #if 0
 #define rom_cbm730 rom_cbmb256hp
 #endif
 
 /*     YEAR		NAME	PARENT	MACHINE		INPUT		INIT		COMPANY								FULLNAME */
-COMPX (1983,	cbm500,	0,		cbm500,		cbm500,		cbm500,		"Commodore Business Machines Co.",	"Commodore B128-40/Pet-II/P500 60Hz",		GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-COMPX (1983,	cbm610, 0,		cbm600, 	cbm600, 	cbm600, 	"Commodore Business Machines Co.",  "Commodore B128-80LP/610 60Hz",             GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-COMPX (1983,	cbm620,	cbm610,	cbm600pal,	cbm600pal,	cbm600pal,	"Commodore Business Machines Co.",	"Commodore B256-80LP/620 Hungarian 50Hz",	GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-COMPX (1983,	cbm710, cbm610, cbm700, 	cbm700, 	cbm700, 	"Commodore Business Machines Co.",  "Commodore B128-80HP/710",                  GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
-COMPX (1983,	cbm720,	cbm610,	cbm700,		cbm700,		cbm700,		"Commodore Business Machines Co.",	"Commodore B256-80HP/720",					GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
+COMPX (1983,	cbm500,	0,		cbm500,		cbm500,		cbm500,		"Commodore Business Machines Co.",	"Commodore B128-40/Pet-II/P500 60Hz",		GAME_NOT_WORKING)
+COMPX (1983,	cbm610, 0,		cbm600, 	cbm600, 	cbm600, 	"Commodore Business Machines Co.",  "Commodore B128-80LP/610 60Hz",             GAME_NOT_WORKING)
+COMPX (1983,	cbm620,	cbm610,	cbm600pal,	cbm600pal,	cbm600pal,	"Commodore Business Machines Co.",	"Commodore B256-80LP/620 50Hz",	GAME_NOT_WORKING)
+COMPX (1983,	cbm620hu,	cbm610,	cbm600pal,	cbm600pal,	cbm600hu,	"Commodore Business Machines Co.",	"Commodore B256-80LP/620 Hungarian 50Hz",	GAME_NOT_WORKING)
+COMPX (1983,	cbm710, cbm610, cbm700, 	cbm700, 	cbm700, 	"Commodore Business Machines Co.",  "Commodore B128-80HP/710",                  GAME_NOT_WORKING)
+COMPX (1983,	cbm720,	cbm610,	cbm700,		cbm700,		cbm700,		"Commodore Business Machines Co.",	"Commodore B256-80HP/720",					GAME_NOT_WORKING)
+COMPX (1983,	cbm720se,	cbm610,	cbm700,	cbm700,		cbm700,		"Commodore Business Machines Co.",	"Commodore B256-80HP/720 Swedish/Finnish",	GAME_NOT_WORKING)
 #if 0
-COMPX (1983,	cbm730, cbm610, cbmbx, 		cbmb, 		cbmb, 		"Commodore Business Machines Co.",	"Commodore BX128-80HP/BX256-80HP/730", GAME_NOT_WORKING|GAME_IMPERFECT_SOUND)
+COMPX (1983,	cbm730, cbm610, cbmbx, 		cbmb, 		cbmb, 		"Commodore Business Machines Co.",	"Commodore BX128-80HP/BX256-80HP/730", GAME_NOT_WORKING)
+#endif
+
+#ifdef RUNTIME_LOADER
+extern void cbmb_runtime_loader_init(void)
+{
+	int i;
+	for (i=0; drivers[i]; i++) {
+		if ( strcmp(drivers[i]->name,"cbm500")==0) drivers[i]=&driver_cbm500;
+		if ( strcmp(drivers[i]->name,"cbm610")==0) drivers[i]=&driver_cbm610;
+		if ( strcmp(drivers[i]->name,"cbm620")==0) drivers[i]=&driver_cbm620;
+		if ( strcmp(drivers[i]->name,"cbm620hu")==0) drivers[i]=&driver_cbm620hu;
+		if ( strcmp(drivers[i]->name,"cbm710")==0) drivers[i]=&driver_cbm710;
+		if ( strcmp(drivers[i]->name,"cbm720")==0) drivers[i]=&driver_cbm720;
+		if ( strcmp(drivers[i]->name,"cbm720se")==0) drivers[i]=&driver_cbm720se;
+	}
+}
 #endif

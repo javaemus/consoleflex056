@@ -36,7 +36,7 @@ public class mc10
 		/* Install DOS ROM ? */
 		if( readinputport(7) & 0x40 )
 		{
-			void *rom = osd_fopen(Machine.gamedrv.name, "mc10ext.rom", OSD_FILETYPE_IMAGE_R, 0);
+			void *rom = osd_fopen(Machine.gamedrv.name, "mc10ext.rom", OSD_FILETYPE_IMAGE, 0);
 			if (rom != 0)
 			{
 				osd_fread(rom, memory_region(REGION_CPU1) + 0xc000, 0x2000);
@@ -53,11 +53,6 @@ public class mc10
 	void mc10_stop_machine(void)
 	{
 	}
-	
-	public static InterruptPtr mc10_interrupt = new InterruptPtr() { public int handler() 
-	{
-		return ignore_interrupt();
-	} };
 	
 	READ_HANDLER ( mc10_bfff_r )
 	{
@@ -139,12 +134,20 @@ public class mc10
 	
 	public static VhStartPtr mc10_vh_start = new VhStartPtr() { public int handler() 
 	{
-		if (m6847_vh_start())
+		extern void dragon_charproc(UINT8 c);
+		struct m6847_init_params p;
+	
+		m6847_vh_normalparams(&p);
+		p.version = M6847_VERSION_ORIGINAL_NTSC;
+		p.artifactdipswitch = 7;
+		p.ram = memory_region(REGION_CPU1);
+		p.ramsize = 0x8000;
+		p.charproc = dragon_charproc;
+	
+		if (m6847_vh_start(&p))
 			return 1;
 	
-		m6847_set_vram(memory_region(REGION_CPU1), 0x7fff);
 		m6847_set_video_offset(0x4000);
-		m6847_set_artifact_dipswitch(7);
 		return 0;
 	} };
 	
@@ -158,31 +161,15 @@ public class mc10
 		 *   BIT 7 SOUND OUTPUT BIT
 		 */
 	
-		int video_mode = 0;
-	
-		/* The following code merely maps the MC-10 video mode registers
-		 * onto the CoCo/Dragon registers
-		 *
-		 * GM2 -. video_mode bit 3
-		 * GM1 -. video_mode bit 2
-		 * GM0 -. video_mode bit 1
-		 * A/G -. video_mode bit 4
-		 * CSS -. video_mode bit 0
-		 */
-	
-		if ((data & 0x04) != 0)
-			video_mode |= 0x08;
-		if ((data & 0x08) != 0)
-			video_mode |= 0x04;
-		if ((data & 0x10) != 0)
-			video_mode |= 0x02;
-		if ((data & 0x20) != 0)
-			video_mode |= 0x10;
-		if ((data & 0x40) != 0)
-			video_mode |= 0x01;
-	
-		m6847_set_mode(video_mode);
+		m6847_gm2_w(0,	data & 0x04);
+		m6847_gm1_w(0,	data & 0x08);
+		m6847_gm0_w(0,	data & 0x10);
+		m6847_ag_w(0,	data & 0x20);
+		m6847_css_w(0,	data & 0x40);
 		DAC_data_w(0, data & 0x80);
+	
+		m6847_set_cannonical_row_height();
+		schedule_full_refresh();
 	}
 	
 	WRITE_HANDLER ( mc10_ram_w )

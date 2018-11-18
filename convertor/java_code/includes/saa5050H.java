@@ -4,7 +4,7 @@
 
 ***********************************************************************/
 
-void	saa5050_vh_screenrefresh (struct osd_bitmap *, int);
+void	saa5050_vh_screenrefresh (struct mame_bitmap *, int);
 
 static GfxLayout saa5050_charlayout = new GfxLayout
 (

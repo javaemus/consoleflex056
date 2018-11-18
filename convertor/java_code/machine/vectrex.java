@@ -7,26 +7,23 @@ package machine;
 public class vectrex
 {
 	
-	#define BLACK 0x00
-	#define RED	  0x04
-	#define GREEN 0x02
-	#define BLUE  0x01
+	
+	#define BLACK 0x00000000
+	#define RED   0x00ff0000
+	#define GREEN 0x0000ff00
+	#define BLUE  0x000000ff
 	#define WHITE RED|GREEN|BLUE
-	#define DARKRED 0x08
+	#define DARKRED 0x00800000
 	
 	#define PORTB 0
 	#define PORTA 1
 	
-	/* from vidhrdw/vectrex.c */
-	extern void vector_add_point_stereo (int x, int y, int color, int intensity);
-	extern void (*vector_add_point_function) (int, int, int, int);
-	extern 
 	/*********************************************************************
 	  Global variables
 	 *********************************************************************/
 	UBytePtr vectrex_ram;		   /* RAM at 0xc800 -- 0xcbff mirrored at 0xcc00 -- 0xcfff */
 	unsigned char vectrex_via_out[2];
-	int vectrex_beam_color = WHITE;	   /* the color of the vectrex beam */
+	UINT32 vectrex_beam_color = WHITE;	   /* the color of the vectrex beam */
 	int vectrex_imager_status = 0;	   /* 0 = off, 1 = right eye, 2 = left eye */
 	int vectrex_refresh_with_T2;	   /* For all known games it's OK to do the screen refresh when T2 expires.
 						* This behaviour can be turned off via dipswitch settings */
@@ -36,7 +33,7 @@ public class vectrex
 	 *********************************************************************/
 	
 	/* Colors for right and left eye */
-	static int imager_colors[6] = {WHITE,WHITE,WHITE,WHITE,WHITE,WHITE};
+	static UINT32 imager_colors[6] = {WHITE,WHITE,WHITE,WHITE,WHITE,WHITE};
 	
 	/* Startpoint (in rad) of the three colors */
 	/* Tanks to Chris Salomon for the values */
@@ -48,22 +45,53 @@ public class vectrex
 	static unsigned char vectrex_imager_pinlevel=0x00;
 	static double imager_wheel_time = 0;
 	
+	
+	static int vectrex_varify_cart (char *data)
+	{
+		/* Verify the file is accepted by the Vectrex bios */
+		if (!memcmp(data,"g GCE", 5))
+			return IMAGE_VERIFY_PASS;
+		else
+			return IMAGE_VERIFY_FAIL;
+	}
+	
 	/*********************************************************************
 	  ROM load and id functions
 	 *********************************************************************/
-	int vectrex_load_rom (int id)
+	int vectrex_init_cart (int id)
 	{
-		static int first = 1;
 		const char *name;
 		FILE *cartfile = 0;
 	
-		cartfile = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
+		/* Set the whole cart ROM area to 1. This is needed to work around a bug (?)
+		 * in Minestorm where the exec-rom attempts to access a vector list here.
+		 * 1 signals the end of the vector list.
+		 */
+		memset (memory_region(REGION_CPU1), 1, 0x8000);
+	
+		cartfile = (FILE*)image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 		if (cartfile != 0)
 		{
 			osd_fread (cartfile, memory_region(REGION_CPU1), 0x8000);
 			osd_fclose (cartfile);
-		}
 	
+			/* check image! */
+			if (vectrex_varify_cart((char*)memory_region(REGION_CPU1)) == IMAGE_VERIFY_FAIL)
+			{
+				logerror("Invalid image!\n");
+				return INIT_FAIL;
+			}
+	
+		}
+		else
+		{
+			if (device_filename(IO_CARTSLOT,id))
+			{
+				logerror("Coleco - Cart specified but not found!\n");
+				return INIT_FAIL;
+			}
+	
+		}
 		vectrex_imager_angles = unknown_game_angles;
 		name = device_filename(IO_CARTSLOT,id);
 		if (name != 0)
@@ -78,35 +106,10 @@ public class vectrex
 				vectrex_imager_angles = minestorm_3d_angles;
 		}
 	
-		if (first != 0)
-			first = 0;
-		else
-			vectrex_set_palette ();
+		if (Machine.scrbitmap)
+			vectrex_init_overlay ();
 	
-		return INIT_OK;
-	}
-	
-	int vectrex_id_rom (int id)
-	{
-		const char *gamename = device_filename(IO_CARTSLOT,id);
-		void *romfile;
-		char magic[5];
-	
-		/* If no file was specified, don't bother */
-		if (!gamename || strlen(gamename)==0)
-			return ID_OK;
-	
-		if (!(romfile = image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0)))
-			return ID_FAILED;
-	
-		/* Verify the file is accepted by the Vectrex bios */
-		osd_fread (romfile, magic, 5);
-		osd_fclose (romfile);
-	
-		if (!memcmp(magic,"g GCE", 5))
-			return ID_OK;
-		else
-			return ID_FAILED;
+		return INIT_PASS;
 	}
 	
 	/*********************************************************************
@@ -214,35 +217,30 @@ public class vectrex
 	 *********************************************************************/
 	void v_via_irq (int level)
 	{
-		static int old_level;
-		if (level != old_level)
-		{
-			cpu_set_irq_line(0, M6809_IRQ_LINE, level);
-			old_level = level;
-		}
+		cpu_set_irq_line(0, M6809_IRQ_LINE, level);
 	}
 	
-	int v_via_pb_r (int offset)
+	public static ReadHandlerPtr v_via_pb_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		/* Joystick */
 		if (vectrex_via_out[PORTA] & 0x80)
 		{
-			if ( input_port_1_r(0) & (0x02<<(vectrex_via_out[PORTB] & 0x6)))
+			if ( input_port_1_r.handler(0) & (0x02<<(vectrex_via_out[PORTB] & 0x6)))
 				vectrex_via_out[PORTB] &= ~0x20;
 			else
 				vectrex_via_out[PORTB] |= 0x20;
 		}
 		else
 		{
-			if ( input_port_1_r(0) & (0x01<<(vectrex_via_out[PORTB] & 0x6)))
+			if ( input_port_1_r.handler(0) & (0x01<<(vectrex_via_out[PORTB] & 0x6)))
 				vectrex_via_out[PORTB] |= 0x20;
 			else
 				vectrex_via_out[PORTB] &= ~0x20;
 		}
 		return vectrex_via_out[PORTB];
-	}
+	} };
 	
-	int v_via_pa_r (int offset)
+	public static ReadHandlerPtr v_via_pa_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		if ((!(vectrex_via_out[PORTB] & 0x10)) && (vectrex_via_out[PORTB] & 0x08))
 			/* BDIR inactive, we can read the PSG. BC1 has to be active. */
@@ -252,12 +250,12 @@ public class vectrex
 			vectrex_imager_pinlevel &= ~0x80;
 		}
 		return vectrex_via_out[PORTA];
-	}
+	} };
 	
-	int s1_via_pb_r (int offset)
+	public static ReadHandlerPtr s1_via_pb_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-		return (vectrex_via_out[PORTB] & ~0x40) | ((input_port_1_r(0) & 0x1)<<6);
-	}
+		return (vectrex_via_out[PORTB] & ~0x40) | ((input_port_1_r.handler(0) & 0x1)<<6);
+	} };
 	
 	/*********************************************************************
 	  3D Imager support
@@ -275,18 +273,18 @@ public class vectrex
 		timer_set (imager_wheel_time*vectrex_imager_angles[2], 1, vectrex_imager_change_color);
 	}
 	
-	void vectrex_imager_left_eye (double time)
+	void vectrex_imager_left_eye (double time_)
 	{
-		imager_wheel_time = time;
+		imager_wheel_time = time_;
 		via_0_ca1_w (0, 1);
 		via_0_ca1_w (0, 0);
 		vectrex_imager_pinlevel |= 0x80;
 	
 		vectrex_imager_status = 2;
 		vectrex_beam_color = imager_colors[5];
-		timer_set (time*vectrex_imager_angles[1], 3, vectrex_imager_change_color);
-		timer_set (time*vectrex_imager_angles[2], 4, vectrex_imager_change_color);
-		timer_set (time/2, 0, vectrex_imager_right_eye);
+		timer_set (time_*vectrex_imager_angles[1], 3, vectrex_imager_change_color);
+		timer_set (time_*vectrex_imager_angles[2], 4, vectrex_imager_change_color);
+		timer_set (time_/2, 0, vectrex_imager_right_eye);
 	}
 	
 }

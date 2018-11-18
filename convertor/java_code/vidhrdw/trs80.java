@@ -39,11 +39,11 @@ public class trs80
 	} };
 	
 	/***************************************************************************
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function,
 	  it will be called by the main emulation engine.
 	***************************************************************************/
-	public static VhUpdatePtr trs80_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void trs80_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	/* Special translation if video RAM with only 7 bits is present
 	 * I don't know if it's entirely correct, but it's close ;-)
@@ -99,18 +99,12 @@ public class trs80
 			full_refresh = 1;
 	    }
 	
-	    /* draw entire scrbitmap because of usrintrf functions
-		 * called osd_clearbitmap or color change / scanline change
-		 */
-		if( palette_recalc() || full_refresh )
-			memset(dirtybuffer, 1, videoram_size[0]);
-	
 		/* do we have double width characters enabled ? */
 		if ((trs80_port_ff & 0x08) != 0)
 		{
 			/* for every second character in the Video RAM, check if it has
 			   been modified since last time and update it accordingly. */
-			for (offs = videoram_size[0] - 2; offs >= 0; offs -= 2)
+			for (offs = videoram_size - 2; offs >= 0; offs -= 2)
 			{
 				if (dirtybuffer[offs])
 				{
@@ -129,7 +123,7 @@ public class trs80
 		{
 			/* for every character in the Video RAM, check if it has
 			* been modified since last time and update it accordingly. */
-			for (offs = videoram_size[0] - 1; offs >= 0; offs--)
+			for (offs = videoram_size - 1; offs >= 0; offs--)
 			{
 				if (dirtybuffer[offs])
 				{
@@ -143,6 +137,6 @@ public class trs80
 	            }
 			}
 		}
-	} };
+	}
 	
 }

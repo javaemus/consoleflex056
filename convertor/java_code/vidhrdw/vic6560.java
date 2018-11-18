@@ -1,6 +1,7 @@
 /***************************************************************************
 
   MOS video interface chip 6560
+  PeT mess@utanet.at
 
 ***************************************************************************/
 /*
@@ -86,7 +87,7 @@ public class vic6560
 	
 	bool vic6560_pal;
 	
-	static struct osd_bitmap *vic6560_bitmap;
+	static struct mame_bitmap *vic6560_bitmap;
 	static int rasterline = 0, lastline = 0;
 	static void vic6560_drawlines (int start, int last);
 	
@@ -106,7 +107,7 @@ public class vic6560
 	static UINT16 mono[2], monoinverted[2], multi[4], multiinverted[4];
 	
 	/* transparent, white, black */
-	static unsigned short pointercolortable[3] =
+	static UINT32 pointercolortable[3] =
 	{0};
 	static GfxLayout pointerlayout = new GfxLayout
 	(
@@ -305,7 +306,7 @@ public class vic6560
 	{
 		int y, code;
 	
-		if (Machine.color_depth == 8)
+	/*	if (Machine.color_depth == 8)
 		{
 			for (y = ybegin; y <= yend; y++)
 			{
@@ -321,7 +322,7 @@ public class vic6560
 			}
 		}
 		else
-		{
+	*/	{
 			for (y = ybegin; y <= yend; y++)
 			{
 				code = vic_dma_read ((chargenaddr + ch * charheight + y) & 0x3fff);
@@ -342,7 +343,7 @@ public class vic6560
 	{
 		int y, code;
 	
-		if (Machine.color_depth == 8)
+	/*	if (Machine.color_depth == 8)
 		{
 			for (y = ybegin; y <= yend; y++)
 			{
@@ -358,7 +359,7 @@ public class vic6560
 			}
 		}
 		else
-		{
+	*/	{
 			for (y = ybegin; y <= yend; y++)
 			{
 				code = vic_dma_read ((chargenaddr + ch * charheight + y) & 0x3fff);
@@ -376,7 +377,7 @@ public class vic6560
 	
 	
 	#ifndef GFX
-	INLINE void vic6560_draw_pointer (struct osd_bitmap *bitmap,
+	INLINE void vic6560_draw_pointer (struct mame_bitmap *bitmap,
 									  struct rectangle *visible, int xoff, int yoff)
 	{
 		/* this is a a static graphical object */
@@ -387,7 +388,7 @@ public class vic6560
 		{0xf0, 0x80, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00};
 		int i, j, y, x;
 	
-		if (Machine.color_depth == 8)
+	/*	if (Machine.color_depth == 8)
 		{
 			for (y = visible.min_y, j = yoff; y <= visible.max_y; y++, j++)
 			{
@@ -401,7 +402,7 @@ public class vic6560
 			}
 		}
 		else
-		{
+	*/	{
 			for (y = visible.min_y, j = yoff; y <= visible.max_y; y++, j++)
 			{
 				for (x = visible.min_x, i = xoff; x <= visible.max_x; x++, i++)
@@ -426,7 +427,7 @@ public class vic6560
 		if (first >= last)
 			return;
 	
-		if (Machine.color_depth == 8)
+	/*	if (Machine.color_depth == 8)
 		{
 			for (line = first; (line < ypos) && (line < last); line++)
 			{
@@ -434,7 +435,7 @@ public class vic6560
 			}
 		}
 		else
-		{
+	*/	{
 			for (line = first; (line < ypos) && (line < last); line++)
 			{
 				memset16 (vic6560_bitmap.line[line], framecolor, vic656x_xsize);
@@ -459,13 +460,13 @@ public class vic6560
 	
 			if (xpos > 0)
 			{
-				if (Machine.color_depth == 8)
+	/*			if (Machine.color_depth == 8)
 				{
 					for (i = ybegin; i <= yend; i++)
 						memset (vic6560_bitmap.line[yoff + i], framecolor, xpos);
 				}
 				else
-				{
+	*/			{
 					for (i = ybegin; i <= yend; i++)
 						memset16 (vic6560_bitmap.line[yoff + i], framecolor, xpos);
 				}
@@ -504,14 +505,14 @@ public class vic6560
 			}
 			if (xoff < vic656x_xsize)
 			{
-				if (Machine.color_depth == 8)
+	/*			if (Machine.color_depth == 8)
 				{
 					for (i = ybegin; i <= yend; i++)
 						memset (vic6560_bitmap.line[yoff + i] + xoff, framecolor,
 								vic656x_xsize - xoff);
 				}
 				else
-				{
+	*/			{
 					for (i = ybegin; i <= yend; i++)
 						memset16 ((UINT16 *) vic6560_bitmap.line[yoff + i] + xoff,
 								  framecolor, vic656x_xsize - xoff);
@@ -528,7 +529,7 @@ public class vic6560
 				line = vline + ypos;
 			}
 		}
-		if (Machine.color_depth == 8)
+	/*	if (Machine.color_depth == 8)
 		{
 			for (; line < last; line++)
 			{
@@ -536,7 +537,7 @@ public class vic6560
 			}
 		}
 		else
-		{
+	*/	{
 			for (; line < last; line++)
 			{
 				memset16 (vic6560_bitmap.line[line], framecolor, vic656x_xsize);
@@ -544,7 +545,7 @@ public class vic6560
 		}
 	}
 	
-	static void vic6560_draw_text (struct osd_bitmap *bitmap, char *text, int *y)
+	static void vic6560_draw_text (struct mame_bitmap *bitmap, char *text, int *y)
 	{
 		int x, x0, y1v, width = (Machine.visible_area.max_x -
 								 Machine.visible_area.min_x) / Machine.uifont.width;
@@ -593,7 +594,7 @@ public class vic6560
 	
 				if (DOCLIP (&r, &Machine.visible_area))
 				{
-					osd_mark_dirty (r.min_x, r.min_y, r.max_x, r.max_y, 0);
+					osd_mark_dirty (r.min_x, r.min_y, r.max_x, r.max_y);
 	#ifndef GFX
 					vic6560_draw_pointer (vic6560_bitmap, &r,
 										  r.min_x - (LIGHTPEN_X_VALUE + VIC656X_MAME_XPOS - 1),
@@ -621,7 +622,7 @@ public class vic6560
 		return ignore_interrupt ();
 	} };
 	
-	public static VhUpdatePtr vic6560_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void vic6560_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
-	} };
+	}
 }

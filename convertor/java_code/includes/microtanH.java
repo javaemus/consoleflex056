@@ -27,16 +27,14 @@ public class microtanH
 	extern UINT8 *microtan_chunky_buffer;
 	
 	/* from src/mess/machine/microtan.c */
-	extern extern 
-	extern int microtan_cassette_id(int id);
+	extern extern extern 
 	extern int microtan_cassette_init(int id);
 	extern void microtan_cassette_exit(int id);
 	
-	extern int microtan_snapshot_id(int id);
+	
 	extern int microtan_snapshot_init(int id);
 	extern void microtan_snapshot_exit(int id);
 	
-	extern int microtan_hexfile_id(int id);
 	extern int microtan_hexfile_init(int id);
 	extern void microtan_hexfile_exit(int id);
 	
@@ -59,4 +57,5 @@ public class microtanH
 	
 	extern WRITE_HANDLER ( microtan_videoram_w );
 	
-	extern extern extern extern }
+	extern extern extern extern void microtan_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);
+}

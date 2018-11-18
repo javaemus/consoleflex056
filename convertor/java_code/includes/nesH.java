@@ -11,13 +11,15 @@
 
 /* Uncomment this to have proper emulation of the color intensity */
 /* bits, at the expense of speed (and wonked sprites). */
-//#define COLOR_INTENSITY
+/* NPW 31-Aug-2001 - Uncommented because this is the only way to get it to work at this point */
+#define COLOR_INTENSITY
+
 extern unsigned char nes_palette[3*64];
 extern int dirtychar[0x200];
-extern unsigned short colortable_mono[4*16];
+extern UINT32 colortable_mono[4*16];
 
 #define BOTTOM_VISIBLE_SCANLINE   239		/* The bottommost visible scanline */
-#define NMI_SCANLINE     		  244		/* 244 times Bayou Billy perfectly */
+#define NMI_SCANLINE			  244		/* 244 times Bayou Billy perfectly */
 #define NTSC_SCANLINES_PER_FRAME  262
 #define PAL_SCANLINES_PER_FRAME   305		/* verify - times Elite perfectly */
 
@@ -44,7 +46,7 @@ extern int PPU_Sprite_Addr; /* $2003 */
 
 extern UINT8 PPU_X_fine;
 
-extern UINT16 PPU_refresh_data;	/* $2006 */
+extern UINT16 PPU_refresh_data; /* $2006 */
 extern int PPU_tile_page;
 extern int PPU_sprite_page;
 extern int PPU_add;
@@ -78,7 +80,7 @@ struct ppu_struct {
 	UINT16 refresh_latch;
 	UINT8 x_fine;
 
-	UINT16 address;			/* $2006 */
+	UINT16 address; 		/* $2006 */
 	UINT8 address_latch;
 
 	UINT8 data_latch;		/* $2007 - read */
@@ -127,6 +129,37 @@ struct fds_struct {
 };
 
 extern struct fds_struct nes_fds;
+
+/* protos */
+
+/* drivers/nes.c */
+READ_HANDLER ( nes_mirrorram_r );
+WRITE_HANDLER ( nes_mirrorram_w );
+READ_HANDLER ( nes_bogus_r );
+extern struct GfxLayout nes_charlayout;
+
+/* machine/nes.c */
+int nes_init_cart (int id);
+int nes_load_disk (int id);
+void nes_exit_disk(int id);
+
+UINT32 nes_partialcrc(const UBytePtr ,unsigned int);
+READ_HANDLER  ( nes_ppu_r );
+READ_HANDLER  ( nes_IN0_r );
+READ_HANDLER  ( nes_IN1_r );
+WRITE_HANDLER ( nes_ppu_w );
+
+WRITE_HANDLER ( nes_low_mapper_w );
+READ_HANDLER  ( nes_low_mapper_r );
+WRITE_HANDLER ( nes_mid_mapper_w );
+READ_HANDLER  ( nes_mid_mapper_r );
+WRITE_HANDLER ( nes_mapper_w );
+
+/* vidhrdw/nes.c */
+void nes_init_palette(UBytePtr sys_palette, unsigned short *sys_colortable,const UBytePtr color_prom);
+void nes_vh_renderscanline (int scanline);
+void nes_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);
+WRITE_HANDLER ( nes_vh_sprite_dma_w );
 
 #endif
 

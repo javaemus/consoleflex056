@@ -44,31 +44,28 @@ package systems;
 public class gb
 {
 	
-	static MemoryReadAddress readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x3fff, MRA_ROM ),   /* 16k fixed ROM BANK #0*/
-		new MemoryReadAddress( 0x4000, 0x7fff, MRA_BANK1 ), /* 16k switched ROM bank */
-		new MemoryReadAddress( 0x8000, 0x9fff, MRA_RAM ),   /* 8k video ram */
-		new MemoryReadAddress( 0xa000, 0xbfff, MRA_BANK2 ), /* 8k RAM bank (on cartridge) */
-		new MemoryReadAddress( 0xc000, 0xff03, MRA_RAM ),   /* internal ram + echo + sprite Ram  IO */
-		new MemoryReadAddress( 0xff04, 0xff04, gb_r_divreg ),    /* special case for the division reg */
-		new MemoryReadAddress( 0xff05, 0xff05, gb_r_timer_cnt ), /* special case for the timer count reg */
-		new MemoryReadAddress( 0xff06, 0xffff, MRA_RAM ),   /* IO */
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	static MEMORY_READ_START (readmem)
+		{ 0x0000, 0x3fff, MRA_ROM },   /* 16k fixed ROM BANK #0*/
+		{ 0x4000, 0x7fff, MRA_BANK1 }, /* 16k switched ROM bank */
+		{ 0x8000, 0x9fff, MRA_RAM },   /* 8k video ram */
+		{ 0xa000, 0xbfff, MRA_BANK2 }, /* 8k RAM bank (on cartridge) */
+		{ 0xc000, 0xfeff, MRA_RAM },   /* internal ram + echo + sprite Ram & IO */
+		{ 0xff00, 0xff03, gb_ser_regs },    /* serial regs */
+		{ 0xff04, 0xff04, gb_r_divreg },    /* special case for the division reg */
+		{ 0xff05, 0xff05, gb_r_timer_cnt }, /* special case for the timer count reg */
+		{ 0xff06, 0xffff, MRA_RAM },   /* IO */
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x1fff, MWA_ROM ),            /* plain rom */
-		new MemoryWriteAddress( 0x2000, 0x3fff, gb_rom_bank_select ), /* rom bank select */
-		new MemoryWriteAddress( 0x4000, 0x5fff, gb_ram_bank_select ), /* ram bank select */
-		new MemoryWriteAddress( 0x6000, 0x7fff, MWA_ROM ),            /* plain rom */
-		new MemoryWriteAddress( 0x8000, 0x9fff, MWA_RAM ),            /* plain ram */
-		new MemoryWriteAddress( 0xa000, 0xbfff, MWA_BANK2 ),          /* banked (cartridge) ram */
-		new MemoryWriteAddress( 0xc000, 0xfeff, MWA_RAM, videoram, videoram_size ), /* video  sprite ram */
-		new MemoryWriteAddress( 0xff00, 0xffff, gb_w_io ),	        /* gb io */
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+	static MEMORY_WRITE_START (writemem)
+		{ 0x0000, 0x1fff, MWA_ROM },            /* plain rom */
+		{ 0x2000, 0x3fff, gb_rom_bank_select }, /* rom bank select */
+		{ 0x4000, 0x5fff, gb_ram_bank_select }, /* ram bank select */
+		{ 0x6000, 0x7fff, MWA_ROM },            /* plain rom */
+		{ 0x8000, 0x9fff, MWA_RAM },            /* plain ram */
+		{ 0xa000, 0xbfff, MWA_BANK2 },          /* banked (cartridge) ram */
+		{ 0xc000, 0xfeff, MWA_RAM, &videoram, &videoram_size }, /* video & sprite ram */
+		{ 0xff00, 0xffff, gb_w_io },	        /* gb io */
+	MEMORY_END
 	
 	static GfxDecodeInfo gfxdecodeinfo[] =
 	{
@@ -83,10 +80,10 @@ public class gb
 	    PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN );
 	    PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1       );
 	    PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2       );
-		/*PORT_BITX( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN, "select", KEYCODE_LSHIFT, IP_JOY_DEFAULT );*/
-		/*PORT_BITX( 0x80, IP_ACTIVE_LOW, IPT_UNKNOWN, "start",  KEYCODE_Z,      IP_JOY_DEFAULT );*/
-		PORT_BITX( 0x40, IP_ACTIVE_LOW, IPT_KEYBOARD, "select", KEYCODE_3, IP_JOY_DEFAULT );
-		PORT_BITX( 0x80, IP_ACTIVE_LOW, IPT_KEYBOARD, "start",  KEYCODE_1, IP_JOY_DEFAULT );
+		/*PORT_BITX( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN, "Select", KEYCODE_LSHIFT, IP_JOY_DEFAULT );*/
+		/*PORT_BITX( 0x80, IP_ACTIVE_LOW, IPT_UNKNOWN, "Start",  KEYCODE_Z,      IP_JOY_DEFAULT );*/
+		PORT_BITX( 0x40, IP_ACTIVE_LOW, IPT_KEYBOARD, "Select", KEYCODE_5, IP_JOY_DEFAULT );
+		PORT_BITX( 0x80, IP_ACTIVE_LOW, IPT_KEYBOARD, "Start",  KEYCODE_1, IP_JOY_DEFAULT );
 	INPUT_PORTS_END(); }}; 
 	
 	static unsigned char palette[] =
@@ -110,6 +107,12 @@ public class gb
 		memcpy(sys_palette,palette,sizeof(palette));
 		memcpy(sys_colortable,colortable,sizeof(colortable));
 	}
+	
+	static CustomSound_interface gameboy_sound_interface = new CustomSound_interface(
+		gameboy_sh_start,
+		null,
+		null
+	);
 	
 	static MachineDriver machine_driver_gameboy = new MachineDriver
 	(
@@ -143,15 +146,19 @@ public class gb
 	
 		/* sound hardware */
 		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound( SOUND_CUSTOM, gameboy_sound_interface ),
+		}
+	
 	);
 	
 	static const struct IODevice io_gameboy[] = {
 		{
 			IO_CARTSLOT,		/* type */
 			1,					/* count */
-			"gb\0",				/* file extensions */
+			"gb\0gmb\0cgb\0gbc\0sgb\0",		/* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-	        gb_id_rom,          /* id */
+	        0,
 			gb_load_rom,		/* init */
 			NULL,				/* exit */
 			NULL,				/* info */
@@ -177,6 +184,6 @@ public class gb
 	#define rom_gameboy NULL
 	
 	/*     YEAR  NAME      PARENT    MACHINE   INPUT     INIT      COMPANY   FULLNAME */
-	CONSX( 1990, gameboy,  0,		 gameboy,  gameboy,  0,		   "Nintendo", "GameBoy", GAME_NOT_WORKING | GAME_NO_SOUND )
+	CONSX( 1990, gameboy,  0,		 gameboy,  gameboy,  0,		   "Nintendo", "GameBoy", GAME_NO_SOUND )
 	
 }

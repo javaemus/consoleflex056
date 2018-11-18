@@ -15,7 +15,7 @@
 			(he's written a CP/M implementation for the PCW16)
 			(www.seasip.deomon.co.uk)
 	- and others who offered their help (Richard Fairhurst, Richard Wildey)
-	
+
 	Hardware:
 		- 2mb dram max,
 		- 2mb flash-file memory max (in 2 1mb chips),
@@ -43,9 +43,9 @@
 		- extract hard-drive code from PC driver and use in this driver
 		- implement printer
 		- .. anything else that requires implementing
-	
+
 	 Info:
-	   - to use this driver you need a OS rescue disc. 
+	   - to use this driver you need a OS rescue disc.
 	   (HINT: This also contains the boot-rom)
 	  - the OS will be installed from the OS rescue disc into the Flash-ROM
 
@@ -75,10 +75,16 @@
   processor (to 16MHz) etc. which meant that it could not be kept
   compatible with the previous models (though documents ARE compatible)"
 
-  
+
 
 
  ******************************************************************************/
+/* PeT 19.October 2000
+   added/changed printer support
+   not working reliable, seams to expect parallelport in epp/ecp mode
+   epp/ecp modes in parallel port not supported yet
+   so ui disabled */
+
 /*
  * ported to v0.37b7
  * using automatic conversion tool v0.01
@@ -148,7 +154,7 @@ public class pcw16
 				{
 					osd_fwrite(file, &pcw16_ram[i], 1);
 				}
-			
+	
 	//			osd_fwrite(file, pcw16_ram, 2048*1024);
 				osd_fclose(file);
 			}
@@ -214,14 +220,12 @@ public class pcw16
 		}
 	}
 	
-	static MemoryReadAddress readmem_pcw16[] =
-	{
-		new MemoryReadAddress(0x0000, 0x03fff, MRA_BANK1),
-		new MemoryReadAddress(0x4000, 0x07fff, MRA_BANK2),
-		new MemoryReadAddress(0x8000, 0x0Bfff, MRA_BANK3),
-		new MemoryReadAddress(0xC000, 0x0ffff, MRA_BANK4),
-		new MemoryReadAddress(-1)							   /* end of table */
-	};
+	MEMORY_READ_START( readmem_pcw16 )
+		{0x0000, 0x03fff, MRA_BANK1},
+		{0x4000, 0x07fff, MRA_BANK2},
+		{0x8000, 0x0Bfff, MRA_BANK3},
+		{0xC000, 0x0ffff, MRA_BANK4},
+	MEMORY_END
 	
 	extern int pcw16_colour_palette[16];
 	
@@ -232,7 +236,7 @@ public class pcw16
 	
 	static char *pcw16_mem_ptr[4];
 	
-	const mem_write_handler pcw16_write_handler_dram[4] = 
+	const mem_write_handler pcw16_write_handler_dram[4] =
 	{
 		MWA_BANK5,
 		MWA_BANK6,
@@ -240,7 +244,7 @@ public class pcw16
 		MWA_BANK8
 	};
 	
-	const mem_read_handler pcw16_read_handler_dram[4] = 
+	const mem_read_handler pcw16_read_handler_dram[4] =
 	{
 		MRA_BANK1,
 		MRA_BANK2,
@@ -430,8 +434,8 @@ public class pcw16
 			/* rom */
 			case PCW16_MEM_ROM:
 			{
-				cpu_setbankhandler_r(bank+1, pcw16_read_handler_dram[bank]);
-				cpu_setbankhandler_w(bank+5, MWA_NOP);
+				memory_set_bankhandler_r(bank+1, 0, pcw16_read_handler_dram[bank]);
+				memory_set_bankhandler_w(bank+5, 0, MWA_NOP);
 			}
 			break;
 	
@@ -439,22 +443,22 @@ public class pcw16
 			/* sram */
 			case PCW16_MEM_FLASH_1:
 			{
-				cpu_setbankhandler_r(bank+1, pcw16_flash0_bank_handlers_r[bank]);
-				cpu_setbankhandler_w(bank+5, pcw16_flash0_bank_handlers_w[bank]);
+				memory_set_bankhandler_r(bank+1, 0, pcw16_flash0_bank_handlers_r[bank]);
+				memory_set_bankhandler_w(bank+5, 0, pcw16_flash0_bank_handlers_w[bank]);
 			}
 			break;
 	
 			case PCW16_MEM_FLASH_2:
 			{
-				cpu_setbankhandler_r(bank+1, pcw16_flash1_bank_handlers_r[bank]);
-				cpu_setbankhandler_w(bank+5, pcw16_flash1_bank_handlers_w[bank]);
+				memory_set_bankhandler_r(bank+1, 0, pcw16_flash1_bank_handlers_r[bank]);
+				memory_set_bankhandler_w(bank+5, 0, pcw16_flash1_bank_handlers_w[bank]);
 			}
 			break;
 	
 			case PCW16_MEM_NONE:
 			{
-				cpu_setbankhandler_r(bank+1, pcw16_no_mem_r);
-				cpu_setbankhandler_w(bank+5, MWA_NOP);
+				memory_set_bankhandler_r(bank+1, 0, pcw16_no_mem_r);
+				memory_set_bankhandler_w(bank+5, 0, MWA_NOP);
 			}
 			break;
 	
@@ -462,8 +466,8 @@ public class pcw16
 			default:
 			case PCW16_MEM_DRAM:
 			{
-				cpu_setbankhandler_r(bank+1, pcw16_read_handler_dram[bank]);
-				cpu_setbankhandler_w(bank+5, pcw16_write_handler_dram[bank]);
+				memory_set_bankhandler_r(bank+1, 0, pcw16_read_handler_dram[bank]);
+				memory_set_bankhandler_w(bank+5, 0, pcw16_write_handler_dram[bank]);
 	
 			}
 			break;
@@ -565,14 +569,14 @@ public class pcw16
 	
 	READ_HANDLER(pcw16_bankhw_r)
 	{
-	//	logerror("bank r: %d \r\n", offset);
+	//	logerror("bank r: %d \n", offset);
 	
 		return pcw16_banks[offset];
 	}
 	
 	WRITE_HANDLER(pcw16_bankhw_w)
 	{
-		//logerror("bank w: %d block: %02x\r\n", offset, data);
+		//logerror("bank w: %d block: %02x\n", offset, data);
 	
 		pcw16_banks[offset] = data;
 	
@@ -581,7 +585,7 @@ public class pcw16
 	
 	WRITE_HANDLER(pcw16_video_control_w)
 	{
-		//logerror("video control w: %02x\r\n", data);
+		//logerror("video control w: %02x\n", data);
 	
 		pcw16_video_control = data;
 	}
@@ -639,7 +643,7 @@ public class pcw16
 			pcw16_keyboard_parity_table[i] = sum & 0x01;
 		}
 	
-		
+	
 		/* clear int */
 		pcw16_keyboard_int(0);
 		/* reset state */
@@ -693,13 +697,13 @@ public class pcw16
 	/* interfaces to a pc-at keyboard */
 	READ_HANDLER(pcw16_keyboard_data_shift_r)
 	{
-		//logerror("keyboard data shift r: %02x\r\n", pcw16_keyboard_data_shift);
+		//logerror("keyboard data shift r: %02x\n", pcw16_keyboard_data_shift);
 		pcw16_keyboard_state &= ~(PCW16_KEYBOARD_BUSY_STATUS);
 	
 		pcw16_keyboard_int(0);
 		/* reset for reception */
 		pcw16_keyboard_reset();
-		
+	
 		/* read byte */
 		return pcw16_keyboard_data_shift;
 	}
@@ -733,9 +737,9 @@ public class pcw16
 		/* initialise start, stop and parity bits */
 		pcw16_keyboard_state &= ~PCW16_KEYBOARD_START_BIT_MASK;
 		pcw16_keyboard_state |=PCW16_KEYBOARD_STOP_BIT_MASK;
-			
-		/* "Keyboard data has odd parity, so the parity bit in the 
-		status register should only be set when the shift register 
+	
+		/* "Keyboard data has odd parity, so the parity bit in the
+		status register should only be set when the shift register
 		data itself has even parity. */
 	
 		pcw16_keyboard_state &= ~PCW16_KEYBOARD_PARITY_MASK;
@@ -743,14 +747,14 @@ public class pcw16
 		/* if data has even parity, set parity bit */
 		if ((pcw16_keyboard_parity_table[data])==0)
 			pcw16_keyboard_state |= PCW16_KEYBOARD_PARITY_MASK;
-		
+	
 		pcw16_keyboard_int(1);
 	}
 	
 	
 	WRITE_HANDLER(pcw16_keyboard_data_shift_w)
 	{
-		//logerror("Keyboard Data Shift: %02x\r\n", data);
+		//logerror("Keyboard Data Shift: %02x\n", data);
 		/* writing to shift register clears parity */
 		/* writing to shift register clears start bit */
 		pcw16_keyboard_state &= ~(
@@ -767,7 +771,7 @@ public class pcw16
 	READ_HANDLER(pcw16_keyboard_status_r)
 	{
 		/* bit 2,3 are bits 8 and 9 of vdu pointer */
-		return (pcw16_keyboard_state & 
+		return (pcw16_keyboard_state &
 			(PCW16_KEYBOARD_PARITY_MASK |
 			 PCW16_KEYBOARD_STOP_BIT_MASK |
 			 PCW16_KEYBOARD_START_BIT_MASK |
@@ -778,7 +782,7 @@ public class pcw16
 	
 	WRITE_HANDLER(pcw16_keyboard_control_w)
 	{
-		//logerror("Keyboard control w: %02x\r\n",data);
+		//logerror("Keyboard control w: %02x\n",data);
 	
 		pcw16_keyboard_previous_state = pcw16_keyboard_state;
 	
@@ -789,7 +793,7 @@ public class pcw16
 		}
 	
 		/* clear read/write bits */
-		pcw16_keyboard_state &= 
+		pcw16_keyboard_state &=
 			~(PCW16_KEYBOARD_FORCE_KEYBOARD_CLOCK |
 				PCW16_KEYBOARD_TRANSMIT_MODE);
 		/* set read/write bits from data */
@@ -860,14 +864,12 @@ public class pcw16
 		}
 	}
 	
-	static MemoryWriteAddress writemem_pcw16[] =
-	{
-		new MemoryWriteAddress(0x00000, 0x03fff, MWA_BANK5),
-		new MemoryWriteAddress(0x04000, 0x07fff, MWA_BANK6),
-		new MemoryWriteAddress(0x08000, 0x0bfff, MWA_BANK7),
-		new MemoryWriteAddress(0x0c000, 0x0ffff, MWA_BANK8),
-		new MemoryWriteAddress(-1)							   /* end of table */
-	};
+	MEMORY_WRITE_START( writemem_pcw16 )
+		{0x00000, 0x03fff, MWA_BANK5},
+		{0x04000, 0x07fff, MWA_BANK6},
+		{0x08000, 0x0bfff, MWA_BANK7},
+		{0x0c000, 0x0ffff, MWA_BANK8},
+	MEMORY_END
 	
 	static unsigned char rtc_seconds;
 	static unsigned char rtc_minutes;
@@ -1058,6 +1060,8 @@ public class pcw16
 		rtc_setup_max_days();
 	}
 	
+	static int previous_fdc_int_state;
+	
 	static void pcw16_trigger_fdc_int(void)
 	{
 		int state;
@@ -1069,13 +1073,20 @@ public class pcw16
 			/* nmi */
 			case 0:
 			{
-				if (state != 0)
+				/* I'm assuming that the nmi is edge triggered */
+				/* a interrupt from the fdc will cause a change in line state, and
+				the nmi will be triggered, but when the state changes because the int
+				is cleared this will not cause another nmi */
+				/* I'll emulate it like this to be sure */
+	
+				if (state!=previous_fdc_int_state)
 				{
-					cpu_set_nmi_line(0, ASSERT_LINE);
-				}
-				else
-				{
-					cpu_set_nmi_line(0, CLEAR_LINE);
+					if (state != 0)
+					{
+						/* I'll pulse it because if I used hold-line I'm not sure
+						it would clear - to be checked */
+						cpu_set_nmi_line(0, PULSE_LINE);
+					}
 				}
 			}
 			break;
@@ -1091,11 +1102,13 @@ public class pcw16
 			default:
 				break;
 		}
+	
+		previous_fdc_int_state = state;
 	}
 	
 	READ_HANDLER(pcw16_system_status_r)
 	{
-	//	logerror("system status r: \r\n");
+	//	logerror("system status r: \n");
 	
 		return pcw16_system_status | (readinputport(0) & 0x04);
 	}
@@ -1118,7 +1131,7 @@ public class pcw16
 	
 	WRITE_HANDLER(pcw16_system_control_w)
 	{
-		//logerror("0x0f8: function: %d\r\n",data);
+		//logerror("0x0f8: function: %d\n",data);
 	
 		/* lower 4 bits define function code */
 		switch (data & 0x0f)
@@ -1205,8 +1218,8 @@ public class pcw16
 				/* bit 4 - monitor on/off (1==on) */
 	
 				pcw16_4_bit_port = data>>4;
-				
-				
+	
+	
 			}
 			break;
 		}
@@ -1305,7 +1318,7 @@ public class pcw16
 				{
 					new_inputs = UART8250_INPUTS_RING_INDICATOR;
 				}
-				
+	
 				uart8250_handshake_in(1, new_inputs);
 			}
 			break;
@@ -1324,7 +1337,7 @@ public class pcw16
 		},
 		{
 			TYPE16550,
-			1843200,        
+			1843200,
 			pcw16_com_interrupt,
 			NULL,
 			NULL,
@@ -1334,56 +1347,52 @@ public class pcw16
 	
 	
 	
-	static IOReadPort readport_pcw16[] =
-	{
+	PORT_READ_START( readport_pcw16 )
 		/* super i/o chip */
-		new IOReadPort(0x01c, 0x01c, pcw16_superio_fdc_main_status_register_r),
-		new IOReadPort(0x01d, 0x01d, pcw16_superio_fdc_data_r),
-		new IOReadPort(0x01f, 0x01f, pcw16_superio_fdc_digital_input_register_r),
-		new IOReadPort(0x020, 0x027, uart8250_0_r),
-		new IOReadPort(0x028, 0x02f, uart8250_1_r),
-		new IOReadPort(0x038, 0x03a, pc_LPT1_r),
+		{0x01c, 0x01c, pcw16_superio_fdc_main_status_register_r},
+		{0x01d, 0x01d, pcw16_superio_fdc_data_r},
+		{0x01f, 0x01f, pcw16_superio_fdc_digital_input_register_r},
+		{0x020, 0x027, uart8250_0_r},
+		{0x028, 0x02f, uart8250_1_r},
+		{0x038, 0x03a, pc_parallelport0_r},
 		/* anne asic */
-		new IOReadPort(0x0f0, 0x0f3, pcw16_bankhw_r),
-		new IOReadPort(0x0f4, 0x0f4, pcw16_keyboard_data_shift_r),
-		new IOReadPort(0x0f5, 0x0f5, pcw16_keyboard_status_r),
-		new IOReadPort(0x0f7, 0x0f7, pcw16_timer_interrupt_counter_r),
-		new IOReadPort(0x0f8, 0x0f8, pcw16_system_status_r),
-		new IOReadPort(0x0f9, 0x0f9, rtc_256ths_seconds_r),
-		new IOReadPort(0x0fa, 0x0fa, rtc_seconds_r),
-		new IOReadPort(0x0fb, 0x0fb, rtc_minutes_r),
-		new IOReadPort(0x0fc, 0x0fc, rtc_hours_r),
-		new IOReadPort(0x0fd, 0x0fd, rtc_days_r),
-		new IOReadPort(0x0fe, 0x0fe, rtc_month_r),
-		new IOReadPort(0x0ff, 0x0ff, rtc_year_invalid_r),
-		new IOReadPort(-1)							   /* end of table */
-	};
+		{0x0f0, 0x0f3, pcw16_bankhw_r},
+		{0x0f4, 0x0f4, pcw16_keyboard_data_shift_r},
+		{0x0f5, 0x0f5, pcw16_keyboard_status_r},
+		{0x0f7, 0x0f7, pcw16_timer_interrupt_counter_r},
+		{0x0f8, 0x0f8, pcw16_system_status_r},
+		{0x0f9, 0x0f9, rtc_256ths_seconds_r},
+		{0x0fa, 0x0fa, rtc_seconds_r},
+		{0x0fb, 0x0fb, rtc_minutes_r},
+		{0x0fc, 0x0fc, rtc_hours_r},
+		{0x0fd, 0x0fd, rtc_days_r},
+		{0x0fe, 0x0fe, rtc_month_r},
+		{0x0ff, 0x0ff, rtc_year_invalid_r},
+	PORT_END
 	
-	static IOWritePort writeport_pcw16[] =
-	{
+	PORT_WRITE_START( writeport_pcw16 )
 		/* super i/o */
-		new IOWritePort(0x01a, 0x01a, pcw16_superio_fdc_digital_output_register_w),
-		new IOWritePort(0x01d, 0x01d, pcw16_superio_fdc_data_w),
-		new IOWritePort(0x01f, 0x01f, pcw16_superio_fdc_datarate_w),
-		new IOWritePort(0x020, 0x027, uart8250_0_w),
-		new IOWritePort(0x028, 0x02f, uart8250_1_w),
-		new IOWritePort(0x038, 0x03a, pc_LPT1_w),
+		{0x01a, 0x01a, pcw16_superio_fdc_digital_output_register_w},
+		{0x01d, 0x01d, pcw16_superio_fdc_data_w},
+		{0x01f, 0x01f, pcw16_superio_fdc_datarate_w},
+		{0x020, 0x027, uart8250_0_w},
+		{0x028, 0x02f, uart8250_1_w},
+		{0x038, 0x03a, pc_parallelport0_w},
 		/* anne asic */
-		new IOWritePort(0x0e0, 0x0ef, pcw16_palette_w),
-		new IOWritePort(0x0f0, 0x0f3, pcw16_bankhw_w),
-		new IOWritePort(0x0f7, 0x0f7, pcw16_video_control_w),
-		new IOWritePort(0x0f4, 0x0f4, pcw16_keyboard_data_shift_w),
-		new IOWritePort(0x0f5, 0x0f5, pcw16_keyboard_control_w),
-		new IOWritePort(0x0f8, 0x0f8, pcw16_system_control_w),
-		new IOWritePort(0x0f9, 0x0f9, rtc_control_w),
-		new IOWritePort(0x0fa, 0x0fa, rtc_seconds_w),
-		new IOWritePort(0x0fb, 0x0fb, rtc_minutes_w),
-		new IOWritePort(0x0fc, 0x0fc, rtc_hours_w),
-		new IOWritePort(0x0fd, 0x0fd, rtc_days_w),
-		new IOWritePort(0x0fe, 0x0fe, rtc_month_w),
-		new IOWritePort(0x0ff, 0x0ff, rtc_year_w),
-		new IOWritePort(-1)							   /* end of table */
-	};
+		{0x0e0, 0x0ef, pcw16_palette_w},
+		{0x0f0, 0x0f3, pcw16_bankhw_w},
+		{0x0f7, 0x0f7, pcw16_video_control_w},
+		{0x0f4, 0x0f4, pcw16_keyboard_data_shift_w},
+		{0x0f5, 0x0f5, pcw16_keyboard_control_w},
+		{0x0f8, 0x0f8, pcw16_system_control_w},
+		{0x0f9, 0x0f9, rtc_control_w},
+		{0x0fa, 0x0fa, rtc_seconds_w},
+		{0x0fb, 0x0fb, rtc_minutes_w},
+		{0x0fc, 0x0fc, rtc_hours_w},
+		{0x0fd, 0x0fd, rtc_days_w},
+		{0x0fe, 0x0fe, rtc_month_w},
+		{0x0ff, 0x0ff, rtc_year_w},
+	PORT_END
 	
 	void pcw16_reset(void)
 	{
@@ -1414,19 +1423,30 @@ public class pcw16
 	}
 	
 	
+	static PC_LPT_CONFIG lpt_config={
+		1,
+		LPT_UNIDIRECTIONAL, // more one of these epp/ecp aware ports
+		NULL
+	};
+	static CENTRONICS_CONFIG cent_config={
+		PRINTER_CENTRONICS,
+		pc_lpt_handshake_in
+	};
+	
+	
 	public static InitMachinePtr pcw16_init_machine = new InitMachinePtr() { public void handler() 
 	{
 		pcw16_ram = NULL;
 	
-		cpu_setbankhandler_r(1, MRA_BANK1);
-		cpu_setbankhandler_r(2, MRA_BANK2);
-		cpu_setbankhandler_r(3, MRA_BANK3);
-		cpu_setbankhandler_r(4, MRA_BANK4);
+		memory_set_bankhandler_r(1, 0, MRA_BANK1);
+		memory_set_bankhandler_r(2, 0, MRA_BANK2);
+		memory_set_bankhandler_r(3, 0, MRA_BANK3);
+		memory_set_bankhandler_r(4, 0, MRA_BANK4);
 	
-		cpu_setbankhandler_w(5, MWA_BANK5);
-		cpu_setbankhandler_w(6, MWA_BANK6);
-		cpu_setbankhandler_w(7, MWA_BANK7);
-		cpu_setbankhandler_w(8, MWA_BANK8);
+		memory_set_bankhandler_w(5, 0, MWA_BANK5);
+		memory_set_bankhandler_w(6, 0, MWA_BANK6);
+		memory_set_bankhandler_w(7, 0, MWA_BANK7);
+		memory_set_bankhandler_w(8, 0, MWA_BANK8);
 	
 	
 	
@@ -1444,18 +1464,22 @@ public class pcw16
 		pcw16_system_status = 0;
 		pcw16_interrupt_counter = 0;
 	
-		/* video ints */	
+		/* video ints */
 		pcw16_timer = timer_pulse(TIME_IN_MSEC(5.83), 0,pcw16_timer_callback);
 		/* rtc timer */
 		pcw16_rtc_timer = timer_pulse(TIME_IN_SEC(1.0f/256.0f), 0, rtc_timer_callback);
 	
 		pcw16_keyboard_timer = timer_pulse(TIME_IN_HZ(50), 0, pcw16_keyboard_timer_callback);
-		
+	
 	
 		pc_fdc_init(&pcw16_fdc_interface);
 		uart8250_init(0, pcw16_com_interface);
 		uart8250_init(1, pcw16_com_interface+1);
-		
+	
+		pc_lpt_config(0, &lpt_config);
+		centronics_config(0, &cent_config);
+		pc_lpt_set_device(0, &CENTRONICS_PRINTER_DEVICE);
+	
 		/* initialise mouse */
 		pc_mouse_set_protocol(TYPE_MOUSE_SYSTEMS);
 		pc_mouse_set_input_base(1);
@@ -1467,16 +1491,18 @@ public class pcw16
 		at_keyboard_set_scan_code_set(3);
 		at_keyboard_set_input_port_base(4);
 		at_keyboard_set_type(AT_KEYBOARD_TYPE_AT);
-		
+	
 		pcw16_reset();
 	
-	        beep_set_state(0,0);
-	        beep_set_frequency(0,3750);
+		beep_set_state(0,0);
+		beep_set_frequency(0,3750);
 	} };
 	
 	
 	void pcw16_shutdown_machine(void)
 	{
+		pc_fdc_exit();
+	
 		if (pcw16_ram!=NULL)
 		{
 			free(pcw16_ram);
@@ -1518,7 +1544,7 @@ public class pcw16
 		PORT_BITX(0x40, 0x40, IPT_DIPSWITCH_NAME | IPF_TOGGLE, "Power Switch/Suspend", IP_KEY_NONE, IP_JOY_NONE);
 		PORT_DIPSETTING(0x0, DEF_STR( "Off"));
 		PORT_DIPSETTING(0x40, DEF_STR( "On"));
-		
+	
 		INPUT_MOUSE_SYSTEMS
 	
 		AT_KEYBOARD
@@ -1526,7 +1552,8 @@ public class pcw16
 	
 	static struct beep_interface pcw16_beep_interface =
 	{
-	        1
+		1,
+		{100}
 	};
 	
 	static MachineDriver machine_driver_pcw16 = new MachineDriver
@@ -1589,7 +1616,7 @@ public class pcw16
 	/* the lower 64k of the flash-file memory is write protected. This contains the boot
 		rom. The boot rom is also on the OS rescue disc. Handy! */
 	static RomLoadPtr rom_pcw16 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION((0x010000+524288); REGION_CPU1)
+		ROM_REGION((0x010000+524288); REGION_CPU1,0)
 		ROM_LOAD("pcw045.sys",0x10000, 524288, 0xc642f498);
 	ROM_END(); }}; 
 	
@@ -1606,7 +1633,7 @@ public class pcw16
 	        NULL,               /* info */
 	        NULL,               /* open */
 	        NULL,               /* close */
-	        NULL,               /* status */
+	        floppy_status,               /* status */
 	        NULL,               /* seek */
 			NULL,				/* tell */
 	        NULL,               /* input */
@@ -1614,6 +1641,7 @@ public class pcw16
 	        NULL,               /* input_chunk */
 	        NULL                /* output_chunk */
 	    },
+	//	IO_PRINTER_PORT(1,"\0"),
 		{IO_END}
 	};
 	

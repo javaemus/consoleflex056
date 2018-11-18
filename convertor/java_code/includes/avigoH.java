@@ -15,5 +15,9 @@ public class avigoH
 	WRITE_HANDLER(avigo_vid_memory_w);
 	
 	
+	void avigo_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
 	void avigo_init_palette(UBytePtr sys_palette, unsigned short *sys_colortable, const UBytePtr color_prom);
+	
+	void	avigo_vh_set_stylus_marker_position(int x,int y);
+	
 }

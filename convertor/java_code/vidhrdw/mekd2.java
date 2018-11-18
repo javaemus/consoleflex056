@@ -16,6 +16,7 @@ package vidhrdw;
 public class mekd2
 {
 	
+	
 	#ifndef VERBOSE
 	#define VERBOSE 1
 	#endif
@@ -26,15 +27,9 @@ public class mekd2
 	#define LOG(x)	/* x */
 	#endif
 	
-	static struct artwork *mekd2_backdrop;
-	
 	public static VhConvertColorPromPtr mekd2_init_colors = new VhConvertColorPromPtr() { public void handler(char []palette, char []colortable, UBytePtr color_prom) 
 	{
-		char backdrop_name[200];
-	    int i, nextfree;
-	
-	    /* try to load a backdrop for the machine */
-	    sprintf (backdrop_name, "%s.png", Machine.gamedrv.name);
+	    int i;
 	
 		/* initialize 16 colors with shades of red (orange) */
 	    for (i = 0; i < 16; i++)
@@ -76,29 +71,23 @@ public class mekd2
 	    colortable[2 * 16 + 1 * 4 + 1] = 17;
 	    colortable[2 * 16 + 1 * 4 + 2] = 19;
 	    colortable[2 * 16 + 1 * 4 + 3] = 15;
-	
-	    nextfree = 21;
-	
-		if ((mekd2_backdrop = artwork_load (backdrop_name, nextfree, Machine.drv.total_colors - nextfree)) != NULL)
-	    {
-	        LOG (("backdrop %s successfully loaded\n", backdrop_name));
-			memcpy (&palette[nextfree * 3], mekd2_backdrop.orig_palette, mekd2_backdrop.num_pens_used * 3 * sizeof (unsigned char));
-	    }
-	    else
-	    {
-	        LOG (( "no backdrop loaded\n"));
-	    }
 	} };
 	
 	public static VhStartPtr mekd2_vh_start = new VhStartPtr() { public int handler() 
 	{
 	    videoram_size[0] = 6 * 2 + 24;
-	    videoram = malloc (videoram_size[0]);
+	    videoram = (UINT8*)auto_malloc (videoram_size[0]);
 		if (!videoram)
 	        return 1;
-		if (mekd2_backdrop != 0)
-			backdrop_refresh (mekd2_backdrop);
-	    if (generic_vh_start () != 0)
+	
+		{
+			char backdrop_name[200];
+		    /* try to load a backdrop for the machine */
+			sprintf(backdrop_name, "%s.png", Machine.gamedrv.name);
+			backdrop_load(backdrop_name, 2);
+		}
+	
+		if (generic_vh_start () != 0)
 	        return 1;
 	
 	    return 0;
@@ -106,28 +95,13 @@ public class mekd2
 	
 	public static VhStopPtr mekd2_vh_stop = new VhStopPtr() { public void handler() 
 	{
-		if (mekd2_backdrop != 0)
-			artwork_free (mekd2_backdrop);
-		mekd2_backdrop = NULL;
-	    if (videoram != 0)
-	        free (videoram);
 	    videoram = NULL;
 	    generic_vh_stop ();
 	} };
 	
-	public static VhUpdatePtr mekd2_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void mekd2_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	    int x, y;
-	
-	    if (full_refresh != 0)
-	    {
-	        osd_mark_dirty (0, 0, bitmap.width, bitmap.height, 0);
-	        memset (videoram, 0x0f, videoram_size[0]);
-	    }
-		if (mekd2_backdrop != 0)
-			copybitmap (bitmap, mekd2_backdrop.artwork, 0, 0, 0, 0, NULL, TRANSPARENCY_NONE, 0);
-		else
-			fillbitmap (bitmap, Machine.pens[0], &Machine.drv.visible_area);
 	
 	    for (x = 0; x < 6; x++)
 	    {
@@ -137,7 +111,7 @@ public class mekd2
 	        drawgfx (bitmap, Machine.gfx[0],
 	                 videoram.read(2 * x + 0), videoram.read(2 * x + 1),
 	                 0, 0, sx, sy, NULL, TRANSPARENCY_PEN, 0);
-	        osd_mark_dirty (sx, sy, sx + 15, sy + 31, 1);
+	        osd_mark_dirty (sx, sy, sx + 15, sy + 31);
 	    }
 	
 	    for (y = 0; y < 6; y++)
@@ -165,11 +139,11 @@ public class mekd2
 	                     layout[y][x], color,
 	                     0, 0, sx, sy, NULL,
 	                     TRANSPARENCY_NONE, 0);
-	            osd_mark_dirty (sx, sy, sx + 23, sy + 17, 1);
+	            osd_mark_dirty (sx, sy, sx + 23, sy + 17);
 	        }
 	    }
 	
-	} };
+	}
 	
 	
 }

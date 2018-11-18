@@ -14,7 +14,8 @@ READ_HANDLER ( sms_vdp_data_r );
 WRITE_HANDLER ( sms_vdp_data_w );
 READ_HANDLER ( sms_vdp_ctrl_r );
 WRITE_HANDLER ( sms_vdp_ctrl_w );
-void sms_refresh_line(struct osd_bitmap *bitmap, int line);
+void sms_refresh_line(struct mame_bitmap *bitmap, int line);
+void sms_vdp_refresh(struct mame_bitmap *bitmap, int full_refresh);
 
 #endif /* _SMSVDP_H_ */
 

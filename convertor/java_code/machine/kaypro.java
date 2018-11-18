@@ -138,8 +138,8 @@ public class kaypro
 	public static InitMachinePtr kaypro_init_machine = new InitMachinePtr() { public void handler() 
 	{
 		/* disable CapsLock LED initially */
-		osd_led_w(1, 1);
-		osd_led_w(1, 0);
+		set_led_status(1, 1);
+		set_led_status(1, 0);
 		cpm_init(4, disk_ids);
 	} };
 	
@@ -202,7 +202,7 @@ public class kaypro
 			lastrow = row;
 			/* CapsLock LED */
 			if( row == 3 && chg == 0x80 )
-				osd_led_w(1, (keyrows[3] & 0x80) ? 0 : 1);
+				set_led_status(1, (keyrows[3] & 0x80) ? 0 : 1);
 	
 			if ((new & chg) != 0)	/* key(s) pressed ? */
 			{

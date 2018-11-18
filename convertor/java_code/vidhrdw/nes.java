@@ -40,10 +40,10 @@ public class nes
 	UBytePtr dirtybuffer3;
 	UBytePtr dirtybuffer4;
 	#endif
-	unsigned char line_priority[0x100];
+	unsigned char line_priority[0x108];
 	
 	/* Changed at runtime */
-	static unsigned short nes_colortable[] =
+	static UINT32 nes_colortable[] =
 	{
 		0,1,2,3,
 		0,1,2,3,
@@ -55,7 +55,7 @@ public class nes
 		0,1,2,3,
 	};
 	
-	unsigned short colortable_mono[] =
+	UINT32 colortable_mono[] =
 	{
 		0,1,2,3,
 		0,1,2,3,
@@ -77,15 +77,15 @@ public class nes
 	public static VhConvertColorPromPtr nes_init_palette = new VhConvertColorPromPtr() { public void handler(char []palette, char []colortable, UBytePtr color_prom) 
 	{
 	#ifndef M_PI
-	#define M_PI 			(3.14159265358979323846L)
+	#define M_PI			(3.14159265358979323846L)
 	#endif
 	
 		/* This routine builds a palette using a transformation from */
 		/* the YUV (Y, B-Y, R-Y) to the RGB color space */
 	
-		/* The NES has a 64 color palette                        */
-		/* 16 colors, with 4 luminance levels for each color     */
-		/* The 16 colors circle around the YUV color space,      */
+		/* The NES has a 64 color palette						 */
+		/* 16 colors, with 4 luminance levels for each color	 */
+		/* The 16 colors circle around the YUV color space, 	 */
 	
 		/* It also returns a fake colortable, for the menus */
 	
@@ -113,7 +113,9 @@ public class nes
 		/* Loop through the emphasis modes (8 total) */
 		for (x = 0; x < 8; x ++)
 		{
-			double r_mod, g_mod, b_mod;
+			double r_mod = 0;
+			double g_mod = 0;
+			double b_mod = 0;
 	
 			switch (x)
 			{
@@ -200,7 +202,14 @@ public class nes
 		}
 	#endif
 	
-		memcpy(colortable,nes_colortable,sizeof(nes_colortable));
+	#if 0
+	/* base type of arrays are different now!*/
+	   memcpy(colortable,nes_colortable,sizeof(nes_colortable));
+	#else
+		for (i=0; i<ARRAY_LENGTH(nes_colortable); i++) {
+		    colortable[i]=nes_colortable[i];
+		}
+	#endif
 	} };
 	
 	/***************************************************************************
@@ -217,10 +226,10 @@ public class nes
 			return 1;
 	
 		/* We use an offscreen bitmap that's 4 times as large as the visible one */
-		if ((tmpbitmap = osd_alloc_bitmap(2 * 32*8, 2 * 30*8,Machine.scrbitmap.depth)) == 0)
+		if ((tmpbitmap = bitmap_alloc_depth(2 * 32*8, 2 * 30*8,Machine.scrbitmap.depth)) == 0)
 		{
 			free (videoram);
-			osd_free_bitmap (tmpbitmap);
+			bitmap_free (tmpbitmap);
 			return 1;
 		}
 	
@@ -228,7 +237,7 @@ public class nes
 		if ((spriteram = calloc (SPRITERAM_SIZE,1)) == 0)
 		{
 			free (videoram);
-			osd_free_bitmap (tmpbitmap);
+			bitmap_free (tmpbitmap);
 			return 1;
 		}
 	
@@ -241,7 +250,7 @@ public class nes
 		if ((!dirtybuffer) || (!dirtybuffer2) || (!dirtybuffer3) || (!dirtybuffer4))
 		{
 			free (videoram);
-			osd_free_bitmap (tmpbitmap);
+			bitmap_free (tmpbitmap);
 			free (spriteram);
 			if (dirtybuffer != 0)  free (dirtybuffer);
 			if (dirtybuffer2 != 0) free (dirtybuffer2);
@@ -290,7 +299,7 @@ public class nes
 		free (dirtybuffer3);
 		free (dirtybuffer4);
 	#endif
-		osd_free_bitmap (tmpbitmap);
+		bitmap_free (tmpbitmap);
 	
 	#ifdef LOG_VIDEO
 		if (videolog != 0) fclose (videolog);
@@ -317,7 +326,7 @@ public class nes
 		UINT8 scroll_y_fine;
 		UINT8 color_mask;
 		int total_elements;
-		const unsigned short *paldata_1;
+		const UINT32 *paldata_1;
 	//	const UBytePtr sd_1;
 	
 	#ifdef BIG_SCREEN
@@ -437,14 +446,14 @@ public class nes
 	#endif
 	
 			{
-				const unsigned short *paldata;
+				const UINT32 *paldata;
 				const UBytePtr sd;
-				UBytePtr bm;
+	//			UBytePtr bm;
 				int start;
 	
 	//			paldata = &Machine.gfx[gfx_bank].colortable[4 * (((color_byte >> color_bits) & 0x03)/* % 8*/)];
 				paldata = &paldata_1[4 * (((color_byte >> color_bits) & 0x03))];
-				bm = Machine.scrbitmap.line[scanline] + start_x;
+	//			bm = Machine.scrbitmap.line[scanline] + start_x;
 	//			sd = &Machine.gfx[gfx_bank].gfxdata[start * Machine.gfx[gfx_bank].width];
 				start = (index2 % total_elements) * 8 + scroll_y_fine;
 				sd = &Machine.gfx[gfx_bank].gfxdata[start * 8];
@@ -467,7 +476,7 @@ public class nes
 					}
 				}
 	
-				if (*ppu_latch)
+				if (ppu_latch != 0)
 				{
 					(*ppu_latch)((PPU_tile_page << 10) | (ppu_page[page][address] << 4));
 				}
@@ -544,7 +553,7 @@ public class nes
 			{
 				PPU_refresh_data |= (tmp & 0x03e0);
 			}
-	    }
+		}
 	
 		profiler_mark(PROFILER_END);
 	}
@@ -572,7 +581,7 @@ public class nes
 			/* If the sprite isn't visible, skip it */
 			if ((y + size <= scanline) || (y > scanline)) continue;
 	
-			x    = spriteram.read(i+3);
+			x	 = spriteram.read(i+3);
 			tile = spriteram.read(i+1);
 			color = (spriteram.read(i+2)& 0x03) + 4;
 			pri = spriteram.read(i+2)& 0x20;
@@ -599,7 +608,7 @@ public class nes
 	
 	//if (priority == 0)
 	{
-			if (*ppu_latch)
+			if (ppu_latch != 0)
 			{
 	//			if ((tile == 0x1fd) || (tile == 0x1fe)) Debugger ();
 				(*ppu_latch)((PPU_sprite_page << 10) | ((tile & 0xff) << 4));
@@ -610,9 +619,9 @@ public class nes
 			{
 				int sprite_line;
 				int drawn = 0;
-				const unsigned short *paldata;
+				const UINT32 *paldata;
 				const UBytePtr sd;
-				UBytePtr bm;
+	//			UBytePtr bm;
 				int start;
 	
 				sprite_line = scanline - y;
@@ -629,7 +638,7 @@ public class nes
 	
 				paldata = &Machine.gfx[gfx_bank].colortable[4 * color];
 				start = (index1 % Machine.gfx[gfx_bank].total_elements) * 8 + sprite_line;
-				bm = Machine.scrbitmap.line[scanline] + x;
+	//			bm = Machine.scrbitmap.line[scanline] + x;
 				sd = &Machine.gfx[gfx_bank].gfxdata[start * Machine.gfx[gfx_bank].width];
 	
 				if (pri != 0)
@@ -750,7 +759,7 @@ public class nes
 		}
 	}
 	
-	void nes_vh_sprite_dma_w (int offset, int data)
+	WRITE_HANDLER(nes_vh_sprite_dma_w)
 	{
 		UBytePtr RAM = memory_region(REGION_CPU1);
 	
@@ -762,7 +771,7 @@ public class nes
 	#endif
 	}
 	
-	void draw_sight(int playerNum, int x_center, int y_center)
+	static void draw_sight(int playerNum, int x_center, int y_center)
 	{
 		int x,y;
 		UINT16 color;
@@ -772,11 +781,11 @@ public class nes
 		else
 			color = Machine.pens[0x30]; /* white */
 	
-	    if (x_center<2)   x_center=2;
-	    if (x_center>253) x_center=253;
+		if (x_center<2)   x_center=2;
+		if (x_center>253) x_center=253;
 	
-	    if (y_center<2)   y_center=2;
-	    if (y_center>253) y_center=253;
+		if (y_center<2)   y_center=2;
+		if (y_center>253) y_center=253;
 	
 		for(y = y_center-5; y < y_center+6; y++)
 			if((y >= 0) && (y < 256))
@@ -788,7 +797,7 @@ public class nes
 	}
 	
 	/* This routine is called at the start of vblank to refresh the screen */
-	public static VhUpdatePtr nes_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void nes_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	#ifdef BIG_SCREEN
 		int page;
@@ -1111,5 +1120,6 @@ public class nes
 			}
 		}
 	#endif
-	} };
+	}
+	
 }

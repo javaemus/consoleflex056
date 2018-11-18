@@ -24,7 +24,7 @@ public class cbmb
 	UINT8 *cbmb_memory;
 	UINT8 *cbmb_basic;
 	UINT8 *cbmb_kernal;
-	UINT8 *cbmb_chargen;
+	static UINT8 *cbmb_chargen;
 	UINT8 *cbmb_videoram;
 	UINT8 *cbmb_colorram;
 	
@@ -156,7 +156,7 @@ public class cbmb
 		if (level != old_level)
 		{
 			DBG_LOG (3, "mos6509", ("irq %s\n", level ? "start" : "end"));
-			cpu_set_irq_line (0, M6509_INT_IRQ, level);
+			cpu_set_irq_line (0, M6502_IRQ_LINE, level);
 			old_level = level;
 		}
 	}
@@ -213,21 +213,22 @@ public class cbmb
 		return cbmb_colorram[offset&0x3ff];
 	}
 	
+	static void cbmb_change_font(int level)
+	{
+		cbmb_vh_set_font(level);
+	}
+	
 	static void cbmb_common_driver_init (void)
 	{
+		cbmb_chargen=memory_region(REGION_CPU1)+0x100000;
 		/*    memset(c64_memory, 0, 0xfd00); */
 	
-	#if 0
-		sid6581_0_init (c64_paddle_read);
-	#else
-		sid6581_0_init (NULL, 1);
-	#endif
 		cbmb_cia.todin50hz = 0;
 		cia6526_config (0, &cbmb_cia);
 	
 		tpi6525[0].a.read=cbmb_tpi0_port_a_r;
 		tpi6525[0].a.output=cbmb_tpi0_port_a_w;
-		tpi6525[0].ca.output=crtc6845_address_line_12;
+		tpi6525[0].ca.output=cbmb_change_font;
 		tpi6525[0].interrupt.output=cbmb_irq;
 		tpi6525[1].a.read=cbmb_keyboard_line_a;
 		tpi6525[1].b.read=cbmb_keyboard_line_b;
@@ -245,32 +246,44 @@ public class cbmb
 		cbm_ieee_open();
 	}
 	
+	static CRTC6845_CONFIG cbm600_crtc= { 1600000 /*?*/, cbmb_vh_cursor };
 	void cbm600_driver_init (void)
 	{
 		cbmb_common_driver_init ();
-		raster2.display_state=cbmb_state;
-		crtc6845_cbm600_init(cbmb_videoram);
+		state_add_function(cbmb_state);
+		cbm600_vh_init();
+		crtc6845_init(crtc6845, &cbm600_crtc);
 	}
 	
 	void cbm600pal_driver_init (void)
 	{
 		cbmb_common_driver_init ();
-		raster2.display_state=cbmb_state;
-		crtc6845_cbm600pal_init(cbmb_videoram);
+		state_add_function(cbmb_state);
+		cbm600_vh_init();
+		crtc6845_init(crtc6845, &cbm600_crtc);
 	}
 	
+	void cbm600hu_driver_init (void)
+	{
+		cbmb_common_driver_init ();
+		state_add_function(cbmb_state);
+		crtc6845_init(crtc6845, &cbm600_crtc);
+	}
+	
+	static CRTC6845_CONFIG cbm700_crtc= { 2000000 /*?*/, cbmb_vh_cursor };
 	void cbm700_driver_init (void)
 	{
 		cbmb_common_driver_init ();
-		raster2.display_state=cbmb_state;
-		crtc6845_cbm700_init(cbmb_videoram);
+		state_add_function(cbmb_state);
+		cbm700_vh_init();
+		crtc6845_init(crtc6845, &cbm700_crtc);
 	}
 	
 	void cbm500_driver_init (void)
 	{
 		cbmb_common_driver_init ();
 		cbm500=1;
-		raster1.display_state=cbmb_state;
+		state_add_function(cbmb_state);
 		vic6567_init (0, 0, cbmb_dma_read, cbmb_dma_read_color, NULL);
 	}
 	
@@ -280,7 +293,7 @@ public class cbmb
 	
 	public static InitMachinePtr cbmb_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		sid6581_0_reset();
+		sid6581_reset(0);
 		cia6526_reset ();
 		tpi6525_0_reset();
 		tpi6525_1_reset();
@@ -595,31 +608,25 @@ public class cbmb
 	
 		vic2_frame_interrupt ();
 	
-		osd_led_w (1 /*KB_CAPSLOCK_FLAG */ , KEY_SHIFTLOCK ? 1 : 0);
+		set_led_status (1 /*KB_CAPSLOCK_FLAG */ , KEY_SHIFTLOCK ? 1 : 0);
 	#if 0
-		osd_led_w (0 /*KB_NUMLOCK_FLAG */ , JOYSTICK_SWAP ? 1 : 0);
+		set_led_status (0 /*KB_NUMLOCK_FLAG */ , JOYSTICK_SWAP ? 1 : 0);
 	#endif
 	}
 	
-	void cbmb_state(PRASTER *This)
+	void cbmb_state(void)
 	{
 	#if VERBOSE_DBG
-		int y;
 		char text[70];
-	
-		y = Machine.visible_area.max_y + 1 - Machine.uifont.height;
 	
 		snprintf(text, sizeof(text),
 				 "%.2x %.2x",
 				 MODELL_700, VIDEO_NTSC);
-		praster_draw_text (This, text, &y);
-	
-		crtc6845_status(text, sizeof(text));
-		praster_draw_text (This, text, &y);
+		state_display_text (text);
 	
 	#if 0
 		cia6526_status (text, sizeof (text));
-		praster_draw_text (This, text, &y);
+		state_display_text (text);
 	#endif
 	#endif
 	}

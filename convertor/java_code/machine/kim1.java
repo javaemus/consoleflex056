@@ -633,7 +633,7 @@ public class kim1
 		char buff[4];
 		void *file;
 	
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, 0);
+		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE, 0);
 		if (file != 0)
 		{
 			UINT16 addr, size;
@@ -643,7 +643,7 @@ public class kim1
 			if (memcmp(buff, magic, sizeof (buff)))
 			{
 				logerror("kim1_rom_load: magic '%s' not found\n", magic);
-				return INIT_FAILED;
+				return INIT_FAIL;
 			}
 			osd_fread_lsbfirst(file, &addr, 2);
 			osd_fread_lsbfirst(file, &size, 2);
@@ -653,31 +653,12 @@ public class kim1
 				osd_fread(file, &RAM[addr++], 1);
 			osd_fclose(file);
 		}
-		return INIT_OK;
+		return INIT_PASS;
 	}
 	
 	void kim1_cassette_exit(int id)
 	{
 		/* nothing yet */
-	}
-	
-	int kim1_cassette_id(int id)
-	{
-		const char magic[] = "KIM1";
-		char buff[4];
-		void *file;
-	
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, 0);
-		if (file != 0)
-		{
-			osd_fread(file, buff, sizeof (buff));
-			if (memcmp(buff, magic, sizeof (buff)) == 0)
-			{
-				logerror("kim1_rom_id: magic '%s' found\n", magic);
-				return 1;
-			}
-		}
-		return 0;
 	}
 	
 	static void m6530_timer_cb(int chip)

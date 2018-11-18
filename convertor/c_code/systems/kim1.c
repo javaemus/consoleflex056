@@ -76,8 +76,7 @@
 #define LOG(x)	/* x */
 #endif
 
-static struct MemoryReadAddress readmem[] =
-{
+static MEMORY_READ_START ( readmem )
 	{ 0x0000, 0x03ff, MRA_RAM },
 	{ 0x1700, 0x173f, m6530_003_r },
 	{ 0x1740, 0x177f, m6530_002_r },
@@ -86,11 +85,9 @@ static struct MemoryReadAddress readmem[] =
 	{ 0x1800, 0x1bff, MRA_ROM },
 	{ 0x1c00, 0x1fff, MRA_ROM },
 	{ 0x2000, 0xffff, kim1_mirror_r },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress writemem[] =
-{
+static MEMORY_WRITE_START( writemem )
 	{ 0x0000, 0x03ff, MWA_RAM },
 	{ 0x1700, 0x173f, m6530_003_w },
 	{ 0x1740, 0x177f, m6530_002_w },
@@ -99,8 +96,7 @@ static struct MemoryWriteAddress writemem[] =
 	{ 0x1800, 0x1bff, MWA_ROM },
 	{ 0x1c00, 0x1fff, MWA_ROM },
 	{ 0x2000, 0xffff, kim1_mirror_w },
-    {-1}
-};
+MEMORY_END
 
 INPUT_PORTS_START( kim1 )
 	PORT_START			/* IN0 keys row 0 */
@@ -182,8 +178,7 @@ static struct GfxDecodeInfo gfxdecodeinfo[] =
 {
 	{ 1, 0, &led_layout, 0, 16 },
 	{ 2, 0, &key_layout, 16*2, 2 },
-	{ -1 } /* end of array */
-};
+MEMORY_END	 /* end of array */
 
 static struct DACinterface dac_interface =
 {
@@ -211,7 +206,7 @@ static struct MachineDriver machine_driver_kim1 =
 	/* video hardware (well, actually there was no video ;) */
 	600, 768, { 0, 600 - 1, 0, 768 - 1},
 	gfxdecodeinfo,
-	256*3,
+	32768+21,				/* leave extra colors for the overlay */
 	256,
 	kim1_init_colors,		/* convert color prom */
 
@@ -232,12 +227,12 @@ static struct MachineDriver machine_driver_kim1 =
 };
 
 ROM_START(kim1)
-	ROM_REGION(0x10000,REGION_CPU1)
+	ROM_REGION(0x10000,REGION_CPU1,0)
 		ROM_LOAD("6530-003.bin",    0x1800, 0x0400, 0xa2a56502)
 		ROM_LOAD("6530-002.bin",    0x1c00, 0x0400, 0x2b08e923)
-	ROM_REGION(128 * 24 * 3,REGION_GFX1)
+	ROM_REGION(128 * 24 * 3,REGION_GFX1,0)
 		/* space filled with 7segement graphics by kim1_init_driver */
-	ROM_REGION( 24 * 18 * 3 * 2,REGION_GFX2)
+	ROM_REGION( 24 * 18 * 3 * 2,REGION_GFX2,0)
 		/* space filled with key icons by kim1_init_driver */
 ROM_END
 
@@ -249,7 +244,7 @@ static const struct IODevice io_kim1[] = {
         1,                  /* count */
 		"kim\0",            /* file extensions */
 		IO_RESET_ALL,		/* reset if file changed */
-        kim1_cassette_id,   /* id */
+        0,
 		kim1_cassette_init, /* init */
 		kim1_cassette_exit, /* exit */
         NULL,               /* info */
@@ -267,5 +262,5 @@ static const struct IODevice io_kim1[] = {
 };
 
 /*    YEAR  NAME      PARENT    MACHINE   INPUT     INIT      COMPANY   FULLNAME */
-COMP( 1975, kim1,	  0, 		kim1,	  kim1, 	kim1,	  "Commodore Business Machines Co.",  "KIM-1" )
+COMP( 1975, kim1,	  0, 		kim1,	  kim1, 	kim1,	  "MOS Technologies",  "KIM-1" )
 

@@ -16,6 +16,7 @@ package machine;
 public class mekd2
 {
 	
+	
 	#ifndef VERBOSE
 	#define VERBOSE 1
 	#endif
@@ -545,7 +546,7 @@ public class mekd2
 	
 		dst = memory_region(2);
 		memset(dst, 0, 24 * 18 * 24 / 8);
-		for (i = 0; i < 24; i++)
+		for (i = 0; (i < 24)&&(keys[i]); i++) // only 23 keys inited!
 		{
 			for (y = 0; y < 18; y++)
 			{
@@ -582,7 +583,7 @@ public class mekd2
 	
 		//if (name && name[0])
 		//{
-			file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, 0);
+			file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 			if (file != 0)
 			{
 				UINT16 addr, size;
@@ -591,7 +592,7 @@ public class mekd2
 				osd_fread(file, buff, sizeof (buff));
 				if (memcmp(buff, magic, sizeof (buff)))
 				{
-					LOG(( "mekd2_rom_load: magic '%s' not found\n", magic));
+					logerror( "mekd2_rom_load: magic '%s' not found\n", magic);
 					return 1;
 				}
 				osd_fread_lsbfirst(file, &addr, 2);
@@ -604,25 +605,6 @@ public class mekd2
 			}
 		//}
 	
-		return 0;
-	}
-	
-	int mekd2_rom_id(int id)
-	{
-		const char magic[] = "MEK6800D2";
-		char buff[9];
-		void *file;
-	
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, 0);
-		if (file != 0)
-		{
-			osd_fread(file, buff, sizeof (buff));
-			if (memcmp(buff, magic, sizeof (buff)) == 0)
-			{
-				LOG(( "mekd2_rom_id: magic '%s' found\n", magic));
-				return 1;
-			}
-		}
 		return 0;
 	}
 	

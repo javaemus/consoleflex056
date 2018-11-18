@@ -72,7 +72,7 @@ public class epnickH
 		unsigned long LD2;
 	
 		LPT_ENTRY	LPT;
-		UBytePtr dest;
+		unsigned short *dest;
 	
 		unsigned char Reg[16];
 	} NICK_STATE;

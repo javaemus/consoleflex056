@@ -41,7 +41,7 @@ public class zx
 		{
 			int y, new_x, new_y;
 			struct rectangle r;
-			struct osd_bitmap *bitmap = Machine.scrbitmap;
+			struct mame_bitmap *bitmap = Machine.scrbitmap;
 	
 			new_y = cpu_getscanline();
 			new_x = cpu_gethorzbeampos();
@@ -121,7 +121,7 @@ public class zx
 	
 	int zx_ula_r(int offs, int region)
 	{
-		struct osd_bitmap *bitmap = Machine.scrbitmap;
+		struct mame_bitmap *bitmap = Machine.scrbitmap;
 		int x, y, chr, data, ireg, rreg, cycles, offs0 = offs, halted = 0;
 		UINT8 *chrgen, *rom = memory_region(REGION_CPU1);
 	
@@ -169,7 +169,7 @@ public class zx
 		return rom[offs0];
 	}
 	
-	public static VhUpdatePtr zx_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void zx_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		/* decrement video synchronization counter */
 		if (ula_frame_vsync != 0)
@@ -186,5 +186,5 @@ public class zx
 			ui_text(bitmap, zx_frame_message, 2, Machine.visible_area.max_y - Machine.visible_area.min_y - 9);
 			zx_frame_time--;
 		}
-	} };
+	}
 }

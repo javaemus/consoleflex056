@@ -32,128 +32,104 @@ public class trs80
 {
 	
 	#define FW	TRS80_FONT_W
-	#define FH  TRS80_FONT_H
+	#define FH	TRS80_FONT_H
 	
-	static MemoryReadAddress readmem_level1[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x0fff, MRA_ROM ),
-	    new MemoryReadAddress( 0x3800, 0x38ff, trs80_keyboard_r ),
-		new MemoryReadAddress( 0x3c00, 0x3fff, MRA_RAM ),
-		new MemoryReadAddress( 0x4000, 0x7fff, MRA_RAM ),
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	MEMORY_READ_START( readmem_level1 )
+		{ 0x0000, 0x0fff, MRA_ROM },
+		{ 0x3800, 0x38ff, trs80_keyboard_r },
+		{ 0x3c00, 0x3fff, MRA_RAM },
+		{ 0x4000, 0x7fff, MRA_RAM },
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_level1[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x0fff, MWA_ROM ),
-		new MemoryWriteAddress( 0x3c00, 0x3fff, videoram_w, videoram, videoram_size ),
-		new MemoryWriteAddress( 0x4000, 0x7fff, MWA_RAM ),
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+	MEMORY_WRITE_START( writemem_level1 )
+		{ 0x0000, 0x0fff, MWA_ROM },
+		{ 0x3c00, 0x3fff, videoram_w, &videoram, &videoram_size },
+		{ 0x4000, 0x7fff, MWA_RAM },
+	MEMORY_END
 	
-	static IOReadPort readport_level1[] =
-	{
-		new IOReadPort( 0xff, 0xfe, trs80_port_xx_r ),
-	    new IOReadPort( 0xff, 0xff, trs80_port_ff_r ),
-		new IOReadPort( -1 )
-	};
+	PORT_READ_START( readport_level1 )
+		{ 0xff, 0xfe, trs80_port_xx_r },
+		{ 0xff, 0xff, trs80_port_ff_r },
+	PORT_END
 	
-	static IOWritePort writeport_level1[] =
-	{
-		new IOWritePort( 0xff, 0xff, trs80_port_ff_w ),
-		new IOWritePort( -1 )
-	};
+	PORT_WRITE_START( writeport_level1 )
+		{ 0xff, 0xff, trs80_port_ff_w },
+	PORT_END
 	
-	static MemoryReadAddress readmem_model1[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x2fff, MRA_ROM ),
-		new MemoryReadAddress( 0x3000, 0x37df, MRA_NOP ),
-		new MemoryReadAddress( 0x37e0, 0x37e3, trs80_irq_status_r ),
-		new MemoryReadAddress( 0x30e4, 0x37e7, MRA_NOP ),
-		new MemoryReadAddress( 0x37e8, 0x37eb, trs80_printer_r ),
-		new MemoryReadAddress( 0x37ec, 0x37ec, wd179x_status_r ),
-		new MemoryReadAddress( 0x37ed, 0x37ed, wd179x_track_r ),
-		new MemoryReadAddress( 0x37ee, 0x37ee, wd179x_sector_r ),
-		new MemoryReadAddress( 0x37ef, 0x37ef, wd179x_data_r ),
-		new MemoryReadAddress( 0x37f0, 0x37ff, MRA_NOP ),
-		new MemoryReadAddress( 0x3800, 0x38ff, trs80_keyboard_r ),
-		new MemoryReadAddress( 0x3900, 0x3bff, MRA_NOP ),
-		new MemoryReadAddress( 0x3c00, 0x3fff, MRA_RAM ),
-		new MemoryReadAddress( 0x4000, 0xffff, MRA_RAM ),
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	MEMORY_READ_START( readmem_model1 )
+		{ 0x0000, 0x2fff, MRA_ROM },
+		{ 0x3000, 0x37df, MRA_NOP },
+		{ 0x37e0, 0x37e3, trs80_irq_status_r },
+		{ 0x30e4, 0x37e7, MRA_NOP },
+		{ 0x37e8, 0x37eb, trs80_printer_r },
+		{ 0x37ec, 0x37ec, wd179x_status_r },
+		{ 0x37ed, 0x37ed, wd179x_track_r },
+		{ 0x37ee, 0x37ee, wd179x_sector_r },
+		{ 0x37ef, 0x37ef, wd179x_data_r },
+		{ 0x37f0, 0x37ff, MRA_NOP },
+		{ 0x3800, 0x38ff, trs80_keyboard_r },
+		{ 0x3900, 0x3bff, MRA_NOP },
+		{ 0x3c00, 0x3fff, MRA_RAM },
+		{ 0x4000, 0xffff, MRA_RAM },
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_model1[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x2fff, MWA_ROM ),
-		new MemoryWriteAddress( 0x3000, 0x37df, MWA_NOP ),
-		new MemoryWriteAddress( 0x37e0, 0x37e3, trs80_motor_w ),
-		new MemoryWriteAddress( 0x37e4, 0x37e7, MWA_NOP ),
-		new MemoryWriteAddress( 0x37e8, 0x37eb, trs80_printer_w ),
-		new MemoryWriteAddress( 0x37ec, 0x37ec, wd179x_command_w ),
-		new MemoryWriteAddress( 0x37ed, 0x37ed, wd179x_track_w ),
-		new MemoryWriteAddress( 0x37ee, 0x37ee, wd179x_sector_w ),
-		new MemoryWriteAddress( 0x37ef, 0x37ef, wd179x_data_w ),
-		new MemoryWriteAddress( 0x37f0, 0x37ff, MWA_NOP ),
-		new MemoryWriteAddress( 0x3800, 0x3bff, MWA_NOP ),
-		new MemoryWriteAddress( 0x3c00, 0x3fff, videoram_w, videoram, videoram_size ),
-		new MemoryWriteAddress( 0x4000, 0xffff, MWA_RAM ),
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+	MEMORY_WRITE_START( writemem_model1 )
+		{ 0x0000, 0x2fff, MWA_ROM },
+		{ 0x3000, 0x37df, MWA_NOP },
+		{ 0x37e0, 0x37e3, trs80_motor_w },
+		{ 0x37e4, 0x37e7, MWA_NOP },
+		{ 0x37e8, 0x37eb, trs80_printer_w },
+		{ 0x37ec, 0x37ec, wd179x_command_w },
+		{ 0x37ed, 0x37ed, wd179x_track_w },
+		{ 0x37ee, 0x37ee, wd179x_sector_w },
+		{ 0x37ef, 0x37ef, wd179x_data_w },
+		{ 0x37f0, 0x37ff, MWA_NOP },
+		{ 0x3800, 0x3bff, MWA_NOP },
+		{ 0x3c00, 0x3fff, videoram_w, &videoram, &videoram_size },
+		{ 0x4000, 0xffff, MWA_RAM },
+	MEMORY_END
 	
-	static IOReadPort readport_model1[] =
-	{
-		new IOReadPort( 0xff, 0xfe, trs80_port_xx_r ),
-	    new IOReadPort( 0xff, 0xff, trs80_port_ff_r ),
-		new IOReadPort( -1 )
-	};
+	PORT_READ_START( readport_model1 )
+		{ 0xff, 0xfe, trs80_port_xx_r },
+		{ 0xff, 0xff, trs80_port_ff_r },
+	PORT_END
 	
-	static IOWritePort writeport_model1[] =
-	{
-		new IOWritePort( 0xff, 0xff, trs80_port_ff_w ),
-		new IOWritePort( -1 )
-	};
+	PORT_WRITE_START( writeport_model1 )
+		{ 0xff, 0xff, trs80_port_ff_w },
+	PORT_END
 	
-	static MemoryReadAddress readmem_model3[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x37ff, MRA_ROM ),
-		new MemoryReadAddress( 0x3800, 0x38ff, trs80_keyboard_r ),
-		new MemoryReadAddress( 0x3c00, 0x3fff, MRA_RAM ),
-		new MemoryReadAddress( 0x4000, 0xffff, MRA_RAM ),
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	MEMORY_READ_START( readmem_model3 )
+		{ 0x0000, 0x37ff, MRA_ROM },
+		{ 0x3800, 0x38ff, trs80_keyboard_r },
+		{ 0x3c00, 0x3fff, MRA_RAM },
+		{ 0x4000, 0xffff, MRA_RAM },
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_model3[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x37ff, MWA_ROM ),
-		new MemoryWriteAddress( 0x3800, 0x38ff, MWA_NOP ),
-		new MemoryWriteAddress( 0x3c00, 0x3fff, videoram_w, videoram, videoram_size ),
-		new MemoryWriteAddress( 0x4000, 0xffff, MWA_RAM ),
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+	MEMORY_WRITE_START( writemem_model3 )
+		{ 0x0000, 0x37ff, MWA_ROM },
+		{ 0x3800, 0x38ff, MWA_NOP },
+		{ 0x3c00, 0x3fff, videoram_w, &videoram, &videoram_size },
+		{ 0x4000, 0xffff, MWA_RAM },
+	MEMORY_END
 	
-	static IOReadPort readport_model3[] =
-	{
-		new IOReadPort( 0xe0, 0xe3, trs80_irq_status_r ),
-		new IOReadPort( 0xf0, 0xf0, wd179x_status_r ),
-		new IOReadPort( 0xf1, 0xf1, wd179x_track_r ),
-		new IOReadPort( 0xf2, 0xf2, wd179x_sector_r ),
-		new IOReadPort( 0xf3, 0xf3, wd179x_data_r ),
-		new IOReadPort( 0xff, 0xff, trs80_port_ff_r ),
-		new IOReadPort( -1 )
-	};
+	PORT_READ_START( readport_model3 )
+		{ 0xe0, 0xe3, trs80_irq_status_r },
+		{ 0xf0, 0xf0, wd179x_status_r },
+		{ 0xf1, 0xf1, wd179x_track_r },
+		{ 0xf2, 0xf2, wd179x_sector_r },
+		{ 0xf3, 0xf3, wd179x_data_r },
+		{ 0xff, 0xff, trs80_port_ff_r },
+	PORT_END
 	
-	static IOWritePort writeport_model3[] =
-	{
-		new IOWritePort( 0xe0, 0xe3, trs80_irq_mask_w ),
-		new IOWritePort( 0xe4, 0xe4, trs80_motor_w ),
-		new IOWritePort( 0xf0, 0xf0, wd179x_command_w ),
-		new IOWritePort( 0xf1, 0xf1, wd179x_track_w ),
-		new IOWritePort( 0xf2, 0xf2, wd179x_sector_w ),
-		new IOWritePort( 0xf3, 0xf3, wd179x_data_w ),
-		new IOWritePort( 0xff, 0xff, trs80_port_ff_w ),
-		new IOWritePort( -1 )
-	};
+	PORT_WRITE_START( writeport_model3 )
+		{ 0xe0, 0xe3, trs80_irq_mask_w },
+		{ 0xe4, 0xe4, trs80_motor_w },
+		{ 0xf0, 0xf0, wd179x_command_w },
+		{ 0xf1, 0xf1, wd179x_track_w },
+		{ 0xf2, 0xf2, wd179x_sector_w },
+		{ 0xf3, 0xf3, wd179x_data_w },
+		{ 0xff, 0xff, trs80_port_ff_w },
+	PORT_END
 	
 	/**************************************************************************
 	   w/o SHIFT							 with SHIFT
@@ -313,38 +289,37 @@ public class trs80
 	{
 		new GfxDecodeInfo( REGION_GFX1, 0, trs80_charlayout_normal_width, 0, 4 ),
 		new GfxDecodeInfo( REGION_GFX1, 0, trs80_charlayout_double_width, 0, 4 ),
-		new GfxDecodeInfo( -1 ) /* end of array */
-	};
+	MEMORY_END	 /* end of array */
 	
 	static unsigned char palette[] =
-	{
+	new GfxDecodeInfo(
 	   0x00,0x00,0x00,
 	   0xff,0xff,0xff
-	};
+	);
 	
 	static unsigned short colortable[] =
-	{
+	new GfxDecodeInfo(
 		0,1 	/* green on black */
-	};
+	);
 	
 	
 	
 	/* Initialise the palette */
 	static void trs80_init_palette(UBytePtr sys_palette, unsigned short *sys_colortable,const UBytePtr color_prom)
-	{
+	new GfxDecodeInfo(
 		memcpy(sys_palette,palette,sizeof(palette));
 		memcpy(sys_colortable,colortable,sizeof(colortable));
-	}
+	)
 	
-	static INT16 speaker_levels[3] = {0.0*32767,0.46*32767,0.85*32767};
+	static INT16 speaker_levels[3] = new GfxDecodeInfo(0.0*32767,0.46*32767,0.85*32767);
 	
 	static struct Speaker_interface speaker_interface =
-	{
+	new GfxDecodeInfo(
 		1,					/* one speaker */
 		{ 100 },			/* mixing levels */
 		{ 3 },				/* optional: number of different levels */
 		{ speaker_levels }	/* optional: level lookup table */
-	};
+	);
 	
 	
 	static MachineDriver machine_driver_level1 = new MachineDriver
@@ -471,8 +446,8 @@ public class trs80
 		new MachineSound[] {
 			new MachineSound(
 				SOUND_SPEAKER,
-	            speaker_interface
-	        )
+				speaker_interface
+			)
 		}
 	);
 	
@@ -482,170 +457,184 @@ public class trs80
 	
 	***************************************************************************/
 	
-	static RomLoadPtr rom_trs80l1 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+	static RomLoadPtr rom_trs80 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("level1.rom",  0x0000, 0x1000, 0x70d06dff);
 	
-		ROM_REGION(0x00c00, REGION_GFX1);
+		ROM_REGION(0x00c00, REGION_GFX1,0);
 		ROM_LOAD("trs80m1.chr", 0x0800, 0x0400, 0x0033f2b9);
 	ROM_END(); }}; 
 	
 	
-	static RomLoadPtr rom_trs80 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+	static RomLoadPtr rom_trs80l2 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("trs80.z33",   0x0000, 0x1000, 0x83dbbbe2);
 		ROM_LOAD("trs80.z34",   0x1000, 0x1000, 0x05818718);
 		ROM_LOAD("trs80.zl2",   0x2000, 0x1000, 0x306e5d66);
 	
-		ROM_REGION(0x00c00, REGION_GFX1);
+		ROM_REGION(0x00c00, REGION_GFX1,0);
 		ROM_LOAD("trs80m1.chr", 0x0800, 0x0400, 0x0033f2b9);
 	ROM_END(); }}; 
 	
 	
-	static RomLoadPtr rom_trs80alt = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+	static RomLoadPtr rom_trs80l2a = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("trs80alt.z33",0x0000, 0x1000, 0xbe46faf5);
 		ROM_LOAD("trs80alt.z34",0x1000, 0x1000, 0x6c791c2d);
 		ROM_LOAD("trs80alt.zl2",0x2000, 0x1000, 0x55b3ad13);
 	
-		ROM_REGION(0x00c00, REGION_GFX1);
+		ROM_REGION(0x00c00, REGION_GFX1,0);
 		ROM_LOAD("trs80m1.chr", 0x0800, 0x0400, 0x0033f2b9);
 	ROM_END(); }}; 
 	
 	
 	static RomLoadPtr rom_sys80 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("sys80rom.1",  0x0000, 0x1000, 0x8f5214de);
 		ROM_LOAD("sys80rom.2",  0x1000, 0x1000, 0x46e88fbf);
-		ROM_LOAD("sys80rom.3",  0x2000, 0x1000, 0x306e5d66);
+		ROM_LOAD("trs80.zl2",  0x2000, 0x1000, 0x306e5d66);
 	
-		ROM_REGION(0x00c00, REGION_GFX1);
+		ROM_REGION(0x00c00, REGION_GFX1,0);
 		ROM_LOAD("trs80m1.chr", 0x0800, 0x0400, 0x0033f2b9);
 	ROM_END(); }}; 
 	
+	static RomLoadPtr rom_lnw80 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
+		ROM_LOAD("lnw_a.bin",  0x0000, 0x0800, 0xe09f7e91);
+		ROM_LOAD("lnw_a1.bin", 0x0800, 0x0800, 0xac297d99);
+		ROM_LOAD("lnw_b.bin",  0x1000, 0x0800, 0xc4303568);
+		ROM_LOAD("lnw_b1.bin", 0x1800, 0x0800, 0x3a5ea239);
+		ROM_LOAD("lnw_c.bin",  0x2000, 0x0800, 0x2ba025d7);
+		ROM_LOAD("lnw_c1.bin", 0x2800, 0x0800, 0xed547445);
+	
+		ROM_REGION(0x01000, REGION_GFX1,0);
+		ROM_LOAD("lnw_chr.bin",0x0800, 0x0800, 0xc89b27df);
+	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_trs80m3 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("trs80m3.rom", 0x0000, 0x3800, 0x00000000);
 	
-		ROM_REGION(0x00c00, REGION_GFX1);
+		ROM_REGION(0x00c00, REGION_GFX1,0);
 		ROM_LOAD("trs80m1.chr", 0x0800, 0x0400, 0x0033f2b9);
 	ROM_END(); }}; 
-	
-	
-	static const struct IODevice io_trs80l1[] = {
-		{
-			IO_CASSETTE,		/* type */
-			1,					/* count */
-			"cas\0",            /* file extensions */
-			IO_RESET_NONE,		/* reset if file changed */
-	        trs80_cas_id,       /* id */
-			trs80_cas_init, 	/* init */
-			trs80_cas_exit, 	/* exit */
-			NULL,				/* info */
-			NULL,				/* open */
-			NULL,				/* close */
-			NULL,				/* status */
-			NULL,				/* seek */
-			NULL,				/* tell */
-	        NULL,               /* input */
-			NULL,				/* output */
-			NULL,				/* input_chunk */
-			NULL				/* output_chunk */
-		},
-		{
-			IO_QUICKLOAD,		/* type */
-			1,					/* count */
-			"cmd\0",            /* file extensions */
-			IO_RESET_ALL,		/* reset if file changed */
-	        trs80_cmd_id,       /* id */
-			trs80_cmd_init, 	/* init */
-			trs80_cmd_exit, 	/* exit */
-			NULL,				/* info */
-			NULL,				/* open */
-			NULL,				/* close */
-			NULL,				/* status */
-			NULL,				/* seek */
-			NULL,				/* tell */
-	        NULL,               /* input */
-			NULL,				/* output */
-			NULL,				/* input_chunk */
-			NULL				/* output_chunk */
-	    },
-		{ IO_END }
-	};
 	
 	
 	static const struct IODevice io_trs80[] = {
 		{
-			IO_CASSETTE,		/* type */
-			1,					/* count */
-			"cas\0",            /* file extensions */
-			IO_RESET_NONE,		/* reset if file changed */
-	        trs80_cas_id,       /* id */
-			trs80_cas_init, 	/* init */
-			trs80_cas_exit, 	/* exit */
-			NULL,				/* info */
-			NULL,				/* open */
-			NULL,				/* close */
-			NULL,				/* status */
-			NULL,				/* seek */
-			NULL,				/* tell */
-	        NULL,               /* input */
-			NULL,				/* output */
-			NULL,				/* input_chunk */
-			NULL				/* output_chunk */
+			IO_CASSETTE,			/* type */
+			1,						/* count */
+			"cas\0",                /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			trs80_cas_init, 		/* init */
+			trs80_cas_exit, 		/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			NULL,					/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
 		},
 		{
-			IO_QUICKLOAD,		/* type */
-			1,					/* count */
-			"cmd\0",            /* file extensions */
-			IO_RESET_ALL,		/* reset if file changed */
-	        trs80_cmd_id,       /* id */
-			trs80_cmd_init, 	/* init */
-			trs80_cmd_exit, 	/* exit */
-			NULL,				/* info */
-			NULL,				/* open */
-			NULL,				/* close */
-			NULL,				/* status */
-			NULL,				/* seek */
-			NULL,				/* tell */
-	        NULL,               /* input */
-			NULL,				/* output */
-			NULL,				/* input_chunk */
-			NULL				/* output_chunk */
-	    },
-	    {
-			IO_FLOPPY,			/* type */
-			4,					/* count */
-			"dsk\0",            /* file extensions */
-			IO_RESET_NONE,		/* reset if file changed */
-	        NULL,               /* id */
-			trs80_floppy_init,	/* init */
-			trs80_floppy_exit,	/* exit */
-			NULL,				/* info */
-			NULL,				/* open */
-			NULL,				/* close */
-			NULL,				/* status */
-			NULL,				/* seek */
-			NULL,				/* tell */
-	        NULL,               /* input */
-			NULL,				/* output */
-			NULL,				/* input_chunk */
-			NULL				/* output_chunk */
+			IO_QUICKLOAD,			/* type */
+			1,						/* count */
+			"cmd\0",                /* file extensions */
+			IO_RESET_CPU,			/* reset if file changed */
+			0,
+			trs80_cmd_init, 		/* init */
+			trs80_cmd_exit, 		/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			NULL,					/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
 		},
 		{ IO_END }
 	};
 	
-	#define io_trs80alt io_trs80
-	#define io_sys80	io_trs80
-	#define io_trs80m3	io_trs80
+	
+	static const struct IODevice io_trs80l2[] = {
+		{
+			IO_CASSETTE,			/* type */
+			1,						/* count */
+			"cas\0",                /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			trs80_cas_init, 		/* init */
+			trs80_cas_exit, 		/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			NULL,					/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},
+		{
+			IO_QUICKLOAD,			/* type */
+			1,						/* count */
+			"cmd\0",                /* file extensions */
+			IO_RESET_CPU,			/* reset if file changed */
+			0,
+			trs80_cmd_init, 		/* init */
+			trs80_cmd_exit, 		/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			NULL,					/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},
+		{
+			IO_FLOPPY,				/* type */
+			4,						/* count */
+			"dsk\0",                /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			trs80_floppy_init,		/* init */
+			basicdsk_floppy_exit,	/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			floppy_status,			/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},
+		{ IO_END }
+	};
+	
+	#define io_trs80l2a io_trs80l2
+	#define io_sys80	io_trs80l2
+	#define io_lnw80	io_trs80l2
+	#define io_trs80m3	io_trs80l2
 	
 	/*	   YEAR  NAME	   PARENT	 MACHINE   INPUT	 INIT	   COMPANY	 FULLNAME */
-	COMP ( 1977, trs80l1,  0,		 level1,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model I (Level I Basic)" )
-	COMP ( 1978, trs80,    0,		 model1,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model I (Radio Shack Level II Basic)" )
-	COMP ( 1978, trs80alt, trs80,	 model1,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model I (R/S L2 Basic)" )
+	COMP ( 1977, trs80,    0,		 level1,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model I (Level I Basic)" )
+	COMP ( 1978, trs80l2,  trs80,	 model1,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model I (Radio Shack Level II Basic)" )
+	COMP ( 1978, trs80l2a, trs80,	 model1,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model I (R/S L2 Basic)" )
 	COMP ( 1980, sys80,    trs80,	 model1,   trs80,	 trs80,    "EACA Computers Ltd.","System-80" )
+	COMPX( 1981, lnw80,    trs80,	 model1,   trs80,	 trs80,    "LNW Research","LNW-80", GAME_NOT_WORKING )
 	COMPX( 19??, trs80m3,  trs80,	 model3,   trs80,	 trs80,    "Tandy Radio Shack",  "TRS-80 Model III", GAME_NOT_WORKING )
 	
 }

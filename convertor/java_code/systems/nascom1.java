@@ -37,11 +37,11 @@ Nascom Memory map
 
 	Monitors:
 		Nasbug1		1K	Original Nascom1
-		Nasbug2
-		Nasbug3
+		Nasbug2     	1K
+		Nasbug3     Probably non existing
 		Nasbug4		2K
 		Nassys1		2K	Original Nascom2
-		Nassys2
+		Nassys2     Probably non existing
 		Nassys3		2K
 		Nassys4		2K
 		T4			2K
@@ -59,49 +59,41 @@ public class nascom1
 	
 	/* port i/o functions */
 	
-	static IOReadPort nascom1_readport[] =
-	{
-		new IOReadPort( 0x00, 0x00, nascom1_port_00_r),
-		new IOReadPort( 0x01, 0x01, nascom1_port_01_r),
-		new IOReadPort( 0x02, 0x02, nascom1_port_02_r),
-		new IOReadPort(-1)
-	};
+	PORT_READ_START( nascom1_readport )
+		{ 0x00, 0x00, nascom1_port_00_r},
+		{ 0x01, 0x01, nascom1_port_01_r},
+		{ 0x02, 0x02, nascom1_port_02_r},
+	PORT_END
 	
-	static IOWritePort nascom1_writeport[] =
-	{
-		new IOWritePort( 0x00, 0x00, nascom1_port_00_w),
-		new IOWritePort( 0x01, 0x01, nascom1_port_01_w),
-		new IOWritePort(-1)
-	};
+	PORT_WRITE_START( nascom1_writeport )
+		{ 0x00, 0x00, nascom1_port_00_w},
+		{ 0x01, 0x01, nascom1_port_01_w},
+	PORT_END
 	
 	/* Memory w/r functions */
 	
-	static MemoryReadAddress nascom1_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x07ff, MRA_ROM),
-		new MemoryReadAddress(0x0800, 0x0bff, videoram_r),
-		new MemoryReadAddress(0x0c00, 0x0fff, MRA_RAM),
-		new MemoryReadAddress(0x1000, 0x13ff, MRA_RAM),
-		new MemoryReadAddress(0x1000, 0x13ff, MRA_RAM),	/* 1Kb */
-		new MemoryReadAddress(0x1400, 0x4fff, MRA_RAM),	/* 16Kb */
-		new MemoryReadAddress(0x5000, 0x8fff, MRA_RAM),	/* 32Kb */
-		new MemoryReadAddress(0x9000, 0xafff, MRA_RAM),	/* 40Kb */
-		new MemoryReadAddress(0xb000, 0xffff, MRA_ROM),
-		new MemoryReadAddress(-1)
-	};
+	MEMORY_READ_START( nascom1_readmem )
+		{0x0000, 0x07ff, MRA_ROM},
+		{0x0800, 0x0bff, videoram_r},
+		{0x0c00, 0x0fff, MRA_RAM},
+		{0x1000, 0x13ff, MRA_RAM},
+		{0x1000, 0x13ff, MRA_RAM},	/* 1Kb */
+		{0x1400, 0x4fff, MRA_RAM},	/* 16Kb */
+		{0x5000, 0x8fff, MRA_RAM},	/* 32Kb */
+		{0x9000, 0xafff, MRA_RAM},	/* 40Kb */
+		{0xb000, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress nascom1_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x07ff, MWA_ROM),
-		new MemoryWriteAddress(0x0800, 0x0bff, videoram_w, videoram, videoram_size),
-		new MemoryWriteAddress(0x0c00, 0x0fff, MWA_RAM),
-		new MemoryWriteAddress(0x1000, 0x13ff, MWA_RAM),
-		new MemoryWriteAddress(0x1400, 0x4fff, MWA_RAM),
-		new MemoryWriteAddress(0x5000, 0x8fff, MWA_RAM),
-		new MemoryWriteAddress(0x9000, 0xafff, MWA_RAM),
-		new MemoryWriteAddress(0xb000, 0xffff, MWA_ROM),
-		new MemoryWriteAddress(-1)
-	};
+	MEMORY_WRITE_START( nascom1_writemem )
+		{0x0000, 0x07ff, MWA_ROM},
+		{0x0800, 0x0bff, videoram_w, &videoram, &videoram_size},
+		{0x0c00, 0x0fff, MWA_RAM},
+		{0x1000, 0x13ff, MWA_RAM},
+		{0x1400, 0x4fff, MWA_RAM},
+		{0x5000, 0x8fff, MWA_RAM},
+		{0x9000, 0xafff, MWA_RAM},
+		{0xb000, 0xffff, MWA_ROM},
+	MEMORY_END
 	
 	/* graphics output */
 	
@@ -120,8 +112,7 @@ public class nascom1
 	static GfxDecodeInfo nascom1_gfxdecodeinfo[] =
 	{
 		new GfxDecodeInfo( REGION_GFX1, 0x0000, nascom1_charlayout, 0, 1),
-		new GfxDecodeInfo(-1)
-	};
+	MEMORY_END
 	
 	static GfxLayout nascom2_charlayout = new GfxLayout
 	(
@@ -138,26 +129,25 @@ public class nascom1
 	static GfxDecodeInfo nascom2_gfxdecodeinfo[] =
 	{
 		new GfxDecodeInfo( REGION_GFX1, 0x0000, nascom2_charlayout, 0, 1),
-		new GfxDecodeInfo(-1)
-	};
+	MEMORY_END
 	
 	static	unsigned	char	nascom1_palette[] =
-	{
+	new GfxDecodeInfo(
 		0x00, 0x00, 0x00,	/* Black */
 		0xff, 0xff, 0xff	/* White */
-	};
+	);
 	
 	static	unsigned	short	nascom1_colortable[] =
-	{
+	new GfxDecodeInfo(
 		0, 1
-	};
+	);
 	
 	static	void	nascom1_init_palette (UBytePtr sys_palette,
 				unsigned short *sys_colortable, const UBytePtr color_prom)
-	{
+	new GfxDecodeInfo(
 		memcpy (sys_palette, nascom1_palette, sizeof (nascom1_palette));
 		memcpy (sys_colortable, nascom1_colortable, sizeof (nascom1_colortable));
-	}
+	)
 	
 	/* Keyboard input */
 	
@@ -309,17 +299,40 @@ public class nascom1
 	);
 	
 	static RomLoadPtr rom_nascom1 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
+		ROM_LOAD("nasbugt1.rom", 0x0000, 0x0400, 0x0);
+		ROM_REGION(0x0800, REGION_GFX1,0);
+		ROM_LOAD("nascom1.chr", 0x0000, 0x0800, 0x33e92a04);
+	ROM_END(); }}; 
+	
+	static RomLoadPtr rom_nascom1a = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("nasbugt2.rom", 0x0000, 0x0400, 0xe371b58a);
-		ROM_REGION(0x0800, REGION_GFX1);
+		ROM_REGION(0x0800, REGION_GFX1,0);
+		ROM_LOAD("nascom1.chr", 0x0000, 0x0800, 0x33e92a04);
+	ROM_END(); }}; 
+	
+	static RomLoadPtr rom_nascom1b = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
+		ROM_LOAD("nasbugt4.rom", 0x0000, 0x0800, 0xf391df68);
+		ROM_REGION(0x0800, REGION_GFX1,0);
 		ROM_LOAD("nascom1.chr", 0x0000, 0x0800, 0x33e92a04);
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_nascom2 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("nassys1.rom", 0x0000, 0x0800, 0xb6300716);
 		ROM_LOAD("basic.rom", 0xe000, 0x2000, 0x5cb5197b);
-		ROM_REGION(0x1000, REGION_GFX1);
+		ROM_REGION(0x1000, REGION_GFX1,0);
+		ROM_LOAD("nascom1.chr", 0x0000, 0x0800, 0x33e92a04);
+		ROM_LOAD("nasgra.chr", 0x0800, 0x0800, 0x2bc09d32);
+	ROM_END(); }}; 
+	
+	static RomLoadPtr rom_nascom2a = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000, REGION_CPU1,0);
+		ROM_LOAD("nassys3.rom", 0x0000, 0x0800, 0x3da17373);
+		ROM_LOAD("basic.rom", 0xe000, 0x2000, 0x5cb5197b);
+		ROM_REGION(0x1000, REGION_GFX1,0);
 		ROM_LOAD("nascom1.chr", 0x0000, 0x0800, 0x33e92a04);
 		ROM_LOAD("nasgra.chr", 0x0800, 0x0800, 0x2bc09d32);
 	ROM_END(); }}; 
@@ -410,7 +423,13 @@ public class nascom1
 		{ IO_END }
 	};
 	
-	/*		YEAR	NAME		PARENT		MACHINE		INPUT		INIT	COMPANY		FULLNAME */
-	COMP(	1978,	nascom1,	0,			nascom1,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 1" )
-	COMP(	1979,	nascom2,	nascom1,	nascom2,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 2" )
+	#define io_nascom1a io_nascom1
+	#define io_nascom1b io_nascom1
+	#define io_nascom2a io_nascom2
+	/*	YEAR	NAME		PARENT		MACHINE		INPUT		INIT	COMPANY		FULLNAME */
+	COMP(	1978,	nascom1,	0,		nascom1,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 1 (NasBug T1)" )
+	COMP(	1978,	nascom1a,	nascom1,	nascom1,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 1 (NasBug T2)" )
+	COMP(	1978,	nascom1b,	nascom1,	nascom1,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 1 (NasBug T4)" )
+	COMP(	1979,	nascom2,	nascom1,	nascom2,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 2 (NasSys 1)" )
+	COMP(	1979,	nascom2a,	nascom1,	nascom2,	nascom1,	0,		"Nascom Microcomputers",	"Nascom 2 (NasSys 3)" )
 }

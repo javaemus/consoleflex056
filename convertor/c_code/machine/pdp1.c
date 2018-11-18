@@ -3,6 +3,8 @@
 #include "vidhrdw/pdp1.h"
 #include "driver.h"
 
+#include "includes/pdp1.h"
+
 /*
  * osd_fread (romfile, pdp1_memory, 16384);
  *
@@ -20,11 +22,6 @@
 
 static unsigned char *ROM;
 
-int pdp1_iot(int *io, int md);
-int pdp1_load_rom (int id);
-int pdp1_id_rom (int id);
-void pdp1_plot(int x, int y);
-
 int *pdp1_memory;
 
 int pdp1_load_rom (int id)
@@ -33,7 +30,7 @@ int pdp1_load_rom (int id)
 	int i;
 
 	/* The spacewar! is mandatory for now. */
-	if (!(romfile = osd_fopen (Machine->gamedrv->name, "spacewar.bin",OSD_FILETYPE_IMAGE_R, 0)))
+	if (!(romfile = osd_fopen (Machine->gamedrv->name, "spacewar.bin",OSD_FILETYPE_IMAGE, 0)))
 	{
 		logerror("PDP1: can't find SPACEWAR.BIN\n");
 		return 1;
@@ -50,7 +47,7 @@ int pdp1_load_rom (int id)
 	}
 
 	/* Allocate memory and set up memory regions */
-	if( new_memory_region(REGION_CPU1, 0x10000 * sizeof(int)) )
+	if( new_memory_region(REGION_CPU1, 0x10000 * sizeof(int), 0) )
 	{
 		logerror("PDP1: Memory allocation failed!\n");
 		return 1;
@@ -85,11 +82,6 @@ int pdp1_load_rom (int id)
 	return 0;
 }
 
-int pdp1_id_rom (int id)
-{
-	/* This driver doesn't ID images yet */
-	return ID_OK;
-}
 static OPBASE_HANDLER(setOPbasefunc)
 {
 	/* just to get rid of the warnings */
@@ -100,15 +92,15 @@ void pdp1_init_machine(void)
 {
 	/* init pdp1 cpu */
 	extern_iot=pdp1_iot;
-	cpu_setOPbaseoverride(0,setOPbasefunc);
+	memory_set_opbase_handler(0,setOPbasefunc);
 }
 
-int pdp1_read_mem(int offset)
+READ18_HANDLER(pdp1_read_mem)
 {
 	return pdp1_memory ? pdp1_memory[offset] : 0;
 }
 
-void pdp1_write_mem(int offset, int data)
+WRITE18_HANDLER(pdp1_write_mem)
 {
 	if (pdp1_memory)
 		pdp1_memory[offset]=data;

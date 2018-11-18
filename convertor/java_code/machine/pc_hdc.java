@@ -25,6 +25,16 @@ public class pc_hdc
 {
 	
 	
+	
+	#define VERBOSE_HDC 0		/* HDC (hard disk controller) */
+	
+	#if VERBOSE_HDC
+	#define HDC_LOG(n,m,a) LOG(VERBOSE_HDC,n,m,a)
+	#else
+	#define HDC_LOG(n,m,a)
+	#endif
+	
+	
 	#define MAX_BOARD	2				/* two boards supported */
 	#define MAX_HARD	4				/* up to four had disks */
 	#define HDC_DMA 	3				/* DMA channel */
@@ -84,7 +94,7 @@ public class pc_hdc
 	static int sector[MAX_HARD] = {0,}; 			/* current sector */
 	static int sector_cnt[MAX_HARD] = {0,};         /* sector count */
 	static int control[MAX_HARD] = {0,};            /* control */
-	static int offset[MAX_HARD] = {0,};             /* offset into image file */
+	static int offset_[MAX_HARD] = {0,};             /* offset into image file */
 	
 	static int csb[MAX_BOARD] = {0,};				/* command status byte */
 	static int status[MAX_BOARD] = {0,};			/* drive status */
@@ -96,6 +106,9 @@ public class pc_hdc
 	static int data_cnt = 0;                /* data count */
 	static UINT8 buffer[17*4*512];			/* data buffer */
 	static UINT8 *ptr = 0;					/* data pointer */
+	
+	
+	static int display[4]= { 0 };
 	
 	static void pc_hdc_result(int n)
 	{
@@ -132,26 +145,27 @@ public class pc_hdc
 		UINT8 data[512], *src = data;
 		int size = sector_cnt[idx] * 512;
 		int read = 0, first = 1;
-		int no_dma = pc_DMA_mask & (0x10 << HDC_DMA);
+		int no_dma = dma8237.mask & (0x10 << HDC_DMA);
 	
+		display[idx]|=1;
 		if (f != 0)
 		{
 			if (no_dma != 0)
 			{
-				HDC_LOG(1,"hdc_PIO_read",("C:%02d H:%d S:%02d N:%d $%08x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx], size));
+				HDC_LOG(1,"hdc_PIO_read",("C:%02d H:%d S:%02d N:%d $%08x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx], size));
 				do
 				{
 					if( read == 0 )
 					{
-						osd_fseek(f, offset[idx], SEEK_SET);
+						osd_fseek(f, offset_[idx], SEEK_SET);
 						if( !first )
 						{
 							HDC_LOG(2,"hdc_PIO_read next",("C:%02d H:%d S:%02d N:%d $%08x, $%04x\n",
-								cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx], size));
+								cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx], size));
 						}
 						read = osd_fread(f, data, 512);
 	                    size -= 512;
-						offset[idx] += read;
+						offset_[idx] += read;
 						src = data;
 						first = 0;
 						sector[idx]++;
@@ -175,33 +189,41 @@ public class pc_hdc
 			}
 			else
 			{
-				HDC_LOG(1,"hdc_DMA_read",("C:%02d H:%d S:%02d N:%d $%08x . $%06x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx], pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], pc_DMA_count[HDC_DMA]+1));
+				HDC_LOG(1,"hdc_DMA_read",("C:%02d H:%d S:%02d N:%d $%08x . $%06x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx], pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], pc_DMA_count[HDC_DMA]+1));
+	#if 1
+				dma8237.status |= (0x10 << HDC_DMA);	/* reset DMA running flag */
+	#endif
 				do
 				{
 					if (read == 0)
 					{
-						osd_fseek(f, offset[idx], SEEK_SET);
+						osd_fseek(f, offset_[idx], SEEK_SET);
 						if (!first)
 						{
 							HDC_LOG(2,"hdc_DMA_read next",("C:%02d H:%d S:%02d N:%d $%08x . $%06x, $%04x\n",
-								cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx],
+								cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx],
 								pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], pc_DMA_count[HDC_DMA]+1));
 						}
 						read = osd_fread(f, data, 512);
 	                    size -= 512;
-						offset[idx] += read;
+						offset_[idx] += read;
 						src = data;
 						first = 0;
 						sector[idx]++;
 					}
-					if( pc_DMA_operation[HDC_DMA] == 1 )
+	#if 1
+					dma8237_read(dma8237, HDC_DMA, *src);
+					src++;
+	#else
+					if( dma8237.chan[HDC_DMA].operation == 1 )
 					{
 						/* now copy the buffer into PCs memory */
-						cpu_writemem20(pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], *src++);
+						cpu_writemem24(dma8237.chan[HDC_DMA].page + dma8237.chan[HDC_DMA].address, *src++);
 					}
 					else
 						src++;
-					pc_DMA_address[HDC_DMA] += pc_DMA_direction[HDC_DMA];
+					dma8237.chan[HDC_DMA].address += dma8237.chan[HDC_DMA].direction;
+	#endif
 					if( --read == 0 )
 					{
 						/* end of cylinder ? */
@@ -215,9 +237,13 @@ public class pc_hdc
 	                        }
 	                    }
 					}
-				} while( pc_DMA_count[HDC_DMA]-- );
-				pc_DMA_status &= ~(0x10 << HDC_DMA);	/* reset DMA running flag */
-				pc_DMA_status |= 0x01 << HDC_DMA;		/* set DMA terminal count flag */
+	#if 1
+				} while( dma8237.status&(0x10<<HDC_DMA) );
+	#else
+				} while( dma8237.chan[HDC_DMA].count-- );
+				dma8237.status &= ~(0x10 << HDC_DMA);	/* reset DMA running flag */
+				dma8237.status |= 0x01 << HDC_DMA;		/* set DMA terminal count flag */
+	#endif
 			}
 		}
 	}
@@ -228,22 +254,23 @@ public class pc_hdc
 		UINT8 data[512], *dst = data;
 		int size = sector_cnt[idx] * 512;
 		int write = 512, first = 1;
-		int no_dma = pc_DMA_mask & (0x10 << HDC_DMA);
+		int no_dma = dma8237.mask & (0x10 << HDC_DMA);
 	
+		display[idx]|=2;
 		if (f != 0)
 		{
 			if (no_dma != 0)
 			{
-				HDC_LOG(1,"hdc_PIO_write",("C:%02d H:%d S:%02d N:%d $%08x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx], size));
+				HDC_LOG(1,"hdc_PIO_write",("C:%02d H:%d S:%02d N:%d $%08x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx], size));
 				do
 				{
 					/* copy data into the result buffer */
 					*dst++ = buffer[data_cnt++];
 					if( --write == 0 )
 					{
-						osd_fseek(f, offset[idx], SEEK_SET);
+						osd_fseek(f, offset_[idx], SEEK_SET);
 						write = osd_fwrite(f, data, 512);
-	                    offset[idx] += write;
+	                    offset_[idx] += write;
 						size -= write;
 						if (size <= 0) write = 0;
 						dst = data;
@@ -262,21 +289,28 @@ public class pc_hdc
 			}
 			else
 			{
-				HDC_LOG(1,"hdc_DMA_write",("C:%02d H:%d S:%02d N:%d $%08x . $%06x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx], pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], pc_DMA_count[HDC_DMA]+1));
+				HDC_LOG(1,"hdc_DMA_write",("C:%02d H:%d S:%02d N:%d $%08x . $%06x, $%04x\n", cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx], pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], pc_DMA_count[HDC_DMA]+1));
+	#if 1
+				dma8237.status |= (0x10 << HDC_DMA);	/* reset DMA running flag */
+	#endif
 				do
 				{
-					if( pc_DMA_operation[HDC_DMA] == 2 )
+	#if 1
+					*dst++= dma8237_write(dma8237, HDC_DMA);
+	#else
+					if( dma8237.chan[HDC_DMA].operation == 2 )
 					{
 						/* now copy the buffer into PCs memory */
-						*dst++ = cpu_readmem20(pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA]);
+						*dst++ = cpu_readmem24(dma8237.chan[HDC_DMA].page + dma8237.chan[HDC_DMA].address);
 					};
-					pc_DMA_address[HDC_DMA] += pc_DMA_direction[HDC_DMA];
+					dma8237.chan[HDC_DMA].address += dma8237.chan[HDC_DMA].direction;
+	#endif
 					if( --write == 0 )
 					{
-						osd_fseek(f, offset[idx], SEEK_SET);
+						osd_fseek(f, offset_[idx], SEEK_SET);
 						write = osd_fwrite(f, data, 512);
 	                    size -= 512;
-						offset[idx] += write;
+						offset_[idx] += write;
 	                    /* end of cylinder ? */
 						if( ++sector[idx] >= spt[idx] )
 						{
@@ -290,15 +324,19 @@ public class pc_hdc
 						if( !first )
 						{
 							HDC_LOG(2,"hdc_DMA_write next",("C:%02d H:%d S:%02d N:%d $%08x . $%06x, $%04x\n",
-								cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset[idx],
+								cylinder[idx], head[idx], sector[idx], sector_cnt[idx], offset_[idx],
 								pc_DMA_page[HDC_DMA] + pc_DMA_address[HDC_DMA], pc_DMA_count[HDC_DMA]+1));
 	                    }
 	                    dst = data;
 	                    first = 0;
 	                }
-				} while( pc_DMA_count[HDC_DMA]-- );
-				pc_DMA_status &= ~(0x10 << HDC_DMA);	/* reset DMA running flag */
-				pc_DMA_status |= 0x01 << HDC_DMA;		/* set DMA terminal count flag */
+	#if 1
+				} while( dma8237.status&(0x10<<HDC_DMA) );
+	#else
+				} while( dma8237.chan[HDC_DMA].count-- );
+				dma8237.status &= ~(0x10 << HDC_DMA);	/* reset DMA running flag */
+				dma8237.status |= 0x01 << HDC_DMA;		/* set DMA terminal count flag */
+	#endif
 			}
 		}
 	}
@@ -318,7 +356,7 @@ public class pc_hdc
 	    cylinder[idx] |= buffer[3];
 	    sector_cnt[idx] = buffer[4];
 	    control[idx] = buffer[5];   /* 7: no retry, 6: no ecc retry, 210: step rate */
-	    offset[idx] = ((cylinder[idx] * heads[idx] + head[idx]) * spt[idx] + sector[idx]) * 512;
+	    offset_[idx] = ((cylinder[idx] * heads[idx] + head[idx]) * spt[idx] + sector[idx]) * 512;
 		error[n] = 0x80;	/* a potential error has C/H/S/N info */
 	}
 	
@@ -688,4 +726,75 @@ public class pc_hdc
 	}
 	
 	
+	/*************************************************************************
+	 *
+	 *		HDC
+	 *		hard disk controller
+	 *
+	 *************************************************************************/
+	void pc_HDC_w(int chip, int offs, int data)
+	{
+		if( !(input_port_3_r(0) & (0x08>>chip)) || !pc_hdc_file[chip<<1] )
+			return;
+	
+		switch( offs )
+		{
+			case 0: pc_hdc_data_w(chip,data);	 break;
+			case 1: pc_hdc_reset_w(chip,data);	 break;
+			case 2: pc_hdc_select_w(chip,data);  break;
+			case 3: pc_hdc_control_w(chip,data); break;
+		}
+	}
+	WRITE_HANDLER ( pc_HDC1_w ) { pc_HDC_w(0, offset, data); }
+	WRITE_HANDLER ( pc_HDC2_w ) { pc_HDC_w(1, offset, data); }
+	
+	int pc_HDC_r(int chip, int offs)
+	{
+		int data = 0xff;
+		if( !(input_port_3_r(0) & (0x08>>chip)) || !pc_hdc_file[chip<<1] )
+			return data;
+		switch( offs )
+		{
+			case 0: data = pc_hdc_data_r(chip); 	 break;
+			case 1: data = pc_hdc_status_r(chip);	 break;
+			case 2: data = pc_hdc_dipswitch_r(chip); break;
+			case 3: break;
+		}
+		return data;
+	}
+	READ_HANDLER ( pc_HDC1_r ) { return pc_HDC_r(0, offset); }
+	READ_HANDLER ( pc_HDC2_r ) { return pc_HDC_r(1, offset); }
+	
+	/*************************************
+	 *
+	 *		Port handlers.
+	 *
+	 *************************************/
+	int pc_harddisk_init(int id)
+	{
+		pc_hdc_file[id] = image_fopen(IO_HARDDISK, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW);
+		return INIT_PASS;
+	}
+	
+	void pc_harddisk_exit(int id)
+	{
+		if( pc_hdc_file[id] )
+			osd_fclose(pc_hdc_file[id]);
+	    pc_hdc_file[id] = NULL;
+	}
+	
+	void pc_harddisk_state(void)
+	{
+		int i;
+		char text[50];
+	
+		for (i=0; i<MAX_HARD; i++) {
+			if (display[i]) {
+				snprintf(text, sizeof(text), "HDD:%d track:%-3d head:%-2d sector:%-2d %s",
+						 i,cylinder[i],head[i],sector[i], display[i]&2?"writing":"reading" );
+				state_display_text(text);
+				display[i]=0;
+			}
+		}
+	}
 }

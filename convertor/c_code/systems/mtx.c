@@ -52,17 +52,17 @@ static WRITE_HANDLER ( mtx_psg_w )
 static READ_HANDLER ( mtx_vdp_r )
 {
 	if (offset & 0x01)
-		return TMS9928A_register_r();
+		return TMS9928A_register_r(0);
 	else
-		return TMS9928A_vram_r();
+		return TMS9928A_vram_r(0);
 }
 
 static WRITE_HANDLER ( mtx_vdp_w )
 {
 	if (offset & 0x01)
-		TMS9928A_register_w(data);
+		TMS9928A_register_w(0, data);
 	else
-		TMS9928A_vram_w(data);
+		TMS9928A_vram_w(0, data);
 }
 
 static WRITE_HANDLER ( mtx_sense_w )
@@ -564,7 +564,7 @@ static WRITE_HANDLER ( mtx_trap_write )
 
                                                                 filename[i + 1] = '\0';
 								logerror("%s\n", filename);
-                                                                if ((f = osd_fopen(Machine->gamedrv->name, filename,OSD_FILETYPE_IMAGE_RW,1)) != 0)
+                                                                if ((f = osd_fopen(Machine->gamedrv->name, filename,OSD_FILETYPE_IMAGE,1)) != 0)
 									{
                                                                                     osd_fwrite(f,mtx_savebuffer,mtx_saveindex);
                                                                                     osd_fclose(f);
@@ -588,7 +588,7 @@ static WRITE_HANDLER ( mtx_trap_write )
 								}
 								for(i=15; i>0 && filename[i] == 0x20;i--)
 								filename[i+1] = '\0';
-								if ((f = osd_fopen(Machine->gamedrv->name, filename,OSD_FILETYPE_IMAGE_R,0)) != 0)
+								if ((f = osd_fopen(Machine->gamedrv->name, filename,OSD_FILETYPE_IMAGE,0)) != 0)
 									{
 										filesize=osd_fsize(f);
                                                                                 mtx_loadindex = filesize;
@@ -647,24 +647,24 @@ void mtx_init_machine(void)
 
 	z80ctc_init(&mtx_ctc_intf);
 
-	cpu_setbankhandler_r(1, MRA_BANK1);
-	cpu_setbankhandler_r(2, MRA_BANK2);
-	cpu_setbankhandler_r(3, MRA_BANK3);
-	cpu_setbankhandler_r(4, MRA_BANK4);
-	cpu_setbankhandler_r(5, MRA_BANK5);
-	cpu_setbankhandler_r(6, MRA_BANK6);
-	cpu_setbankhandler_r(7, MRA_BANK7);
-	cpu_setbankhandler_r(8, MRA_BANK8);
+	memory_set_bankhandler_r(1, 0, MRA_BANK1);
+	memory_set_bankhandler_r(2, 0, MRA_BANK2);
+	memory_set_bankhandler_r(3, 0, MRA_BANK3);
+	memory_set_bankhandler_r(4, 0, MRA_BANK4);
+	memory_set_bankhandler_r(5, 0, MRA_BANK5);
+	memory_set_bankhandler_r(6, 0, MRA_BANK6);
+	memory_set_bankhandler_r(7, 0, MRA_BANK7);
+	memory_set_bankhandler_r(8, 0, MRA_BANK8);
 
 
-	cpu_setbankhandler_w(9, mtx_trap_write);
-	cpu_setbankhandler_w(10, MWA_NOP);
-	cpu_setbankhandler_w(11, MWA_BANK11);
-	cpu_setbankhandler_w(12, MWA_BANK12);
-	cpu_setbankhandler_w(13, MWA_BANK13);
-	cpu_setbankhandler_w(14, MWA_BANK14);
-	cpu_setbankhandler_w(15, MWA_BANK15);
-	cpu_setbankhandler_w(16, MWA_BANK16);
+	memory_set_bankhandler_w(9, 0, mtx_trap_write);
+	memory_set_bankhandler_w(10, 0, MWA_NOP);
+	memory_set_bankhandler_w(11, 0, MWA_BANK11);
+	memory_set_bankhandler_w(12, 0, MWA_BANK12);
+	memory_set_bankhandler_w(13, 0, MWA_BANK13);
+	memory_set_bankhandler_w(14, 0, MWA_BANK14);
+	memory_set_bankhandler_w(15, 0, MWA_BANK15);
+	memory_set_bankhandler_w(16, 0, MWA_BANK16);
 
 	// set up memory configuration
 
@@ -724,8 +724,7 @@ static int mtx_interrupt(void)
 	return ignore_interrupt();
 }
 
-static struct MemoryReadAddress mtx_readmem[] =
-{
+MEMORY_READ_START( mtx_readmem )
 	{ 0x0000, 0x1fff, MRA_BANK1 },
 	{ 0x2000, 0x3fff, MRA_BANK2 },
 	{ 0x4000, 0x5fff, MRA_BANK3 },
@@ -734,11 +733,9 @@ static struct MemoryReadAddress mtx_readmem[] =
 	{ 0xa000, 0xbfff, MRA_BANK6 },
 	{ 0xc000, 0xdfff, MRA_BANK7 },
 	{ 0xe000, 0xffff, MRA_BANK8 },
-	{ -1 }
-};
+MEMORY_END
 
-static struct MemoryWriteAddress mtx_writemem[] =
-{
+MEMORY_WRITE_START( mtx_writemem )
 	{ 0x0000, 0x1fff, MWA_BANK9 },
 	{ 0x2000, 0x3fff, MWA_BANK10 },
         { 0x4000, 0x5fff, MWA_BANK11 },
@@ -747,28 +744,23 @@ static struct MemoryWriteAddress mtx_writemem[] =
         { 0xa000, 0xbfff, MWA_BANK14 },
         { 0xc000, 0xdfff, MWA_BANK15 },
         { 0xe000, 0xffff, MWA_BANK16 },
-	{ -1 }
-};
+MEMORY_END
 
-static struct IOReadPort mtx_readport[] =
-{
+PORT_READ_START( mtx_readport )
 	{ 0x01, 0x02, mtx_vdp_r },
 	{ 0x03, 0x03, mtx_psg_r },
 	{ 0x05, 0x05, mtx_key_lo_r },
 	{ 0x06, 0x06, mtx_key_hi_r },
 	{ 0x08, 0x0b, mtx_ctc_r },
-	{ -1 }
-};
+PORT_END
 
-static struct IOWritePort mtx_writeport[] =
-{
+PORT_WRITE_START( mtx_writeport )
 	{ 0x00, 0x00, mtx_bankswitch_w },
 	{ 0x01, 0x02, mtx_vdp_w },
 	{ 0x05, 0x05, mtx_sense_w },
 	{ 0x06, 0x06, mtx_psg_w },
 	{ 0x08, 0x0a, mtx_ctc_w },
-	{ -1 }
-};
+PORT_END
 
 INPUT_PORTS_START( mtx512 )
  PORT_START /* 0 */
@@ -892,8 +884,7 @@ static Z80_DaisyChain mtx_daisy_chain[] =
 
 static struct GfxDecodeInfo mtx_gfxdecodeinfo[] =
 {
-	{ -1 } /* end of array */
-};
+MEMORY_END	 /* end of array */
 
 static struct MachineDriver machine_driver_mtx512 =
 {
@@ -920,7 +911,7 @@ static struct MachineDriver machine_driver_mtx512 =
 	mtx_gfxdecodeinfo,
 	TMS9928A_PALETTE_SIZE, TMS9928A_COLORTABLE_SIZE,
 	tms9928A_init_palette,
-	VIDEO_MODIFIES_PALETTE | VIDEO_UPDATE_BEFORE_VBLANK | VIDEO_TYPE_RASTER,
+	VIDEO_UPDATE_BEFORE_VBLANK | VIDEO_TYPE_RASTER,
 	0,
 	mtx_vh_init,
 	TMS9928A_stop,
@@ -938,7 +929,7 @@ static struct MachineDriver machine_driver_mtx512 =
 };
 
 ROM_START (mtx512)
-	ROM_REGION (0x20000, REGION_CPU1)
+	ROM_REGION (0x20000, REGION_CPU1,0)
 	ROM_LOAD ("osrom", 0x10000, 0x2000, 0x9ca858cc)
 	ROM_LOAD ("basicrom", 0x12000, 0x2000, 0x87b4e59c)
 	ROM_LOAD ("assemrom", 0x14000, 0x2000, 0x9d7538c3)

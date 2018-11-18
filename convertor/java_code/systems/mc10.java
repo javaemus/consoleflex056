@@ -10,47 +10,39 @@ public class mc10
 	extern int coco_cassette_init(int id);
 	extern void coco_cassette_exit(int id);
 	
-	static MemoryReadAddress mc10_readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x001f, m6803_internal_registers_r ),
-		new MemoryReadAddress( 0x0020, 0x007f, MRA_NOP ), /* unused */
-		new MemoryReadAddress( 0x0080, 0x00ff, MRA_RAM ), /* 6803 internal RAM */
-		new MemoryReadAddress( 0x0100, 0x3fff, MRA_NOP ), /* unused */
-		new MemoryReadAddress( 0x4000, 0x4fff, MRA_RAM ),
-	//	new MemoryReadAddress( 0x5000, 0xbffe, MRA_RAM ), /* expansion RAM */
-		new MemoryReadAddress( 0xbfff, 0xbfff, mc10_bfff_r ),
-	//	new MemoryReadAddress( 0xc000, 0xdfff, MWA_ROM ), /* expansion ROM */
-		new MemoryReadAddress( 0xe000, 0xffff, MRA_ROM ), /* ROM */
-		new MemoryReadAddress( -1 )	/* end of table */
-	};
+	static MEMORY_READ_START( mc10_readmem )
+		{ 0x0000, 0x001f, m6803_internal_registers_r },
+		{ 0x0020, 0x007f, MRA_NOP }, /* unused */
+		{ 0x0080, 0x00ff, MRA_RAM }, /* 6803 internal RAM */
+		{ 0x0100, 0x3fff, MRA_NOP }, /* unused */
+		{ 0x4000, 0x4fff, MRA_RAM },
+	//	{ 0x5000, 0xbffe, MRA_RAM }, /* expansion RAM */
+		{ 0xbfff, 0xbfff, mc10_bfff_r },
+	//	{ 0xc000, 0xdfff, MWA_ROM }, /* expansion ROM */
+		{ 0xe000, 0xffff, MRA_ROM }, /* ROM */
+	MEMORY_END
 	
-	static MemoryWriteAddress mc10_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x001f, m6803_internal_registers_w ),
-		new MemoryWriteAddress( 0x0020, 0x007f, MWA_NOP ), /* unused */
-		new MemoryWriteAddress( 0x0080, 0x00ff, MWA_RAM ), /* 6803 internal RAM */
-		new MemoryWriteAddress( 0x0100, 0x3fff, MWA_NOP ), /* unused */
-		new MemoryWriteAddress( 0x4000, 0x4fff, mc10_ram_w ),
-	//	new MemoryWriteAddress( 0x5000, 0xbffe, MWA_RAM ), /* expansion RAM */
-		new MemoryWriteAddress( 0xbfff, 0xbfff, mc10_bfff_w ),
-	//	new MemoryWriteAddress( 0xc000, 0xdfff, MWA_ROM ), /* expansion ROM */
-		new MemoryWriteAddress( 0xe000, 0xffff, MWA_ROM ), /* ROM */
-		new MemoryWriteAddress( -1 )	/* end of table */
-	};
+	static MEMORY_WRITE_START( mc10_writemem )
+		{ 0x0000, 0x001f, m6803_internal_registers_w },
+		{ 0x0020, 0x007f, MWA_NOP }, /* unused */
+		{ 0x0080, 0x00ff, MWA_RAM }, /* 6803 internal RAM */
+		{ 0x0100, 0x3fff, MWA_NOP }, /* unused */
+		{ 0x4000, 0x4fff, mc10_ram_w },
+	//	{ 0x5000, 0xbffe, MWA_RAM }, /* expansion RAM */
+		{ 0xbfff, 0xbfff, mc10_bfff_w },
+	//	{ 0xc000, 0xdfff, MWA_ROM }, /* expansion ROM */
+		{ 0xe000, 0xffff, MWA_ROM }, /* ROM */
+	MEMORY_END
 	
-	static IOReadPort mc10_readport[] =
-	{
-		new IOReadPort( M6803_PORT1, M6803_PORT1, mc10_port1_r ),
-		new IOReadPort( M6803_PORT2, M6803_PORT2, mc10_port2_r ),
-		new IOReadPort( -1 )	/* end of table */
-	};
+	static PORT_READ_START( mc10_readport )
+		{ M6803_PORT1, M6803_PORT1, mc10_port1_r },
+		{ M6803_PORT2, M6803_PORT2, mc10_port2_r },
+	PORT_END
 	
-	static IOWritePort mc10_writeport[] =
-	{
-		new IOWritePort( M6803_PORT1, M6803_PORT1, mc10_port1_w ),
-		new IOWritePort( M6803_PORT2, M6803_PORT2, mc10_port2_w ),
-		new IOWritePort( -1 )	/* end of table */
-	};
+	static PORT_WRITE_START( mc10_writeport )
+		{ M6803_PORT1, M6803_PORT1, mc10_port1_w },
+		{ M6803_PORT2, M6803_PORT2, mc10_port2_w },
+	PORT_END
 	
 	/* MC-10 keyboard
 	
@@ -159,7 +151,7 @@ public class mc10
 				894886,	/* 0,894886 Mhz */
 				mc10_readmem,mc10_writemem,
 				mc10_readport, mc10_writeport,
-				mc10_interrupt, 1,
+				m6847_vh_interrupt, M6847_INTERRUPTS_PER_FRAME,
 				0, 0,
 			),
 		},
@@ -194,7 +186,7 @@ public class mc10
 	);
 	
 	static RomLoadPtr rom_mc10 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000,REGION_CPU1);
+		ROM_REGION(0x10000,REGION_CPU1,0);
 		ROM_LOAD("mc10.rom", 0xE000, 0x2000, 0x11fda97e);
 	ROM_END(); }}; 
 	

@@ -20,11 +20,8 @@ public class vtech2
 	#define BORDER_H	64
 	#define BORDER_V	32
 	
-	/* from mame.c */
-	extern int bitmap_dirty;
-	
 	/* from machine/laser350.c */
-	extern int laser_latch;
+	//extern int laser_latch;
 	
 	/* public */
 	char laser_frame_message[64+1];
@@ -59,7 +56,7 @@ public class vtech2
 	public static VhStartPtr laser_vh_start = new VhStartPtr() { public int handler() 
 	{
 		videoram_size[0] = 0x04000;
-		dirtybuffer = malloc(videoram_size[0]);
+		dirtybuffer = (UINT8*)malloc(videoram_size[0]);
 		if (!dirtybuffer)
 			return 1;
 		return 0;
@@ -141,17 +138,14 @@ public class vtech2
 		0x26a0,0x2ea0,0x36a0,0x3ea0,0x27a0,0x2fa0,0x37a0,0x3fa0
 	};
 	
-	public static VhUpdatePtr laser_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void laser_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int offs, x, y;
-	
-		if( palette_recalc() )
-			full_refresh = 1;
 	
 	    if (full_refresh != 0)
 		{
 			fillbitmap(Machine.scrbitmap, Machine.pens[(laser_bg_mode >> 4) & 15], &Machine.visible_area);
-			memset(dirtybuffer, 1, videoram_size[0]);
+			memset(dirtybuffer, 1, videoram_size);
 	    }
 	
 		if ((laser_latch & 0x08) != 0)
@@ -361,29 +355,29 @@ public class vtech2
 			ui_text(bitmap, laser_frame_message, 2, Machine.visible_area.max_y - 9);
 			/* if the message timed out, clear it on the next frame */
 			if( --laser_frame_time == 0 )
-				bitmap_dirty = 1;
+				schedule_full_refresh();
 		}
-	} };
+	}
 	
-	void laser_bg_mode_w(int offs, int data)
+	public static WriteHandlerPtr laser_bg_mode_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 	    if (laser_bg_mode != data)
 	    {
-	        bitmap_dirty = 1;
+	        schedule_full_refresh();
 	        laser_bg_mode = data;
 			logerror("laser border:$%X mode:$%X\n", data >> 4, data & 15);
 	    }
-	}
+	} };
 	
-	void laser_two_color_w(int offs, int data)
+	public static WriteHandlerPtr laser_two_color_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 		if (laser_two_color != data)
 		{
-			bitmap_dirty = 1;
+			schedule_full_refresh();
 			laser_two_color = data;
 			logerror("laser foreground:$%X background:$%X\n", data >> 4, data & 15);
 	    }
-	}
+	} };
 	
 	
 }

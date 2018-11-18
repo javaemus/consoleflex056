@@ -17,36 +17,22 @@ package systems;
 public class vectrex
 {
 	
-	/* From machine/vectrex.c */
-	extern UBytePtr vectrex_ram;
-	extern READ_HANDLER  ( vectrex_mirrorram_r );
-	extern WRITE_HANDLER ( vectrex_mirrorram_w );
-	extern int vectrex_load_rom (int id);
-	extern int vectrex_id_rom (int id);
 	
-	/* From vidhrdw/vectrex.c */
-	extern extern extern extern 
-	extern extern WRITE_HANDLER  ( raaspec_led_w );
-	extern extern 
-	static MemoryReadAddress vectrex_readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x7fff, MRA_ROM ),
-		new MemoryReadAddress( 0xc800, 0xcbff, MRA_RAM ),
-		new MemoryReadAddress( 0xcc00, 0xcfff, vectrex_mirrorram_r ),
-		new MemoryReadAddress( 0xd000, 0xd7ff, via_0_r ),    /* VIA 6522 */
-		new MemoryReadAddress( 0xe000, 0xffff, MRA_ROM ),
-		new MemoryReadAddress( -1 )
-	};
+	MEMORY_READ_START( vectrex_readmem )
+		{ 0x0000, 0x7fff, MRA_ROM },
+		{ 0xc800, 0xcbff, MRA_RAM },
+		{ 0xcc00, 0xcfff, vectrex_mirrorram_r },
+		{ 0xd000, 0xd7ff, via_0_r },    /* VIA 6522 */
+		{ 0xe000, 0xffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress vectrex_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x7fff, MWA_ROM ),
-		new MemoryWriteAddress( 0xc800, 0xcbff, MWA_RAM, vectrex_ram ),
-		new MemoryWriteAddress( 0xcc00, 0xcfff, vectrex_mirrorram_w ),
-		new MemoryWriteAddress( 0xd000, 0xd7ff, via_0_w ),    /* VIA 6522 */
-		new MemoryWriteAddress( 0xe000, 0xffff, MWA_ROM ),
-		new MemoryWriteAddress( -1 )
-	};
+	MEMORY_WRITE_START( vectrex_writemem )
+		{ 0x0000, 0x7fff, MWA_ROM },
+		{ 0xc800, 0xcbff, MWA_RAM, &vectrex_ram },
+		{ 0xcc00, 0xcfff, vectrex_mirrorram_w },
+		{ 0xd000, 0xd7ff, via_0_w },    /* VIA 6522 */
+		{ 0xe000, 0xffff, MWA_ROM },
+	MEMORY_END
 	
 	static InputPortPtr input_ports_vectrex = new InputPortPtr(){ public void handler() { 
 		PORT_START(); 
@@ -142,7 +128,7 @@ public class vectrex
 		256 + 32768, null,
 		null,
 	
-		VIDEO_TYPE_VECTOR | VIDEO_MODIFIES_PALETTE,
+		VIDEO_TYPE_VECTOR | VIDEO_SUPPORTS_DIRTY | VIDEO_RGB_DIRECT,
 		null,
 		vectrex_start,
 		vectrex_stop,
@@ -169,8 +155,8 @@ public class vectrex
 			1,					/* count */
 			"bin\0gam\0",       /* file extensions */
 			IO_RESET_ALL,		/* reset if file changed */
-	        vectrex_id_rom,     /* id */
-			vectrex_load_rom,	/* init */
+	        0,
+			vectrex_init_cart,	/* init */
 			NULL,				/* exit */
 			NULL,				/* info */
 			NULL,				/* open */
@@ -188,7 +174,7 @@ public class vectrex
 	
 	
 	static RomLoadPtr rom_vectrex = new RomLoadPtr(){ public void handler(){ 
-	    ROM_REGION(0x10000,REGION_CPU1);
+	    ROM_REGION(0x10000,REGION_CPU1, 0);
 	    ROM_LOAD("system.img", 0xe000, 0x2000, 0xba13fb57);
 	ROM_END(); }}; 
 	
@@ -210,28 +196,24 @@ public class vectrex
 	
 	*****************************************************************/
 	
-	static MemoryReadAddress raaspec_readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x7fff, MRA_ROM ),
-		new MemoryReadAddress( 0x8000, 0x87ff, MRA_RAM ), /* Battery backed RAM for the Spectrum I+ */
-		new MemoryReadAddress( 0xc800, 0xcbff, MRA_RAM ),
-		new MemoryReadAddress( 0xcc00, 0xcfff, vectrex_mirrorram_r ),
-		new MemoryReadAddress( 0xd000, 0xd7ff, via_0_r ),
-		new MemoryReadAddress( 0xe000, 0xffff, MRA_ROM ),
-		new MemoryReadAddress( -1 )
-	};
+	MEMORY_READ_START( raaspec_readmem )
+		{ 0x0000, 0x7fff, MRA_ROM },
+		{ 0x8000, 0x87ff, MRA_RAM }, /* Battery backed RAM for the Spectrum I+ */
+		{ 0xc800, 0xcbff, MRA_RAM },
+		{ 0xcc00, 0xcfff, vectrex_mirrorram_r },
+		{ 0xd000, 0xd7ff, via_0_r },
+		{ 0xe000, 0xffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress raaspec_writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x7fff, MWA_ROM ),
-		new MemoryWriteAddress( 0x8000, 0x87ff, MWA_RAM ),
-		new MemoryWriteAddress( 0xa000, 0xa000, raaspec_led_w ),
-		new MemoryWriteAddress( 0xc800, 0xcbff, MWA_RAM, vectrex_ram ),
-		new MemoryWriteAddress( 0xcc00, 0xcfff, vectrex_mirrorram_w ),
-		new MemoryWriteAddress( 0xd000, 0xd7ff, via_0_w ),
-		new MemoryWriteAddress( 0xe000, 0xffff, MWA_ROM ),
-		new MemoryWriteAddress( -1 )
-	};
+	MEMORY_WRITE_START( raaspec_writemem )
+		{ 0x0000, 0x7fff, MWA_ROM },
+		{ 0x8000, 0x87ff, MWA_RAM },
+		{ 0xa000, 0xa000, raaspec_led_w },
+		{ 0xc800, 0xcbff, MWA_RAM, &vectrex_ram },
+		{ 0xcc00, 0xcfff, vectrex_mirrorram_w },
+		{ 0xd000, 0xd7ff, via_0_w },
+		{ 0xe000, 0xffff, MWA_ROM },
+	MEMORY_END
 	
 	static InputPortPtr input_ports_raaspec = new InputPortPtr(){ public void handler() { 
 		PORT_START(); 
@@ -270,9 +252,9 @@ public class vectrex
 		380, 480, { 0, 500, 0, 600 },
 		null,
 		254, null,
-		raaspec_init_colors,
+		raaspec_init_artwork,
 	
-		VIDEO_TYPE_VECTOR,
+		VIDEO_TYPE_VECTOR | VIDEO_SUPPORTS_DIRTY | VIDEO_RGB_DIRECT,
 		null,
 		raaspec_start,
 		vectrex_stop,
@@ -298,7 +280,7 @@ public class vectrex
 	};
 	
 	static RomLoadPtr rom_raaspec = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000,REGION_CPU1);
+		ROM_REGION(0x10000,REGION_CPU1, 0);
 		ROM_LOAD("spectrum.bin", 0x0000, 0x8000, 0x20af7f3f);
 		ROM_LOAD("system.img", 0xe000, 0x2000, 0xba13fb57);
 	ROM_END(); }}; 
@@ -306,4 +288,15 @@ public class vectrex
 	/*	  YEAR	NAME	  PARENT	MACHINE   INPUT 	INIT	  COMPANY	FULLNAME */
 	CONS( 1982, vectrex,  0, 		vectrex,  vectrex,	0,		  "General Consumer Electronics",   "Vectrex" )
 	CONS( 1984, raaspec,  vectrex,	raaspec,  raaspec,	0,		  "Roy Abel & Associates",   "Spectrum I+" )
+	
+	#ifdef RUNTIME_LOADER
+	extern void vectrex_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"vectrex")==0) drivers[i]=&driver_vectrex;
+			if ( strcmp(drivers[i].name,"raaspec")==0) drivers[i]=&driver_raaspec;
+		}
+	}
+	#endif
 }

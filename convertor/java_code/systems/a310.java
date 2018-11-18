@@ -31,36 +31,36 @@ public class a310
 		UINT8 *mem = memory_region(REGION_CPU1);
 	
 		cpu_setbank(1,&mem[0x00200000]);
-		cpu_setbankhandler_r(1,MRA_BANK1);
-		cpu_setbankhandler_w(1,MWA_ROM);
+		memory_set_bankhandler_r(1,0,MRA_BANK1);
+		memory_set_bankhandler_w(1,0,MWA_ROM);
 	
 		cpu_setbank(2,&mem[0x00000000]);
-		cpu_setbankhandler_r(2,MRA_RAM);
-		cpu_setbankhandler_w(2,MWA_RAM);
+		memory_set_bankhandler_r(2,0,MRA_RAM);
+		memory_set_bankhandler_w(2,0,MWA_RAM);
 	
 	    cpu_setbank(3,&mem[0x00200000]);
-		cpu_setbankhandler_r(3,MRA_BANK3);
-		cpu_setbankhandler_w(3,MWA_ROM);
+		memory_set_bankhandler_r(3,0,MRA_BANK3);
+		memory_set_bankhandler_w(3,0,MWA_ROM);
 	
 	    cpu_setbank(4,&mem[0x00200000]);
-		cpu_setbankhandler_r(4,MRA_BANK4);
-		cpu_setbankhandler_w(4,MWA_ROM);
+		memory_set_bankhandler_r(4,0,MRA_BANK4);
+		memory_set_bankhandler_w(4,0,MWA_ROM);
 	
 	    cpu_setbank(5,&mem[0x00200000]);
-		cpu_setbankhandler_r(5,MRA_BANK5);
-		cpu_setbankhandler_w(5,MWA_ROM);
+		memory_set_bankhandler_r(5,0,MRA_BANK5);
+		memory_set_bankhandler_w(5,0,MWA_ROM);
 	
 	    cpu_setbank(6,&mem[0x00200000]);
-		cpu_setbankhandler_r(6,MRA_BANK6);
-		cpu_setbankhandler_w(6,MWA_ROM);
+		memory_set_bankhandler_r(6,0,MRA_BANK6);
+		memory_set_bankhandler_w(6,0,MWA_ROM);
 	
 	    cpu_setbank(7,&mem[0x00200000]);
-		cpu_setbankhandler_r(7,MRA_BANK7);
-		cpu_setbankhandler_w(7,MWA_ROM);
+		memory_set_bankhandler_r(7,0,MRA_BANK7);
+		memory_set_bankhandler_w(7,0,MWA_ROM);
 	
 	    cpu_setbank(8,&mem[0x00200000]);
-		cpu_setbankhandler_r(8,MRA_BANK8);
-		cpu_setbankhandler_w(8,MWA_ROM);
+		memory_set_bankhandler_r(8,0,MRA_BANK8);
+		memory_set_bankhandler_w(8,0,MWA_ROM);
 	} };
 	
 	public static InitDriverPtr init_a310 = new InitDriverPtr() { public void handler() 
@@ -79,17 +79,17 @@ public class a310
 		generic_vh_stop();
 	} };
 	
-	public static VhUpdatePtr a310_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void a310_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	    int offs;
 	
 	    if (full_refresh != 0)
 		{
 			fillbitmap(Machine.scrbitmap, Machine.pens[0], &Machine.visible_area);
-			memset(dirtybuffer, 1, videoram_size[0]);
+			memset(dirtybuffer, 1, videoram_size);
 	    }
 	
-		for( offs = 0; offs < videoram_size[0]; offs++ )
+		for( offs = 0; offs < videoram_size; offs++ )
 		{
 			if( dirtybuffer[offs] )
 			{
@@ -101,34 +101,44 @@ public class a310
 	                &Machine.visible_area,TRANSPARENCY_NONE,0);
 	        }
 		}
-	} };
+	}
 	
-	static MemoryReadAddress readmem[] =
-	{
-		new MemoryReadAddress( 0x00000000, 0x007fffff, MRA_BANK1 ),
-		new MemoryReadAddress( 0x00800000, 0x00ffffff, MRA_BANK2 ),
-		new MemoryReadAddress( 0x01000000, 0x017fffff, MRA_BANK3 ),
-		new MemoryReadAddress( 0x01800000, 0x01ffffff, MRA_BANK4 ),
-		new MemoryReadAddress( 0x02000000, 0x027fffff, MRA_BANK5 ),
-		new MemoryReadAddress( 0x02800000, 0x02ffffff, MRA_BANK6 ),
-		new MemoryReadAddress( 0x03000000, 0x037fffff, MRA_BANK7 ),
-		new MemoryReadAddress( 0x03800000, 0x03ffffff, MRA_BANK8 ),
-	    new MemoryReadAddress(-1)
-	};
+	static MEMORY_READ32_START (readmem)
+		{ 0x00000000, 0x007fffff, MRA32_BANK1 },
+		{ 0x00800000, 0x00ffffff, MRA32_BANK2 },
+		{ 0x01000000, 0x017fffff, MRA32_BANK3 },
+		{ 0x01800000, 0x01ffffff, MRA32_BANK4 },
+		{ 0x02000000, 0x027fffff, MRA32_BANK5 },
+		{ 0x02800000, 0x02ffffff, MRA32_BANK6 },
+		{ 0x03000000, 0x037fffff, MRA32_BANK7 },
+		{ 0x03800000, 0x03ffffff, MRA32_BANK8 },
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem[] =
+	/* R Nabet : no idea what this is supposed to do */
+	static WRITE32_HANDLER( a310_videoram_w )
 	{
-		new MemoryWriteAddress( 0x00000000, 0x007fffff, MWA_BANK1 ),
-	    new MemoryWriteAddress( 0x001ff000, 0x001fffff, videoram_w, videoram, videoram_size ),
-		new MemoryWriteAddress( 0x00800000, 0x00ffffff, MWA_BANK2 ),
-		new MemoryWriteAddress( 0x01000000, 0x017fffff, MWA_BANK3 ),
-		new MemoryWriteAddress( 0x01800000, 0x01ffffff, MWA_BANK4 ),
-		new MemoryWriteAddress( 0x02000000, 0x027fffff, MWA_BANK5 ),
-		new MemoryWriteAddress( 0x02800000, 0x02ffffff, MWA_BANK6 ),
-		new MemoryWriteAddress( 0x03000000, 0x037fffff, MWA_BANK7 ),
-		new MemoryWriteAddress( 0x03800000, 0x03ffffff, MWA_BANK8 ),
-	    new MemoryWriteAddress(-1)
-	};
+		if (((UINT32 *)videoram)[offset] != data)
+		{
+			dirtybuffer[offset << 2] = 1;
+			dirtybuffer[(offset << 2) + 1] = 1;
+			dirtybuffer[(offset << 2) + 2] = 1;
+			dirtybuffer[(offset << 2) + 3] = 1;
+	
+			COMBINE_DATA(((UINT32 *)videoram)+offset);
+		}
+	}
+	
+	static MEMORY_WRITE32_START (writemem)
+		{ 0x00000000, 0x007fffff, MWA32_BANK1 },
+	    { 0x001ff000, 0x001fffff, a310_videoram_w, (data32_t**)&videoram, &videoram_size },
+		{ 0x00800000, 0x00ffffff, MWA32_BANK2 },
+		{ 0x01000000, 0x017fffff, MWA32_BANK3 },
+		{ 0x01800000, 0x01ffffff, MWA32_BANK4 },
+		{ 0x02000000, 0x027fffff, MWA32_BANK5 },
+		{ 0x02800000, 0x02ffffff, MWA32_BANK6 },
+		{ 0x03000000, 0x037fffff, MWA32_BANK7 },
+		{ 0x03800000, 0x03ffffff, MWA32_BANK8 },
+	MEMORY_END
 	
 	static InputPortPtr input_ports_a310 = new InputPortPtr(){ public void handler() { 
 		PORT_START();  /* DIP switches */
@@ -276,12 +286,12 @@ public class a310
 	);
 	
 	static RomLoadPtr rom_a310 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x00400000,REGION_CPU1);
+		ROM_REGION(0x00400000,REGION_CPU1,0);
 			ROM_LOAD("ic24.rom", 0x00200000, 0x00080000, 0xc1adde84);
 			ROM_LOAD("ic25.rom", 0x00280000, 0x00080000, 0x15d89664);
 			ROM_LOAD("ic26.rom", 0x00300000, 0x00080000, 0xa81ceb7c);
 			ROM_LOAD("ic27.rom", 0x00380000, 0x00080000, 0x707b0c6c);
-		ROM_REGION(0x00800,REGION_GFX1);
+		ROM_REGION(0x00800,REGION_GFX1,0);
 	
 	ROM_END(); }}; 
 	

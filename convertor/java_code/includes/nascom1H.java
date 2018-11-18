@@ -12,9 +12,9 @@ extern public static WriteHandlerPtr nascom1_port_01_w = new WriteHandlerPtr() {
 /* vidhrdw/nascom1.c */
 
 extern extern void nascom1_vh_stop (void);
-extern void nascom1_vh_screenrefresh (struct osd_bitmap *bitmap,
+extern void nascom1_vh_screenrefresh (struct mame_bitmap *bitmap,
 												int full_refresh);
-extern void nascom2_vh_screenrefresh (struct osd_bitmap *bitmap,
+extern void nascom2_vh_screenrefresh (struct mame_bitmap *bitmap,
 												int full_refresh);
 /* systems/nascom1.c */
 

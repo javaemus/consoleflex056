@@ -7,10 +7,8 @@ package mame;
 public class tapectrl
 {
 	
-	/* used to tell updatescreen() to clear the bitmap */
-	extern int need_to_clear_bitmap;
 	
-	int tapecontrol(struct osd_bitmap *bitmap, int selected)
+	int tapecontrol(struct mame_bitmap *bitmap, int selected)
 	{
 		static int id = 0;
 		char timepos[32];
@@ -23,6 +21,8 @@ public class tapectrl
 	    int total;
 	    int arrowize;
 		int status;
+	
+		if (device_count(IO_CASSETTE)==0) return 0;
 	
 	    total = 0;
 	    sel = selected - 1;
@@ -107,11 +107,12 @@ public class tapectrl
 			switch (sel)
 			{
 			case 0:
-				id = --id % device_count(IO_CASSETTE);
+				id--;
+				if (id < 0) id = device_count(IO_CASSETTE)-1;
 				break;
 			}
 			/* tell updatescreen() to clean after us (in case the window changes size) */
-			need_to_clear_bitmap = 1;
+			schedule_full_refresh();
 	    }
 	
 		if (input_ui_pressed(IPT_UI_RIGHT))
@@ -119,11 +120,12 @@ public class tapectrl
 			switch (sel)
 			{
 			case 0:
-				id = ++id % device_count(IO_CASSETTE);
+				id++;
+				if (id > device_count(IO_CASSETTE)-1) id = 0;
 				break;
 			}
 			/* tell updatescreen() to clean after us (in case the window changes size) */
-			need_to_clear_bitmap = 1;
+			schedule_full_refresh();
 	    }
 	
 	    if (input_ui_pressed(IPT_UI_SELECT))
@@ -136,7 +138,7 @@ public class tapectrl
 				switch (sel)
 				{
 				case 0:
-	                id = ++id % device_count(IO_CASSETTE);
+	                id = (id + 1) % device_count(IO_CASSETTE);
 					break;
 				case 2:
 					if ((status & 1) == 0)
@@ -154,7 +156,7 @@ public class tapectrl
 					break;
 	            }
 	            /* tell updatescreen() to clean after us (in case the window changes size) */
-	            need_to_clear_bitmap = 1;
+	            schedule_full_refresh();
 	        }
 	    }
 	
@@ -167,7 +169,7 @@ public class tapectrl
 	    if (sel == -1 || sel == -2)
 	    {
 	        /* tell updatescreen() to clean after us */
-	        need_to_clear_bitmap = 1;
+	        schedule_full_refresh();
 	    }
 	
 	    return sel + 1;

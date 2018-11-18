@@ -15,7 +15,7 @@
 #define VERBOSE_DBG 1
 #include "includes/cbm.h"
 #include "includes/tpi6525.h"
-#include "includes/c1551.h"
+#include "includes/cbmserb.h"
 #include "includes/vc1541.h"
 #include "includes/vc20tape.h"
 #include "includes/ted7360.h"
@@ -56,168 +56,6 @@ static UINT8 *c16_memory_20000;
 static UINT8 *c16_memory_24000;
 static UINT8 *c16_memory_28000;
 static UINT8 *c16_memory_2c000;
-
-/*
- c364 speech
- say 0 .. 10
- rate 0 .. 15?
- voc ?
- rdy ? (only c64)
-
- 0 bit 0..3 ???
-   bit 456 0?
-   bit 7 writen 0 1
-   reset 9 9 b
-   set playback rate
-    rate 4: 2 a 4 5 4 6 0 7 a (default)
-         0          0
-         1          1
-    rate 2: 2 a 4 5 2 6 0 7 a
-    rate 3:         3
-    rate 9:
-   start: 1
- 1 bit 01 set to 1 for start ?
-   bit 6 polled until set (at $80ec)
-       7 set ready to transmit new byte?
- 2 0..7 sample data
-
-seems to be a toshiba t6721a build in
-(8 khz 9bit output)
-generates output for 20ms (or 10ms) out of 6 byte voice data!
-(P?ARCOR voice synthesizing and analyzing method
- Nippon Telegraph and Telephon Public Corporation)
-End code also in voice data
-technical info at www.funet.fi covers only the chip, not
-the synthesizing method
-
-magic voice in c64:
-The internal electronics depicted in Danny's picture above are as follows, going from the MOS chip at top and then clockwise: MOS
-6525B (4383), MOS 251476-01 (8A-06 4341) system ROM, General Instruments 8343SEA (LA05-123), Toshiba T6721A (3L)
-sound generator (?), CD40105BE (RCA H 432) and a 74LS222A logic chip.
-
-*/
-static struct {
-	void *timer;
-
-	bool busy, endOfSample;
-	bool playing;
-	int rate;
-	struct {
-		UINT8 data;
-		int state;
-	} command;
-	struct {
-		UINT8 data[6],index;
-	} sample;
-
-	UINT8 state;
-
-	int sampleindex;
-	UINT8 readindex, writeindex;
-	UINT64 data[0x10];
-
-} speech={ 0 };
-
-void c364_speech_timer(int arg)
-{
-	if (!speech.playing) return;
-
-	if (speech.sampleindex<8000/50) {
-		speech.sampleindex++;
-	} else {
-		speech.endOfSample=
-				(memcmp(speech.sample.data,"\xff\xff\xff\xff\xff\xff",6)==0);
-		/*speech.endOfSample=true; */
-		speech.busy=false;
-	}
-}
-
-WRITE_HANDLER(c364_speech_w)
-{
-	DBG_LOG (2, "364", ("port write %.2x %.2x\n", offset, data));
-	switch (offset) {
-	case 0:
-		if (data&0x80) {
-			switch (speech.command.state) {
-			case 0:
-				switch (speech.command.data) {
-				case 9:case 0xb:
-					speech.playing=false;
-					break;
-				case 1: /* start */
-					speech.timer=timer_pulse(1.0/8000, 0, c364_speech_timer);
-					speech.playing=true;
-					speech.endOfSample=false;
-					speech.sampleindex=0;
-					break;
-				case 2:
-					speech.endOfSample=false;
-					/*speech.busy=false; */
-					if (speech.timer) {
-						timer_remove(speech.timer);
-						speech.timer=0;
-					}
-					speech.playing=false;
-					break;
-				case 5: /* set rate (in next nibble) */
-					speech.command.state=1;
-					break;
-				case 6: /* condition */
-					speech.command.state=2;
-					break;
-				}
-				break;
-			case 1:
-				speech.command.state=0;
-				speech.rate=speech.command.data;
-				break;
-			case 2:
-				speech.command.state=0;
-				break;
-			}
-		} else {
-			speech.command.data=data;
-		}
-		break;
-	case 1:
-		speech.state=(speech.state&~0x3f)|data;
-		break;
-	case 2:
-		speech.sample.data[speech.sample.index++]=data;
-		if (speech.sample.index==sizeof(speech.sample.data)) {
-			DBG_LOG(1,"t6721",("%.2x%.2x%.2x%.2x%.2x%.2x\n",
-							   speech.sample.data[0],
-							   speech.sample.data[1],
-							   speech.sample.data[2],
-							   speech.sample.data[3],
-							   speech.sample.data[4],
-							   speech.sample.data[5]));
-			speech.sample.index=0;
-			/*speech.endOfSample=false; */
-			speech.busy=true;
-			speech.state=0;
-		}
-		break;
-	}
-}
-
-READ_HANDLER(c364_speech_r)
-{
-	int data=0xff;
-	switch (offset) {
-	case 1:
-		data=speech.state;
-		data=1;
-		if (!speech.endOfSample) {
-				data|=0x41;
-				if (!speech.busy) data |=0x81;
-		}
-		break;
-	}
-	DBG_LOG (2, "364", ("port read %.2x %.2x\n", offset, data));
-	return data;
-}
-
 
 /**
   ddr bit 1 port line is output
@@ -615,7 +453,7 @@ void c16_interrupt (int level)
 	if (level != old_level)
 	{
 		DBG_LOG (3, "mos7501", ("irq %s\n", level ? "start" : "end"));
-		cpu_set_irq_line (0, M6510_INT_IRQ, level);
+		cpu_set_irq_line (0, M6510_IRQ_LINE, level);
 		old_level = level;
 	}
 }
@@ -679,7 +517,6 @@ static void c16_common_driver_init (void)
 	if (REAL_VC1541)
 		vc1541_config (0, 0, &vc1541);
 #endif
-	sid6581_0_init(NULL, C16_PAL);
 }
 
 void c16_driver_init (void)
@@ -724,14 +561,18 @@ void c16_init_machine (void)
 	tpi6525_2_reset();
 	tpi6525_3_reset();
 
-	sid6581_0_reset();
+	sid6581_reset(0);
 	if (SIDCARD) {
-		sid6581_0_configure(SIDCARD_8580);
+		sid6581_set_type(0, MOS8580);
 		install_mem_read_handler (0, 0xfd40, 0xfd5f, sid6581_0_port_r);
 		install_mem_write_handler (0, 0xfd40, 0xfd5f, sid6581_0_port_w);
+		install_mem_read_handler (0, 0xfe80, 0xfe9f, sid6581_0_port_r);
+		install_mem_write_handler (0, 0xfe80, 0xfe9f, sid6581_0_port_w);
 	} else {
 		install_mem_read_handler (0, 0xfd40, 0xfd5f, MRA_NOP);
 		install_mem_write_handler (0, 0xfd40, 0xfd5f, MWA_NOP);
+		install_mem_read_handler (0, 0xfe80, 0xfe9f, MRA_NOP);
+		install_mem_write_handler (0, 0xfe80, 0xfe9f, MWA_NOP);
 	}
 
 #if 0
@@ -756,9 +597,7 @@ void c16_init_machine (void)
 #endif
 			install_mem_write_handler (0, 0xff20, 0xff3d, c16_write_3f20);
 			install_mem_write_handler (0, 0xff40, 0xffff, c16_write_3f40);
-			if (SIDCARD) {
-				// lone07 works with sid at the c64 address???
-				// dizzy fantasy 3
+			if (SIDCARD_HACK) {
 				install_mem_write_handler (0, 0xd400, 0xd41f, c16_sidcart_16k);
 			}
 			ted7360_set_dma (ted7360_dma_read_16k, ted7360_dma_read_rom);
@@ -780,17 +619,13 @@ void c16_init_machine (void)
 			install_mem_write_handler (0, 0xff40, 0xffff, c16_write_7f40);
 #endif
 			ted7360_set_dma (ted7360_dma_read_32k, ted7360_dma_read_rom);
-			if (SIDCARD) {
-				// lone07 works with sid at the c64 address???
-				// dizzy fantasy 3
+			if (SIDCARD_HACK) {
 				install_mem_write_handler (0, 0xd400, 0xd41f, c16_sidcart_32k);
 			}
 			break;
 		case MEMORY64K:
 			install_mem_write_handler (0, 0x4000, 0xfcff, MWA_RAM);
-			if (SIDCARD) {
-				// lone07 works with sid at the c64 address???
-				// dizzy fantasy 3
+			if (SIDCARD_HACK) {
 				install_mem_write_handler (0, 0xd400, 0xd41f, c16_sidcart_64k);
 			}
 			install_mem_write_handler (0, 0xff20, 0xff3d, MWA_RAM);
@@ -801,6 +636,10 @@ void c16_init_machine (void)
 	}
 	else
 	{
+		install_mem_write_handler (0, 0x4000, 0xfcff, MWA_RAM);
+		if (SIDCARD_HACK) {
+			install_mem_write_handler (0, 0xd400, 0xd41f, c16_sidcart_64k);
+		}
 		ted7360_set_dma (ted7360_dma_read, ted7360_dma_read_rom);
 	}
 	if (IEC8ON||REAL_C1551)
@@ -858,59 +697,6 @@ void c16_shutdown_machine (void)
 {
 }
 
-int c16_rom_init (int id)
-{
-	rom_specified[id] = device_filename(IO_CARTSLOT,id) != NULL;
-	return rom_specified[id] || !c16_rom_id(id);
-}
-
-
-int c16_rom_load (int id)
-{
-	const char *name = device_filename(IO_CARTSLOT,id);
-    UINT8 *mem = memory_region (REGION_CPU1);
-	FILE *fp;
-	int size, read;
-	char *cp;
-	static unsigned int addr = 0;
-
-	if (name==NULL) return 1;
-	if (!c16_rom_id (id))
-		return 1;
-	fp = (FILE*)image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
-	if (!fp)
-	{
-		logerror("%s file not found\n", name);
-		return 1;
-	}
-
-	size = osd_fsize (fp);
-
-	if ((cp = strrchr (name, '.')) != NULL)
-	{
-		if (stricmp (cp, ".prg") == 0)
-		{
-			unsigned short in;
-
-			osd_fread_lsbfirst (fp, &in, 2);
-			logerror("rom prg %.4x\n", in);
-			addr = in;
-			size -= 2;
-		}
-	}
-	if (addr == 0)
-	{
-		addr = 0x20000;
-	}
-	logerror("loading rom %s at %.5x size:%.4x\n", name, addr, size);
-	read = osd_fread (fp, mem + addr, size);
-	addr += size;
-	osd_fclose (fp);
-	if (read != size)
-		return 1;
-	return 0;
-}
-
 int c16_rom_id (int id)
 {
     /* magic lowrom at offset 7: $43 $42 $4d */
@@ -923,7 +709,7 @@ int c16_rom_id (int id)
 
 	logerror("c16_rom_id %s\n", name);
 	retval = 0;
-	if (!(romfile = (FILE*)image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0)))
+	if (!(romfile = (FILE*)image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0)))
 	{
 		logerror("rom %s not found\n", name);
 		return 0;
@@ -951,6 +737,60 @@ int c16_rom_id (int id)
 			logerror("rom %s not recognized\n", name);
 	return retval;
 }
+
+int c16_rom_init (int id)
+{
+	rom_specified[id] = device_filename(IO_CARTSLOT,id) != NULL;
+	return rom_specified[id] && !c16_rom_id(id) ? INIT_FAIL: INIT_PASS;
+}
+
+
+int c16_rom_load (int id)
+{
+	const char *name = device_filename(IO_CARTSLOT,id);
+    UINT8 *mem = memory_region (REGION_CPU1);
+	FILE *fp;
+	int size, read;
+	char *cp;
+	static unsigned int addr = 0;
+
+	if (name==NULL) return 1;
+	if (!c16_rom_id (id))
+		return 1;
+	fp = (FILE*)image_fopen (IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
+	if (!fp)
+	{
+		logerror("%s file not found\n", name);
+		return 1;
+	}
+
+	size = osd_fsize (fp);
+
+	if ((cp = strrchr (name, '.')) != NULL)
+	{
+		if (stricmp (cp, ".prg") == 0)
+		{
+			unsigned short in;
+
+			osd_fread_lsbfirst (fp, &in, 2);
+			logerror("rom prg %.4x\n", in);
+			addr = in+0x20000;
+			size -= 2;
+		}
+	}
+	if (addr == 0)
+	{
+		addr = 0x20000;
+	}
+	logerror("loading rom %s at %.5x size:%.4x\n", name, addr, size);
+	read = osd_fread (fp, mem + addr, size);
+	addr += size;
+	osd_fclose (fp);
+	if (read != size)
+		return 1;
+	return 0;
+}
+
 
 int c16_frame_interrupt (void)
 {
@@ -1165,8 +1005,8 @@ int c16_frame_interrupt (void)
 
 	vc20_tape_config (DATASSETTE, DATASSETTE_TONE);
 	vc20_tape_buttons (DATASSETTE_PLAY, DATASSETTE_RECORD, DATASSETTE_STOP);
-	osd_led_w (1 /*KB_CAPSLOCK_FLAG */ , KEY_SHIFTLOCK ? 1 : 0);
-	osd_led_w (0 /*KB_NUMLOCK_FLAG */ , JOYSTICK_SWAP ? 1 : 0);
+	set_led_status (1 /*KB_CAPSLOCK_FLAG */ , KEY_SHIFTLOCK ? 1 : 0);
+	set_led_status (0 /*KB_NUMLOCK_FLAG */ , JOYSTICK_SWAP ? 1 : 0);
 
 	return ignore_interrupt ();
 }

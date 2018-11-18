@@ -25,7 +25,7 @@ package machine;
 public class pit8253
 {
 	
-	#define VERBOSE 2
+	//#define VERBOSE 2
 	
 	#if VERBOSE
 	#define LOG(N,M,A)	\
@@ -272,7 +272,7 @@ public class pit8253
 	    pit8253_timer_pulse(which,timer);
 	}
 	
-	static void pit8253_w(int which, offs_t offset, data_t data)
+	static void pit8253_w(int which, offs_t offset, data8_t data)
 	{
 		PIT8253 *this = pit + which;
 	    int timer, count;
@@ -373,10 +373,10 @@ public class pit8253
 	    }
 	}
 	
-	static data_t pit8253_r(int which, offs_t offset)
+	static data8_t pit8253_r(int which, offs_t offset)
 	{
 		PIT8253 *this = pit + which;
-		data_t data = 0xff;
+		data8_t data = 0xff;
 		int timer = offset;
 	
 		if (which >= MAX_PIT8253)
@@ -443,7 +443,7 @@ public class pit8253
 		return data;
 	}
 	
-	void pit8253_gate_w(int which, offs_t offset, data_t data)
+	void pit8253_gate_w(int which, offs_t offset, data8_t data)
 	{
 	    PIT8253 *this = pit + which;
 		int timer = offset;

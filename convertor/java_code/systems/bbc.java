@@ -1,7 +1,9 @@
 /******************************************************************************
-    BBC Model B
+	BBC Model A,B
 
-    MESS Driver By:
+	BBC Model B Plus
+
+	MESS Driver By:
 
 	Gordon Jefferyes
 	mess_bbc@gjeffery.dircon.co.uk
@@ -19,145 +21,685 @@ public class bbc
 	
 	
 	/******************************************************************************
-	FRED
-	&FC00
-	JIM
-	&FD00
-	SHEILA
-	&FE00
-	&00-&07 6845 CRTC       Video controller                8  ( 2 bytes x  4 )
-	&08-&0F 6850 ACIA       Serial controller               8  ( 2 bytes x  4 )
-	&10-&1F Serial ULA      Serial system chip              16 ( 1 byte  x 16 )
-	&20-&2F Video ULA       Video system chip               16 ( 2 bytes x  8 )
-	&30-&3F 74LS161         Paged ROM selector              16 ( 1 byte  x 16 )
-	&40-&5F 6522 VIA        SYSTEM VIA                      32 (16 bytes x  2 )
-	&60-&7F 6522 VIA        USER VIA                        32 (16 bytes x  2 )
-	&80-&9F 8271 FDC        FDC Floppy disc controller      32 ( 8 bytes x  4 )
-	&A0-&BF 68B54 ADLC      ECONET controller               32 ( 4 bytes x  8 )
-	&C0-&DF uPD7002         Analogue to digital converter   32 ( 4 bytes x  8 )
-	&E0-&FF Tube ULA        Tube system interface           32
+	&FC00-&FCFF FRED															1Mhz
+	&FD00-&FDFF JIM																1Mhz
+	&FE00-&FEFF SHEILA
+	&00-&07 6845 CRTC		Video controller				8  ( 2 bytes x	4 ) 1Mhz
+	&08-&0F 6850 ACIA		Serial controller				8  ( 2 bytes x	4 ) 1Mhz
+	&10-&17 Serial ULA		Serial system chip				8  ( 1 byte  x  8 ) 1Mhz
+	&18-&1f INTOFF/STATID   ECONET Interrupt Off / ID No.   8  ( 1 byte  x  8 ) 1Mhz
+	write:
+	&20-&2F Video ULA		Video system chip				16 ( 2 bytes x	8 ) 2Mhz
+	&30-&3F 74LS161 		Paged ROM selector				16 ( 1 byte  x 16 ) 2Mhz
+	read:
+	&20-&2F INTON   		ECONET Interrupt On				16 ( 1 bytes x 16 ) 2Mhz
+	&30-&3F Not Connected   Not Connected										2Mhz
+	
+	&40-&5F 6522 VIA		SYSTEM VIA						32 (16 bytes x	2 ) 1Mhz
+	&60-&7F 6522 VIA		USER VIA						32 (16 bytes x	2 ) 1Mhz
+	&80-&9F 8271 FDC		FDC Floppy disc controller		32 ( 8 bytes x	4 ) 2Mhz
+	&A0-&BF 68B54 ADLC		ECONET controller				32 ( 4 bytes x	8 ) 2Mhz
+	&C0-&DF uPD7002 		Analogue to digital converter	32 ( 4 bytes x	8 ) 1Mhz
+	&E0-&FF Tube ULA		Tube system interface			32 (32 bytes x  1 ) 2Mhz
 	******************************************************************************/
 	
-	/* for the model A just address the 4 on board rom sockets */
-	WRITE_HANDLER ( page_selecta_w )
+	
+	static MEMORY_READ_START(readmem_bbca)
+		{ 0x0000, 0x3fff, MRA_RAM		   },
+		{ 0x4000, 0x7fff, MRA_BANK1 	   },  /* bank 1 is a repeat of the memory at 0x0000 to 0x3fff	 */
+		{ 0x8000, 0xbfff, MRA_BANK3 	   },  /* Paged ROM                                              */
+		{ 0xc000, 0xfbff, MRA_BANK2		   },  /* OS                                                     */
+		{ 0xfc00, 0xfdff, BBC_NOP_FF_r	   },  /* FRED & JIM Pages                                       */
+											   /* Shiela Address Page &fe00 - &feff 					 */
+		{ 0xfe00, 0xfe07, BBC_6845_r	   },  /* &00-&07  6845 CRTC	 Video controller			     */
+		{ 0xfe08, 0xfe0f, BBC_NOP_00_r	   },  /* &08-&0f  6850 ACIA	 Serial Controller			     */
+		{ 0xfe10, 0xfe17, BBC_NOP_00_r	   },  /* &10-&17  Serial ULA	 Serial system chip 		     */
+		{ 0xfe18, 0xfe1f, BBC_NOP_00_r	   },  /* &18-&1f  INTOFF/STATID 1 ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, BBC_NOP_00_r	   },  /* &20-&2f  INTON         1 ECONET Interrupt On		     */
+		{ 0xfe30, 0xfe3f, BBC_NOP_FE_r	   },  /* &30-&3f  NC    		 Not Connected		 		     */
+		{ 0xfe40, 0xfe5f, via_0_r		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 					 */
+		{ 0xfe60, 0xfe7f, BBC_NOP_00_r	   },  /* &60-&7f  6522 VIA 	 1 USER VIA 					 */
+		{ 0xfe80, 0xfe9f, BBC_NOP_00_r	   },  /* &80-&9f  8271/1770 FDC 1 Floppy disc controller		 */
+		{ 0xfea0, 0xfebf, BBC_NOP_FE_r	   },  /* &a0-&bf  68B54 ADLC	 1 ECONET controller			 */
+		{ 0xfec0, 0xfedf, BBC_NOP_00_r	   },  /* &c0-&df  uPD7002		 1 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, BBC_NOP_FE_r	   },  /* &e0-&ff  Tube ULA 	 1 Tube system interface		 */
+		{ 0xff00, 0xffff, MRA_BANK2		   },  /* Hardware marked with a 1 is not present in a Model A	 */
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbca)
+		{ 0x0000, 0x3fff, memory_w		   },
+		{ 0x4000, 0x7fff, memory_w		   },  /* this is a repeat of the memory at 0x0000 to 0x3fff	 */
+		{ 0x8000, 0xdfff, MWA_ROM		   },  /* Paged ROM                                              */
+		{ 0xc000, 0xfdff, MWA_ROM		   },  /* OS                                                     */
+		{ 0xfc00, 0xfdff, MWA_NOP		   },  /* FRED & JIM Pages                                       */
+											   /* Shiela Address Page &fe00 - &feff 					 */
+		{ 0xfe00, 0xfe07, BBC_6845_w	   },  /* &00-&07  6845 CRTC	 Video controller			     */
+		{ 0xfe08, 0xfe0f, MWA_NOP		   },  /* &08-&0f  6850 ACIA	 Serial Controller			     */
+		{ 0xfe10, 0xfe17, MWA_NOP		   },  /* &10-&17  Serial ULA	 Serial system chip 		     */
+		{ 0xfe18, 0xfe1f, MWA_NOP          },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No.   */
+		{ 0xfe20, 0xfe2f, videoULA_w	   },  /* &20-&2f  Video ULA	 Video system chip				 */
+		{ 0xfe30, 0xfe3f, page_selecta_w   },  /* &30-&3f  84LS161		 Paged ROM selector 			 */
+		{ 0xfe40, 0xfe5f, via_0_w		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 					 */
+		{ 0xfe60, 0xfe7f, MWA_NOP		   },  /* &60-&7f  6522 VIA 	 1 USER VIA 					 */
+		{ 0xfe80, 0xfe9f, MWA_NOP		   },  /* &80-&9f  8271/1770 FDC 1 Floppy disc controller		 */
+		{ 0xfea0, 0xfebf, MWA_NOP		   },  /* &a0-&bf  68B54 ADLC	 1 ECONET controller			 */
+		{ 0xfec0, 0xfedf, MWA_NOP		   },  /* &c0-&df  uPD7002		 1 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, MWA_NOP		   },  /* &e0-&ff  Tube ULA 	 1 Tube system interface		 */
+		{ 0xff00, 0xffff, MWA_ROM		   },  /* Hardware marked with a 1 is not present in a Model A	 */
+	MEMORY_END
+	
+	
+	static MEMORY_READ_START(readmem_bbcb)
+		{ 0x0000, 0x7fff, MRA_RAM		   },
+		{ 0x8000, 0xbfff, MRA_BANK3 	   },
+		{ 0xc000, 0xfbff, MRA_BANK2		   },
+		{ 0xfc00, 0xfdff, BBC_NOP_FF_r	   },  /* FRED & JIM Pages */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_r	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, BBC_NOP_00_r	   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, BBC_NOP_00_r	   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, BBC_NOP_00_r	   },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, BBC_NOP_00_r	   },  /* &20-&2f  INTON         ECONET Interrupt On		   */
+		{ 0xfe30, 0xfe3f, BBC_NOP_FE_r	   },  /* &30-&3f  NC    		 Not Connected		 		   */
+		{ 0xfe40, 0xfe5f, via_0_r		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_r		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_i8271_read   },  /* &80-&9f  8271 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, BBC_NOP_FE_r	   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_r	       },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, BBC_NOP_FE_r	   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MRA_BANK2		   },
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbcb)
+		{ 0x0000, 0x7fff, memory_w		   },
+		{ 0x8000, 0xdfff, MWA_ROM		   },
+		{ 0xc000, 0xfdff, MWA_ROM		   },
+		{ 0xfc00, 0xfdff, MWA_NOP		   },  /* FRED & JIM Pages */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_w	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, MWA_NOP		   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, MWA_NOP		   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, MWA_NOP          },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, videoULA_w	   },  /* &20-&2f  Video ULA	 Video system chip			   */
+		{ 0xfe30, 0xfe3f, page_selectb_w   },  /* &30-&3f  84LS161		 Paged ROM selector 		   */
+		{ 0xfe40, 0xfe5f, via_0_w		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_w		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_i8271_write  },  /* &80-&9f  8271 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, MWA_NOP		   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_w        },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, MWA_NOP		   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MWA_ROM		   },
+	MEMORY_END
+	
+	
+	static MEMORY_READ_START(readmem_bbcb1770)
+		{ 0x0000, 0x7fff, MRA_RAM		   },
+		{ 0x8000, 0xbfff, MRA_BANK3 	   },
+		{ 0xc000, 0xfbff, MRA_BANK2		   },
+		{ 0xfc00, 0xfdff, BBC_NOP_FF_r	   },  /* FRED & JIM Pages */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_r	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, BBC_NOP_00_r	   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, BBC_NOP_00_r	   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, BBC_NOP_00_r	   },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, BBC_NOP_00_r	   },  /* &20-&2f  INTON         ECONET Interrupt On		   */
+		{ 0xfe30, 0xfe3f, BBC_NOP_FE_r	   },  /* &30-&3f  NC    		 Not Connected		 		   */
+		{ 0xfe40, 0xfe5f, via_0_r		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_r		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_read  },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, BBC_NOP_FE_r	   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_r  	   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, BBC_NOP_FE_r	   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MRA_BANK2		   },
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbcb1770)
+		{ 0x0000, 0x7fff, memory_w		   },
+		{ 0x8000, 0xdfff, MWA_ROM		   },
+		{ 0xc000, 0xfdff, MWA_ROM		   },
+		{ 0xfc00, 0xfdff, MWA_NOP		   },  /* FRED & JIM Pages */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_w	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, MWA_NOP		   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, MWA_NOP		   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, MWA_NOP          },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, videoULA_w	   },  /* &20-&2f  Video ULA	 Video system chip			   */
+		{ 0xfe30, 0xfe3f, page_selectb_w   },  /* &30-&3f  84LS161		 Paged ROM selector 		   */
+		{ 0xfe40, 0xfe5f, via_0_w		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_w		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_write },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, MWA_NOP		   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_w		   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, MWA_NOP		   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MWA_ROM		   },
+	MEMORY_END
+	
+	
+	static MEMORY_READ_START(readmem_bbcbp)
+		{ 0x0000, 0x2fff, MRA_RAM		   },  /* Normal Ram                                           */
+		{ 0x3000, 0x7fff, MRA_BANK1        },  /* Video/Shadow Ram                                     */
+		{ 0x8000, 0xafff, MRA_BANK3 	   },  /* Paged ROM or 12K of RAM                              */
+		{ 0xb000, 0xbfff, MRA_BANK4        },  /* Rest of paged ROM area                               */
+		{ 0xc000, 0xfbff, MRA_BANK2		   },  /* OS                                                   */
+		{ 0xfc00, 0xfdff, BBC_NOP_FF_r	   },  /* FRED & JIM Pages                                     */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_r	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, BBC_NOP_00_r	   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, BBC_NOP_00_r	   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, BBC_NOP_00_r	   },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, BBC_NOP_00_r	   },  /* &20-&2f  INTON         ECONET Interrupt On		   */
+		{ 0xfe30, 0xfe3f, BBC_NOP_FE_r	   },  /* &30-&3f  NC    		 Not Connected		 		   */
+		{ 0xfe40, 0xfe5f, via_0_r		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_r		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_read  },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, BBC_NOP_FE_r	   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_r 	   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, BBC_NOP_FE_r	   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MRA_BANK2		   },
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbcbp)
+		{ 0x0000, 0x2fff, memorybp0_w	   },  /* Normal Ram                                           */
+		{ 0x3000, 0x7fff, memorybp1_w      },  /* Video/Shadow Ram                                     */
+		{ 0x8000, 0xafff, memorybp3_w      },  /* Paged ROM or 12K of RAM                              */
+		{ 0xb000, 0xdfff, MWA_ROM          },  /* Rest of paged ROM area                               */
+		{ 0xc000, 0xfdff, MWA_ROM		   },  /* OS                                                   */
+		{ 0xfc00, 0xfdff, MWA_NOP		   },  /* FRED & JIM Pages                                     */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_w	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, MWA_NOP		   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, MWA_NOP		   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, MWA_NOP          },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, videoULA_w	   },  /* &20-&2f  Video ULA	 Video system chip			   */
+		{ 0xfe30, 0xfe3f, page_selectbp_w  },  /* &30-&3f  84LS161		 Paged ROM selector 		   */
+		{ 0xfe40, 0xfe5f, via_0_w		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_w		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_write },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, MWA_NOP		   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_w		   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, MWA_NOP		   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MWA_ROM		   },
+	MEMORY_END
+	
+	
+	
+	static MEMORY_READ_START(readmem_bbcbp128)
+		{ 0x0000, 0x2fff, MRA_RAM		   },  /* Normal Ram                                           */
+		{ 0x3000, 0x7fff, MRA_BANK1        },  /* Video/Shadow Ram                                     */
+		{ 0x8000, 0xafff, MRA_BANK3 	   },  /* Paged ROM or 12K of RAM                              */
+		{ 0xb000, 0xbfff, MRA_BANK4        },  /* Rest of paged ROM area                               */
+		{ 0xc000, 0xfbff, MRA_BANK2		   },  /* OS                                                   */
+		{ 0xfc00, 0xfdff, BBC_NOP_FF_r	   },  /* FRED & JIM Pages                                     */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_r	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, BBC_NOP_00_r	   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, BBC_NOP_00_r	   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, BBC_NOP_00_r	   },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, BBC_NOP_00_r	   },  /* &20-&2f  INTON         ECONET Interrupt On		   */
+		{ 0xfe30, 0xfe3f, BBC_NOP_FE_r	   },  /* &30-&3f  NC    		 Not Connected		 		   */
+		{ 0xfe40, 0xfe5f, via_0_r		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_r		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_read  },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, BBC_NOP_FE_r	   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_r 	   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, BBC_NOP_FE_r	   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MRA_BANK2		   },
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbcbp128)
+		{ 0x0000, 0x2fff, memorybp0_w	   },  /* Normal Ram                                           */
+		{ 0x3000, 0x7fff, memorybp1_w      },  /* Video/Shadow Ram                                     */
+		{ 0x8000, 0xafff, memorybp3_128_w  },  /* Paged ROM or 12K of RAM                              */
+		{ 0xb000, 0xdfff, memorybp4_128_w  },  /* Rest of paged ROM area                               */
+		{ 0xc000, 0xfdff, MWA_ROM		   },  /* OS                                                   */
+		{ 0xfc00, 0xfdff, MWA_NOP		   },  /* FRED & JIM Pages                                     */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_w	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, MWA_NOP		   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, MWA_NOP		   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, MWA_NOP          },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, videoULA_w	   },  /* &20-&2f  Video ULA	 Video system chip			   */
+		{ 0xfe30, 0xfe3f, page_selectbp_w  },  /* &30-&3f  84LS161		 Paged ROM selector 		   */
+		{ 0xfe40, 0xfe5f, via_0_w		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_w		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_write },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, MWA_NOP		   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_w		   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, MWA_NOP		   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MWA_ROM		   },
+	MEMORY_END
+	
+	
+	/***************/
+	/* bbc TUBE    */
+	/***************/
+	// This code can live here right now but will get turned into a fully generic TUBE driver (in its own file) when it is working
+	// This tube code is very much WIP right now.
+	
+	
+	UINT8  r1ph[24];
+	UINT8  r1ph_top=0;
+	UINT8  r1ph_bottom=0;
+	UINT8  r1ph_da=0;
+	UINT8  r1ph_nf=1;
+	
+	UINT8  r1hp[1];
+	UINT8  r1hp_top=0;
+	UINT8  r1hp_bottom=0;
+	UINT8  r1hp_da=0;
+	UINT8  r1hp_nf=1;
+	UINT8  r1hp_p=0;
+	UINT8  r1hp_v=0;
+	UINT8  r1hp_m=0;
+	UINT8  r1hp_j=0;
+	UINT8  r1hp_i=0;
+	UINT8  r1hp_q=0;
+	
+	
+	UINT8  r2ph[1];
+	UINT8  r2ph_top=0;
+	UINT8  r2ph_bottom=0;
+	UINT8  r2ph_da=0;
+	UINT8  r2ph_nf=1;
+	
+	UINT8  r2hp[1];
+	UINT8  r2hp_top=0;
+	UINT8  r2hp_bottom=0;
+	UINT8  r2hp_da=0;
+	UINT8  r2hp_nf=1;
+	
+	UINT8  r3ph[2];
+	UINT8  r3ph_top=0;
+	UINT8  r3ph_bottom=0;
+	UINT8  r3ph_da=0;
+	UINT8  r3ph_nf=1;
+	
+	UINT8  r3hp[2];
+	UINT8  r3hp_top=0;
+	UINT8  r3hp_bottom=0;
+	UINT8  r3hp_da=0;
+	UINT8  r3hp_nf=1;
+	
+	UINT8  r4ph[1];
+	UINT8  r4ph_top=0;
+	UINT8  r4ph_bottom=0;
+	UINT8  r4ph_da=0;
+	UINT8  r4ph_nf=1;
+	
+	UINT8  r4hp[1];
+	UINT8  r4hp_top=0;
+	UINT8  r4hp_bottom=0;
+	UINT8  r4hp_da=0;
+	UINT8  r4hp_nf=1;
+	
+	int    r1irq=0;
+	int    r3nmi=0;
+	int    r4irq=0;
+	
+	public static WriteHandlerPtr tube_port_a_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
-		cpu_setbank(2,memory_region(REGION_CPU1)+0x10000+((data&0x03)<<14));
-	}
+		switch (offset&0x7)
+		{
+		case 0:
+			logerror("Port A write to R1STAT %02X\n",data);
+			//r1hp_da=(data>>7)|1;
+			//r1hp_nf=(data>>6)|1;
+			r1hp_p =(data>>5)|1;
+			r1hp_v =(data>>4)|1;
+			r1hp_m =(data>>3)|1;
+			r1hp_j =(data>>2)|1;
+			r1hp_i =(data>>1)|1;
+			r1hp_q =(data>>0)|1;
+			break;
+		case 1:
+			logerror("Port A write to R1DATA %02X\n",data);
+			exit(1);
+			break;
+		case 2:
+			logerror("Port A write to R2STAT %02X\n",data);
+			exit(1);
+			break;
+		case 3:
+			logerror("Port A write to R2DATA %02X\n",data);
+			exit(1);
+			break;
+		case 4:
+			logerror("Port A write to R3STAT %02X\n",data);
+			exit(1);
+			break;
+		case 5:
+			if (r3hp_nf != 0)
+			{
+				logerror("Port A write to R3DATA %02X\n",data);
+				r3hp[r3hp_top]=data;
+				r3hp_top=(r3hp_top+1)%1;
+				r3hp_da=1;
+				if (r3hp_top==r3hp_bottom) r3hp_nf=0;
 	
-	/* for the model B address all 16 of the rom sockets */
-	WRITE_HANDLER ( page_selectb_w )
+				if (r1hp_m && (r3nmi==0)) {
+					r3nmi=1;
+					cpu_set_irq_line(1, M6502_INT_NMI, r3nmi);
+				}
+			} else {
+				logerror("Port A write to R3DATA on full buffer %02X\n",data);
+				r3hp[r3hp_top]=data;
+				r3hp_top=(r3hp_top+1)%1;
+				r3hp_da=1;
+				if (r3hp_top==r3hp_bottom) r3hp_nf=0;
+	
+				if (r1hp_m && (r3nmi==0)) {
+					r3nmi=1;
+					cpu_set_irq_line(1, M6502_INT_NMI, r3nmi);
+				}
+			}
+			break;
+		case 6:
+			logerror("Port A write to R4STAT %02X\n",data);
+			exit(1);
+			break;
+		case 7:
+			logerror("Port A write to R4DATA %02X\n",data);
+			if (r4hp_nf != 0)
+			{
+				r4hp[r4hp_top]=data;
+				r4hp_top=(r4hp_top+1)%1;
+				r4hp_da=1;
+				if (r4hp_top==r4hp_bottom) r4hp_nf=0;
+	
+				if (r1hp_j != 0) {
+					r4irq=1;
+					cpu_set_irq_line(1, M6502_IRQ_LINE, r1irq|r4irq);
+				}
+			} else {
+				logerror("Port A write to R4DATA on full buffer\n");
+				exit(1);
+			}
+			break;
+		};
+	} };
+	
+	public static ReadHandlerPtr tube_port_a_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-		cpu_setbank(2,memory_region(REGION_CPU1)+0x10000+((data&0x0f)<<14));
-	}
+		UINT8 retval=0x00;
+	
+		switch (offset&0x7)
+		{
+		case 0:
+			logerror("Port A read from R1STAT\n");
+			retval=(r1ph_da<<7) | (r1hp_nf<<6) | 0x3f;
+			break;
+		case 1:
+			logerror("Port A read from R1DATA\n");
+			if (r1ph_da != 0)
+			{
+				retval=r1ph[r1ph_bottom];
+				r1ph_bottom=(r1ph_bottom+1)%24;
+				r1ph_nf=1;
+				if (r1ph_top==r1ph_bottom) r1ph_da=0;
+			} else {
+				logerror("Port A read from R1DATA on empty buffer\n");
+				exit(1);
+			}
+	
+			break;
+		case 2:
+			logerror("Port A read from R2STAT\n");
+			exit(1);
+			break;
+		case 3:
+			logerror("Port A read from R2DATA\n");
+			exit(1);
+			break;
+		case 4:
+			logerror("Port A read from R3STAT\n");
+			exit(1);
+			break;
+		case 5:
+			logerror("Port A read from R3DATA\n");
+			exit(1);
+			break;
+		case 6:
+			logerror("Port A read from R4STAT\n");
+			retval=(r4ph_da<<7) | (r4hp_nf<<6) | 0x3f;
+			break;
+		case 7:
+			logerror("Port A read from R4DATA\n");
+			exit(1);
+			break;
+		};
+		logerror("returning %02X\n",retval);
+		return retval;
+	} };
 	
 	
-	WRITE_HANDLER ( memory_w )
+	public static WriteHandlerPtr tube_port_b_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
-		memory_region(REGION_CPU1)[offset]=data;
+		switch (offset&0x7)
+		{
+		case 0:
+			logerror("Port B write to R1STAT %02X\n",data);
+			exit(1);
+			break;
+		case 1:
+			logerror("Port B write to R1DATA %02X\n",data);
+			if (r1ph_nf != 0)
+			{
+				r1ph[r1ph_top]=data;
+				r1ph_top=(r1ph_top+1)%24;
+				r1ph_da=1;
+				if (r1ph_top==r1ph_bottom) r1ph_nf=0;
+			} else {
+				logerror("Port B write to R1DATA on full buffer\n");
+				exit(1);
+			}
+			break;
+		case 2:
+			logerror("Port B write to R2STAT %02X\n",data);
+			exit(1);
+			break;
+		case 3:
+			logerror("Port B write to R2DATA %02X\n",data);
+			exit(1);
+			break;
+		case 4:
+			logerror("Port B write to R3STAT %02X\n",data);
+			exit(1);
+			break;
+		case 5:
+			logerror("Port B write to R3DATA %02X\n",data);
+			exit(1);
+			break;
+		case 6:
+			logerror("Port B write to R4STAT %02X\n",data);
+			exit(1);
+			break;
+		case 7:
+			logerror("Port B write to R4DATA %02X\n",data);
+			exit(1);
+			break;
+		};
+	} };
 	
-		// this array is set so that the video emulator know which addresses to redraw
-		vidmem[offset]=1;
-	}
 	
-	static MemoryReadAddress readmem_bbca[] =
+	public static ReadHandlerPtr tube_port_b_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-		new MemoryReadAddress( 0x0000, 0x3fff, MRA_RAM          ),
-		new MemoryReadAddress( 0x4000, 0x7fff, MRA_BANK1        ),  /* bank 1 is a repeat of the memory at 0x0000 to 0x3fff   */
-		new MemoryReadAddress( 0x8000, 0xbfff, MRA_BANK2        ),
-		new MemoryReadAddress( 0xc000, 0xfbff, MRA_ROM          ),
-		new MemoryReadAddress( 0xfc00, 0xfdff, MRA_NOP          ),  /* FRED  JIM Pages */
-					                           /* Shiela Address Page fe00 - feff                      */
-		new MemoryReadAddress( 0xfe00, 0xfe07, BBC_6845_r       ),  /* 00-07  6845 CRTC     Video controller                */
-		new MemoryReadAddress( 0xfe08, 0xfe0f, MRA_NOP          ),  /* 08-0f  6850 ACIA     Serial Controller               */
-		new MemoryReadAddress( 0xfe10, 0xfe1f, MRA_NOP          ),  /* 10-1f  Serial ULA    Serial system chip              */
-		new MemoryReadAddress( 0xfe20, 0xfe2f, videoULA_r       ),  /* 20-2f  Video ULA     Video system chip               */
-		new MemoryReadAddress( 0xfe30, 0xfe3f, MRA_NOP          ),  /* 30-3f  84LS161       Paged ROM selector              */
-		new MemoryReadAddress( 0xfe40, 0xfe5f, via_0_r          ),  /* 40-5f  6522 VIA      SYSTEM VIA                      */
-		new MemoryReadAddress( 0xfe60, 0xfe7f, MRA_NOP          ),  /* 60-7f  6522 VIA      1 USER VIA                      */
-		new MemoryReadAddress( 0xfe80, 0xfe9f, MRA_NOP          ),  /* 80-9f  8271/1770 FDC 1 Floppy disc controller        */
-		new MemoryReadAddress( 0xfea0, 0xfebf, MRA_NOP          ),  /* a0-bf  68B54 ADLC    1 ECONET controller             */
-		new MemoryReadAddress( 0xfec0, 0xfedf, MRA_NOP          ),  /* c0-df  uPD7002       1 Analogue to digital converter */
-		new MemoryReadAddress( 0xfee0, 0xfeff, MRA_NOP          ),  /* e0-ff  Tube ULA      1 Tube system interface         */
-		new MemoryReadAddress( 0xff00, 0xffff, MRA_ROM          ),  /* Hardware marked with a 1 is not present in a Model A   */
-	    new MemoryReadAddress(-1)
-	};
+		UINT8 retval=0x00;
 	
-	static MemoryWriteAddress writemem_bbca[] =
+		switch (offset&0x7)
+		{
+		case 0:
+			logerror("Port B read from R1STAT\n");
+			retval=(r1hp_da<<7) | (r1ph_nf<<6) | 0x3f;
+			break;
+		case 1:
+			logerror("Port B read from R1DATA\n");
+			exit(1);
+			break;
+		case 2:
+			logerror("Port B read from R2STAT\n");
+			retval=(r2hp_da<<7) | (r2ph_nf<<6) | 0x3f;
+			break;
+		case 3:
+			logerror("Port B read from R2DATA\n");
+			exit(1);
+			break;
+		case 4:
+			logerror("Port B read from R3STAT\n");
+			retval=(r3hp_da<<7) | (r3ph_nf<<6) | 0x3f;
+			break;
+		case 5:
+			if (r3hp_da != 0)
+			{
+				logerror("Port B read from R3DATA\n");
+	
+				retval=r3hp[r3hp_bottom];
+				r3hp_bottom=(r3hp_bottom+1)%1;
+				r3hp_nf=1;
+				if (r3hp_top==r3hp_bottom) r3hp_da=0;
+				if (r3nmi==1)
+				{
+					r3nmi=0;
+					cpu_set_irq_line(1, M6502_INT_NMI, r3nmi);
+				}
+			} else {
+				logerror("Port B read from R3DATA on empty buffer\n");
+				retval=r3hp[r3hp_bottom];
+				if (r3nmi==1)
+				{
+					r3nmi=0;
+					cpu_set_irq_line(1, M6502_INT_NMI, r3nmi);
+				}
+			}
+			break;
+		case 6:
+			logerror("Port B read from R4STAT\n");
+			retval=(r4hp_da<<7) | (r4ph_nf<<6) | 0x3f;
+			break;
+		case 7:
+			if (r4hp_da != 0)
+			{
+				logerror("Port B read from R4DATA\n");
+	
+				retval=r4hp[r4hp_bottom];
+				r4hp_bottom=(r4hp_bottom+1)%1;
+				r4hp_nf=1;
+				if (r4hp_top==r4hp_bottom) r4hp_da=0;
+				if (r4irq==1)
+				{
+					r4irq=0;
+					cpu_set_irq_line(1, M6502_IRQ_LINE, r1irq|r4irq);
+				}
+			} else {
+				logerror("Port B read from R4DATA on empty buffer\n");
+				exit(1);
+			}
+			break;
+		};
+	
+		logerror("returning %02X\n",retval);
+		return retval;
+	} };
+	
+	
+	/******************************************************/
+	/* Starting to look at adding a 6502 second processor */
+	/******************************************************/
+	
+	//the 6502 second processor emulation is more or less complete with this,
+	//I just need to write the TUBE driver now
+	
+	//initially the rom is mapped in for read cycles when A15 is high
+	//the first read or write to the tube maps the rom out leaving only the ram accessable
+	//the first access to the tube is a read, so the map out code is only implemented in the read function
+	
+	
+	
+	
+	public static ReadHandlerPtr bbcs_tube_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-		new MemoryWriteAddress( 0x0000, 0x3fff, memory_w         ),
-		new MemoryWriteAddress( 0x4000, 0x7fff, memory_w         ),  /* this is a repeat of the memory at 0x0000 to 0x3fff     */
-		new MemoryWriteAddress( 0x8000, 0xdfff, MWA_NOP          ),
-		new MemoryWriteAddress( 0xc000, 0xfdff, MWA_NOP          ),
-		new MemoryWriteAddress( 0xfc00, 0xfdff, MWA_NOP          ),  /* FRED  JIM Pages */
-					                           /* Shiela Address Page fe00 - feff                      */
-		new MemoryWriteAddress( 0xfe00, 0xfe07, BBC_6845_w       ),  /* 00-07  6845 CRTC     Video controller                */
-		new MemoryWriteAddress( 0xfe08, 0xfe0f, MWA_NOP          ),  /* 08-0f  6850 ACIA     Serial Controller               */
-		new MemoryWriteAddress( 0xfe10, 0xfe1f, MWA_NOP          ),  /* 10-1f  Serial ULA    Serial system chip              */
-		new MemoryWriteAddress( 0xfe20, 0xfe2f, videoULA_w       ),  /* 20-2f  Video ULA     Video system chip               */
-		new MemoryWriteAddress( 0xfe30, 0xfe3f, page_selecta_w   ),  /* 30-3f  84LS161       Paged ROM selector              */
-		new MemoryWriteAddress( 0xfe40, 0xfe5f, via_0_w          ),  /* 40-5f  6522 VIA      SYSTEM VIA                      */
-		new MemoryWriteAddress( 0xfe60, 0xfe7f, MWA_NOP          ),  /* 60-7f  6522 VIA      1 USER VIA                      */
-		new MemoryWriteAddress( 0xfe80, 0xfe9f, MWA_NOP          ),  /* 80-9f  8271/1770 FDC 1 Floppy disc controller        */
-		new MemoryWriteAddress( 0xfea0, 0xfebf, MWA_NOP          ),  /* a0-bf  68B54 ADLC    1 ECONET controller             */
-		new MemoryWriteAddress( 0xfec0, 0xfedf, MWA_NOP          ),  /* c0-df  uPD7002       1 Analogue to digital converter */
-		new MemoryWriteAddress( 0xfee0, 0xfeff, MWA_NOP          ),  /* e0-ff  Tube ULA      1 Tube system interface         */
-		new MemoryWriteAddress( 0xff00, 0xffff, MWA_ROM          ),  /* Hardware marked with a 1 is not present in a Model A   */
-	    new MemoryWriteAddress(-1)
-	};
+	
+		if (startbank != 0)
+		{
+			cpu_setbank(5,memory_region(REGION_CPU2)+0xf000);
+			startbank=0;
+		}
+		return tube_port_b_r( offset );
+	} };
 	
 	
-	static MemoryReadAddress readmem_bbcb[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x7fff, MRA_RAM          ),
-		new MemoryReadAddress( 0x8000, 0xbfff, MRA_BANK2        ),
-		new MemoryReadAddress( 0xc000, 0xfbff, MRA_ROM          ),
-		new MemoryReadAddress( 0xfc00, 0xfdff, MRA_NOP          ),  /* FRED  JIM Pages */
-					                           /* Shiela Address Page fe00 - feff                    */
-		new MemoryReadAddress( 0xfe00, 0xfe07, BBC_6845_r       ),  /* 00-07  6845 CRTC     Video controller              */
-		new MemoryReadAddress( 0xfe08, 0xfe0f, MRA_NOP          ),  /* 08-0f  6850 ACIA     Serial Controller             */
-		new MemoryReadAddress( 0xfe10, 0xfe1f, MRA_NOP          ),  /* 10-1f  Serial ULA    Serial system chip            */
-		new MemoryReadAddress( 0xfe20, 0xfe2f, videoULA_r       ),  /* 20-2f  Video ULA     Video system chip             */
-		new MemoryReadAddress( 0xfe30, 0xfe3f, MRA_NOP          ),  /* 30-3f  84LS161       Paged ROM selector            */
-		new MemoryReadAddress( 0xfe40, 0xfe5f, via_0_r          ),  /* 40-5f  6522 VIA      SYSTEM VIA                    */
-		new MemoryReadAddress( 0xfe60, 0xfe7f, via_1_r          ),  /* 60-7f  6522 VIA      USER VIA                      */
-		new MemoryReadAddress( 0xfe80, 0xfe9f, bbc_wd1770_read  ),  /* 80-9f  8271/1770 FDC Floppy disc controller        */
-	//	new MemoryReadAddress( 0xfe80, 0xfe9f, bbc_i8271_read   ),
-		new MemoryReadAddress( 0xfea0, 0xfebf, MRA_NOP          ),  /* a0-bf  68B54 ADLC    ECONET controller             */
-		new MemoryReadAddress( 0xfec0, 0xfedf, MRA_NOP          ),  /* c0-df  uPD7002       Analogue to digital converter */
-		new MemoryReadAddress( 0xfee0, 0xfeff, MRA_NOP          ),  /* e0-ff  Tube ULA      Tube system interface         */
-		new MemoryReadAddress( 0xff00, 0xffff, MRA_ROM          ),
-	    new MemoryReadAddress(-1)
-	};
 	
-	static MemoryWriteAddress writemem_bbcb[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x7fff, memory_w         ),
-		new MemoryWriteAddress( 0x8000, 0xdfff, MWA_NOP          ),
-		new MemoryWriteAddress( 0xc000, 0xfdff, MWA_NOP          ),
-		new MemoryWriteAddress( 0xfc00, 0xfdff, MWA_NOP          ),  /* FRED  JIM Pages */
-					                           /* Shiela Address Page fe00 - feff                    */
-		new MemoryWriteAddress( 0xfe00, 0xfe07, BBC_6845_w       ),  /* 00-07  6845 CRTC     Video controller              */
-		new MemoryWriteAddress( 0xfe08, 0xfe0f, MWA_NOP          ),  /* 08-0f  6850 ACIA     Serial Controller             */
-		new MemoryWriteAddress( 0xfe10, 0xfe1f, MWA_NOP          ),  /* 10-1f  Serial ULA    Serial system chip            */
-		new MemoryWriteAddress( 0xfe20, 0xfe2f, videoULA_w       ),  /* 20-2f  Video ULA     Video system chip             */
-		new MemoryWriteAddress( 0xfe30, 0xfe3f, page_selectb_w   ),  /* 30-3f  84LS161       Paged ROM selector            */
-		new MemoryWriteAddress( 0xfe40, 0xfe5f, via_0_w          ),  /* 40-5f  6522 VIA      SYSTEM VIA                    */
-		new MemoryWriteAddress( 0xfe60, 0xfe7f, via_1_w          ),  /* 60-7f  6522 VIA      USER VIA                      */
-		new MemoryWriteAddress( 0xfe80, 0xfe9f, bbc_wd1770_write ),  /* 80-9f  8271/1770 FDC Floppy disc controller        */
-	//	new MemoryWriteAddress( 0xfe80, 0xfe9f, bbc_i8271_write  ),
-		new MemoryWriteAddress( 0xfea0, 0xfebf, MWA_NOP          ),  /* a0-bf  68B54 ADLC    ECONET controller             */
-		new MemoryWriteAddress( 0xfec0, 0xfedf, MWA_NOP          ),  /* c0-df  uPD7002       Analogue to digital converter */
-		new MemoryWriteAddress( 0xfee0, 0xfeff, MWA_NOP          ),  /* e0-ff  Tube ULA      Tube system interface         */
-		new MemoryWriteAddress( 0xff00, 0xffff, MWA_ROM          ),
-	    new MemoryWriteAddress(-1)
-	};
+	/* now add a bbc B with the Tube Connected */
+	
+	static MEMORY_READ_START(readmem_bbcbtube)
+		{ 0x0000, 0x7fff, MRA_RAM		   },
+		{ 0x8000, 0xbfff, MRA_BANK3 	   },
+		{ 0xc000, 0xfbff, MRA_BANK2		   },
+		{ 0xfc00, 0xfdff, BBC_NOP_FF_r	   },  /* FRED & JIM Pages */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_r	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, BBC_NOP_00_r	   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, BBC_NOP_00_r	   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, BBC_NOP_00_r	   },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, BBC_NOP_00_r	   },  /* &20-&2f  INTON         ECONET Interrupt On		   */
+		{ 0xfe30, 0xfe3f, BBC_NOP_FE_r	   },  /* &30-&3f  NC    		 Not Connected		 		   */
+		{ 0xfe40, 0xfe5f, via_0_r		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_r		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_read  },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, BBC_NOP_FE_r	   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_r  	   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, tube_port_a_r	   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MRA_BANK2		   },
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbcbtube)
+		{ 0x0000, 0x7fff, memory_w		   },
+		{ 0x8000, 0xdfff, MWA_ROM		   },
+		{ 0xc000, 0xfdff, MWA_ROM		   },
+		{ 0xfc00, 0xfdff, MWA_NOP		   },  /* FRED & JIM Pages */
+											   /* Shiela Address Page &fe00 - &feff 				   */
+		{ 0xfe00, 0xfe07, BBC_6845_w	   },  /* &00-&07  6845 CRTC	 Video controller			   */
+		{ 0xfe08, 0xfe0f, MWA_NOP		   },  /* &08-&0f  6850 ACIA	 Serial Controller			   */
+		{ 0xfe10, 0xfe17, MWA_NOP		   },  /* &10-&17  Serial ULA	 Serial system chip 		   */
+		{ 0xfe18, 0xfe1f, MWA_NOP          },  /* &18-&1f  INTOFF/STATID ECONET Interrupt Off / ID No. */
+		{ 0xfe20, 0xfe2f, videoULA_w	   },  /* &20-&2f  Video ULA	 Video system chip			   */
+		{ 0xfe30, 0xfe3f, page_selectb_w   },  /* &30-&3f  84LS161		 Paged ROM selector 		   */
+		{ 0xfe40, 0xfe5f, via_0_w		   },  /* &40-&5f  6522 VIA 	 SYSTEM VIA 				   */
+		{ 0xfe60, 0xfe7f, via_1_w		   },  /* &60-&7f  6522 VIA 	 USER VIA					   */
+		{ 0xfe80, 0xfe9f, bbc_wd1770_write },  /* &80-&9f  1770 FDC      Floppy disc controller 	   */
+		{ 0xfea0, 0xfebf, MWA_NOP		   },  /* &a0-&bf  68B54 ADLC	 ECONET controller			   */
+		{ 0xfec0, 0xfedf, uPD7002_w		   },  /* &c0-&df  uPD7002		 Analogue to digital converter */
+		{ 0xfee0, 0xfeff, tube_port_a_w	   },  /* &e0-&ff  Tube ULA 	 Tube system interface		   */
+		{ 0xff00, 0xffff, MWA_ROM		   },
+	MEMORY_END
+	
+	/* Tube memory */
+	
+	static MEMORY_READ_START(readmem_bbc6502)
+		{ 0x0000, 0xefff, MRA_RAM       },
+		{ 0xf000, 0xfeF7, MRA_BANK5     },
+		{ 0xfef8, 0xfeff, bbcs_tube_r   },
+		{ 0xff00, 0xffff, MRA_BANK5     },
+	MEMORY_END
+	
+	static MEMORY_WRITE_START(writemem_bbc6502)
+		{ 0x0000, 0xfeF7, MWA_RAM       },
+		{ 0xfef8, 0xfeff, tube_port_b_w },
+		{ 0xff00, 0xffff, MWA_RAM       },
+	MEMORY_END
+	
+	
+	
+	// end of tube connection WIP
+	/********************/
+	
+	
 	
 	unsigned short bbc_colour_table[8]=
 	{
 		0,1,2,3,4,5,6,7
 	};
 	
-	unsigned char   bbc_palette[8*3]=
+	unsigned char	bbc_palette[8*3]=
 	{
 	
 		0x0ff,0x0ff,0x0ff,
@@ -307,70 +849,232 @@ public class bbc
 		PORT_BITX(0x80,  IP_ACTIVE_LOW, IPT_KEYBOARD, "CURSOR RIGHT",KEYCODE_RIGHT,     IP_JOY_NONE);
 	
 	
+		PORT_START();   // KEYBOARD COLUMN 10 RESERVED FOR BBC MASTER
+		PORT_START();   // KEYBOARD COLUMN 11 RESERVED FOR BBC MASTER
+		PORT_START();   // KEYBOARD COLUMN 12 RESERVED FOR BBC MASTER
+		PORT_START();   // KEYBOARD COLUMN 13 RESERVED FOR BBC MASTER
+		PORT_START();   // KEYBOARD COLUMN 14 RESERVED FOR BBC MASTER
+		PORT_START();   // KEYBOARD COLUMN 15 RESERVED FOR BBC MASTER
+	
+	
+		PORT_START(); 
+		PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 );
+		PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 );
+	
+		PORT_START(); 
+		PORT_ANALOG( 0xff, 0x80, IPT_AD_STICK_X | IPF_PLAYER1, 100, 10, 0x0, 0xff );
+	
+		PORT_START(); 
+		PORT_ANALOG( 0xff, 0x80, IPT_AD_STICK_Y | IPF_PLAYER1, 100, 10, 0x0, 0xff );
+	
+		PORT_START(); 
+		PORT_ANALOG( 0xff, 0x80, IPT_AD_STICK_X | IPF_PLAYER2, 100, 10, 0x0, 0xff );
+	
+		PORT_START(); 
+		PORT_ANALOG( 0xff, 0x80, IPT_AD_STICK_Y | IPF_PLAYER2, 100, 10, 0x0, 0xff );
+	
 	INPUT_PORTS_END(); }}; 
+	
 	
 	/* the BBC came with 4 rom sockets on the mother board as shown in the model A driver */
 	/* you could get a number of rom upgrade boards that took this up to 16 roms as in the */
 	/* model B driver */
 	
 	static RomLoadPtr rom_bbca = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x20000,REGION_CPU1);/* ROM MEMORY */
+		ROM_REGION(0x04000,REGION_CPU1,0);/* RAM */
 	
-		ROM_LOAD("os12.rom",    0x0C000, 0x4000, 0x3c14fc70 );
+		ROM_REGION(0x14000,REGION_USER1,0);/* ROM */
+		ROM_LOAD("os12.rom",    0x10000,  0x4000, 0x3c14fc70);
 	
-															  /* rom page 0  10000 */
-															  /* rom page 1  14000 */
-															  /* rom page 2  18000 */
-		ROM_LOAD("basic2.rom",  0x1c000, 0x4000, 0x79434781 );/* rom page 3  1c000 */
+															  /* rom page 0  00000 */
+															  /* rom page 1  04000 */
+															  /* rom page 2  08000 */
+		ROM_LOAD("basic2.rom",  0x0c000, 0x4000, 0x79434781 );/* rom page 3  0c000 */
 	ROM_END(); }}; 
 	
 	
-	/*  0000- 7fff  ram */
-	/*  8000- bfff  not used, this area is mapped over with one of the roms at 10000 and above */
-	/*  c000- ffff  OS rom and memory mapped hardware at fc00-feff */
-	/* 10000-4ffff  16 paged rom banks mapped back into 8000-bfff by the page rom select */
+	/*	0000- 7fff	ram */
+	/*	8000- bfff	not used, this area is mapped over with one of the roms at 10000 and above */
+	/*	c000- ffff	OS rom and memory mapped hardware at fc00-feff */
+	/* 10000-4ffff	16 paged rom banks mapped back into 8000-bfff by the page rom select */
 	
-	/* I have only plugged a few roms in */
+	
 	static RomLoadPtr rom_bbcb = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x50000,REGION_CPU1);/* ROM MEMORY */
+		ROM_REGION(0x08000,REGION_CPU1,0);/* RAM */
 	
-		ROM_LOAD("os12.rom",    0x0C000, 0x4000, 0x3c14fc70 );
+		ROM_REGION(0x44000,REGION_USER1,0);/* ROM */
+		ROM_LOAD("os12.rom", 0x40000,0x4000, 0x3c14fc70);
 	
 	
-															  /* rom page 0  10000 */
-															  /* rom page 1  14000 */
-															  /* rom page 2  18000 */
-															  /* rom page 3  1c000 */
-		                                                      /* rom page 4  20000 */
-		                                                      /* rom page 5  24000 */
-		                                                      /* rom page 6  28000 */
-		                                                      /* rom page 7  2c000 */
-															  /* rom page 8  30000 */
-															  /* rom page 9  34000 */
-															  /* rom page 10 38000 */
-															  /* rom page 11 3c000 */
-		                                                      /* rom page 12 40000 */
-		                                                      /* rom page 13 44000 */
-		                                                      /* rom page 14 48000 */
-		ROM_LOAD("basic2.rom",  0x4c000, 0x4000, 0x79434781 );/* rom page 15 4c000 */
+		                                                      /* rom page 0  00000 */
+		                                                      /* rom page 1  04000 */
+		                                                      /* rom page 2  08000 */
+		                                                      /* rom page 3  0c000 */
+		                                                      /* rom page 4  10000 */
+		                                                      /* rom page 5  14000 */
+				  											  /* rom page 6  18000 */
+		                                                      /* rom page 7  1c000 */
+															  /* rom page 8  20000 */
+															  /* rom page 9  24000 */
+															  /* rom page 10 28000 */
+															  /* rom page 11 2c000 */
+															  /* rom page 12 30000 */
+															  /* rom page 13 34000 */
+	
+	
+		/* just use one of the following DFS roms */
+	
+		/* dnfs is acorns disc and network filing system rom it replaced dfs 0.9  */
+	//	ROM_LOAD("dnfs.rom",    0x38000, 0x4000, 0x8ccd2157 );/* rom page 14 38000 */
+	
+		/* dfs 0.9 was the standard acorn dfs rom before it was replaced with the dnfs rom */
+	//	ROM_LOAD("dfs09.rom",   0x38000, 0x2000, 0x3ce609cf );/* rom page 14 38000 */
+	//	ROM_RELOAD(             0x3a000, 0x2000             );
+	
+		/* dfs 1.44 from watford electronics, this is the best of the non-acorn dfs roms */
+		ROM_LOAD("dfs144.rom",  0x38000, 0x4000, 0x9fb8d13f );/* rom page 14 38000 */
+	
+		ROM_LOAD("basic2.rom",  0x3c000, 0x4000, 0x79434781 );/* rom page 15 3c000 */
 	
 	
 	ROM_END(); }}; 
+	
+	
+	
+	static RomLoadPtr rom_bbcb1770 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x08000,REGION_CPU1,0);/* RAM */
+	
+		ROM_REGION(0x44000,REGION_USER1,0);/* ROM */
+		ROM_LOAD("os12.rom", 0x40000,0x4000, 0x3c14fc70);
+	
+		                                                      /* rom page 0  00000 */
+		                                                      /* rom page 1  04000 */
+		                                                      /* rom page 2  08000 */
+		                                                      /* rom page 3  0c000 */
+		                                                      /* rom page 4  10000 */
+		                                                      /* rom page 5  14000 */
+				  											  /* rom page 6  18000 */
+		                                                      /* rom page 7  1c000 */
+															  /* rom page 8  20000 */
+															  /* rom page 9  24000 */
+															  /* rom page 10 28000 */
+															  /* rom page 11 2c000 */
+															  /* rom page 12 30000 */
+															  /* rom page 13 34000 */
+	
+	/* ddfs 2.23 this is acorns 1770 disc controller Double density disc filing system */
+	    ROM_LOAD("ddfs223.rom", 0x38000, 0x4000, 0x7891f9b7 );/* rom page 14 38000 */
+	
+		ROM_LOAD("basic2.rom",  0x3c000, 0x4000, 0x79434781 );/* rom page 15 3c000 */
+	
+	ROM_END(); }}; 
+	
+	
+	
+	
+	static RomLoadPtr rom_bbcbp = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000,REGION_CPU1,0);/* ROM MEMORY */
+	
+		ROM_REGION(0x44000,REGION_USER1,0);/* ROM */
+		ROM_LOAD("bpos2.rom",   0x3c000, 0x4000, 0x9f356396 ); /* basic rom */
+		ROM_CONTINUE(           0x40000, 0x4000); /* OS */
+	
+		                                                      /* rom page 0  00000 */
+		                                                      /* rom page 1  04000 */
+		                                                      /* rom page 2  08000 */
+		                                                      /* rom page 3  0c000 */
+		                                                      /* rom page 4  10000 */
+		                                                      /* rom page 5  14000 */
+				  											  /* rom page 6  18000 */
+		                                                      /* rom page 7  1c000 */
+															  /* rom page 8  20000 */
+															  /* rom page 9  24000 */
+															  /* rom page 10 28000 */
+															  /* rom page 11 2c000 */
+															  /* rom page 12 30000 */
+															  /* rom page 13 34000 */
+	
+	    /* ddfs 2.23 this is acorns 1770 disc controller Double density disc filing system */
+	    ROM_LOAD("ddfs223.rom", 0x38000, 0x4000, 0x7891f9b7 );/* rom page 14 38000 */
+	
+	ROM_END(); }}; 
+	
+	
+	static RomLoadPtr rom_bbcbp128 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x10000,REGION_CPU1,0);/* ROM MEMORY */
+	
+		ROM_REGION(0x44000,REGION_USER1,0);/* ROM */
+		ROM_LOAD("bpos2.rom",   0x3c000, 0x4000, 0x9f356396 ); /* basic rom */
+		ROM_CONTINUE(           0x40000, 0x4000); /* OS */
+	
+		                                                      /* rom page 0  00000 */
+		                                                      /* rom page 1  04000 */
+		                                                      /* rom page 2  08000 */
+		                                                      /* rom page 3  0c000 */
+		                                                      /* rom page 4  10000 */
+		                                                      /* rom page 5  14000 */
+				  											  /* rom page 6  18000 */
+		                                                      /* rom page 7  1c000 */
+															  /* rom page 8  20000 */
+															  /* rom page 9  24000 */
+															  /* rom page 10 28000 */
+															  /* rom page 11 2c000 */
+															  /* rom page 12 30000 */
+															  /* rom page 13 34000 */
+	
+	    /* ddfs 2.23 this is acorns 1770 disc controller Double density disc filing system */
+	    ROM_LOAD("ddfs223.rom", 0x38000, 0x4000, 0x7891f9b7 );/* rom page 14 38000 */
+	
+	ROM_END(); }}; 
+	
+	
+	
+	static RomLoadPtr rom_bbcb6502 = new RomLoadPtr(){ public void handler(){ 
+		ROM_REGION(0x08000,REGION_CPU1,0);/* RAM */
+	
+		ROM_REGION(0x44000,REGION_USER1,0);/* ROM */
+		ROM_LOAD("os12.rom", 0x40000,0x4000, 0x3c14fc70);
+	
+		                                                      /* rom page 0  00000 */
+		                                                      /* rom page 1  04000 */
+		                                                      /* rom page 2  08000 */
+		                                                      /* rom page 3  0c000 */
+		                                                      /* rom page 4  10000 */
+		                                                      /* rom page 5  14000 */
+				  											  /* rom page 6  18000 */
+		                                                      /* rom page 7  1c000 */
+															  /* rom page 8  20000 */
+															  /* rom page 9  24000 */
+															  /* rom page 10 28000 */
+															  /* rom page 11 2c000 */
+															  /* rom page 12 30000 */
+															  /* rom page 13 34000 */
+	
+	/* ddfs 2.23 this is acorns 1770 disc controller Double density disc filing system */
+	    ROM_LOAD("ddfs223.rom", 0x38000, 0x4000, 0x7891f9b7 );/* rom page 14 38000 */
+	
+		ROM_LOAD("basic2.rom",  0x3c000, 0x4000, 0x79434781 );/* rom page 15 3c000 */
+	
+		ROM_REGION(0x11000,REGION_CPU2,0);
+		ROM_LOAD("6502tube.rom" , 0x10000,0x1000,0x98b5fe42);
+	
+	ROM_END(); }}; 
+	
 	
 	
 	static int bbcb_vsync(void)
 	{
-		via_0_ca1_w(0,0);
 		via_0_ca1_w(0,1);
-		check_disc_status();
+		via_0_ca1_w(0,0);
+		bbc_frameclock();
 		return 0;
 	}
 	
 	
 	static SN76496interface sn76496_interface = new SN76496interface
 	(
-		1,      /* 1 chip */
-		new int[] { 4000000 },    /* 4Mhz */
+		1,		/* 1 chip */
+		new int[] { 4000000 },	/* 4Mhz */
 		new int[] { 100 }
 	);
 	
@@ -380,17 +1084,17 @@ public class bbc
 		new MachineCPU[] {
 			new MachineCPU(
 				CPU_M6502,
-				2000000,        /* 2.00Mhz */
+				2000000,		/* 2.00Mhz */
 				readmem_bbca,
 				writemem_bbca,
 				null,
 				null,
 	
-				bbcb_vsync,     1,              /* screen refresh interrupts */
+				bbcb_vsync, 	1,				/* screen refresh interrupts */
 				bbcb_keyscan, 1000				/* scan keyboard */
 			)
 		},
-		50, DEFAULT_60HZ_VBLANK_DURATION,
+		50, 128,
 		1,
 		init_machine_bbca, /* init_machine */
 		null, /* stop_machine */
@@ -424,17 +1128,17 @@ public class bbc
 		new MachineCPU[] {
 			new MachineCPU(
 				CPU_M6502,
-				2000000,        /* 2.00Mhz */
+				2000000,		/* 2.00Mhz */
 				readmem_bbcb,
 				writemem_bbcb,
 				null,
 				null,
 	
-				bbcb_vsync,     1,              /* screen refresh interrupts */
-				bbcb_keyscan, 1000              /* scan keyboard */
+				bbcb_vsync, 	1,				/* screen refresh interrupts */
+				bbcb_keyscan, 1000				/* scan keyboard */
 			)
 		},
-		50, DEFAULT_60HZ_VBLANK_DURATION,
+		50, 128,
 		1,
 		init_machine_bbcb, /* init_machine */
 		stop_machine_bbcb, /* stop_machine */
@@ -462,73 +1166,426 @@ public class bbc
 	);
 	
 	
+	static MachineDriver machine_driver_bbcb1770 = new MachineDriver
+	(
+		/* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M6502,
+				2000000,		/* 2.00Mhz */
+				readmem_bbcb1770,
+				writemem_bbcb1770,
+				null,
+				null,
+	
+				bbcb_vsync, 	1,				/* screen refresh interrupts */
+				bbcb_keyscan, 1000				/* scan keyboard */
+			)
+		},
+		50, 128,
+		1,
+		init_machine_bbcb1770, /* init_machine */
+		stop_machine_bbcb1770, /* stop_machine */
+	
+		/* video hardware */
+		800,300, new rectangle(0,800-1,0,300-1),
+		null,
+		16, /*total colours*/
+		16, /*colour_table_length*/
+		init_palette_bbc, /*init palette */
+	
+		VIDEO_TYPE_RASTER,
+		null,
+		bbc_vh_startb,
+		bbc_vh_stop,
+		bbc_vh_screenrefresh,
+		/* sound hardware */
+		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound(
+				SOUND_SN76496,
+				sn76496_interface
+			)
+		}
+	);
+	
+	
+	static MachineDriver machine_driver_bbcbp = new MachineDriver
+	(
+		/* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M6502,
+				2000000,		/* 2.00Mhz */
+				readmem_bbcbp,
+				writemem_bbcbp,
+				null,
+				null,
+	
+				bbcb_vsync, 	1,				/* screen refresh interrupts */
+				bbcb_keyscan, 1000				/* scan keyboard */
+			)
+		},
+		50, 128,
+		1,
+		init_machine_bbcbp, /* init_machine */
+		stop_machine_bbcbp, /* stop_machine */
+	
+		/* video hardware */
+		800,300, new rectangle(0,800-1,0,300-1),
+		null,
+		16, /*total colours*/
+		16, /*colour_table_length*/
+		init_palette_bbc, /*init palette */
+	
+		VIDEO_TYPE_RASTER,
+		null,
+		bbc_vh_startbp,
+		bbc_vh_stop,
+		bbc_vh_screenrefresh,
+		/* sound hardware */
+		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound(
+				SOUND_SN76496,
+				sn76496_interface
+			)
+		}
+	);
+	
+	
+	static MachineDriver machine_driver_bbcbp128 = new MachineDriver
+	(
+		/* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M6502,
+				2000000,		/* 2.00Mhz */
+				readmem_bbcbp128,
+				writemem_bbcbp128,
+				null,
+				null,
+	
+				bbcb_vsync, 	1,				/* screen refresh interrupts */
+				bbcb_keyscan, 1000				/* scan keyboard */
+			)
+		},
+		50, 128,
+		1,
+		init_machine_bbcbp, /* init_machine */
+		stop_machine_bbcbp, /* stop_machine */
+	
+		/* video hardware */
+		800,300, new rectangle(0,800-1,0,300-1),
+		null,
+		16, /*total colours*/
+		16, /*colour_table_length*/
+		init_palette_bbc, /*init palette */
+	
+		VIDEO_TYPE_RASTER,
+		null,
+		bbc_vh_startbp,
+		bbc_vh_stop,
+		bbc_vh_screenrefresh,
+		/* sound hardware */
+		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound(
+				SOUND_SN76496,
+				sn76496_interface
+			)
+		}
+	);
+	
+	
+	
+	static MachineDriver machine_driver_bbcb6502 = new MachineDriver
+	(
+		/* basic machine hardware */
+		new MachineCPU[] {
+			new MachineCPU(
+				CPU_M6502,
+				2000000,		/* 2.00Mhz */
+				readmem_bbcbtube,
+				writemem_bbcbtube,
+				null,
+				null,
+	
+				bbcb_vsync, 	1,				/* screen refresh interrupts */
+				bbcb_keyscan, 1000				/* scan keyboard */
+			),
+			new MachineCPU(
+				CPU_M6502,
+				2000000,		/* 2.00Mhz */
+				readmem_bbc6502,
+				writemem_bbc6502,
+				null,
+				null,
+			)
+	
+		},
+		50, 128,
+		1,
+		init_machine_bbcb6502, /* init_machine */
+		stop_machine_bbcb6502, /* stop_machine */
+	
+		/* video hardware */
+		800,300, new rectangle(0,800-1,0,300-1),
+		null,
+		16, /*total colours*/
+		16, /*colour_table_length*/
+		init_palette_bbc, /*init palette */
+	
+		VIDEO_TYPE_RASTER,
+		null, 	/* screen refresh interrupts */
+		bbc_vh_startb,
+		bbc_vh_stop,
+		bbc_vh_screenrefresh,
+		/* sound hardware */
+		0,0,0,0,
+		new MachineSound[] {
+			new MachineSound(
+				SOUND_SN76496,
+				sn76496_interface
+			)
+		}
+	);
+	
 	
 	static const struct IODevice io_bbca[] = {
 		{
-	   		IO_CASSETTE,        /* type */
-	   		1,                  /* count */
-			"wav\0",            /* File extensions */
-			IO_RESET_ALL,		/* reset if file changed */
-	        NULL,               /* id */
-			NULL,				/* init */
-			NULL,				/* exit */
-	   		NULL,               /* info */
-	   		NULL,               /* open */
-	   		NULL,               /* close */
-	   		NULL,               /* status */
-	   		NULL,               /* seek */
-			NULL,				/* tell */
-	   		NULL,               /* input */
-	   		NULL,               /* output */
-	   		NULL,               /* input_chunk */
-	   		NULL                /* output_chunk */
+			IO_CASSETTE,			/* type */
+			1,						/* count */
+			"wav\0",                /* File extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			NULL,					/* id */
+			NULL,					/* init */
+			NULL,					/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			NULL,					/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
 		},
-	    { IO_END }
+		{ IO_END }
 	};
 	
 	static const struct IODevice io_bbcb[] = {
 		{
-	   		IO_CASSETTE,        /* type */
-	   		1,                  /* count */
-	   		"wav\0",    		/* File extensions */
-			IO_RESET_ALL,		/* reset if file changed */
-	        NULL,               /* id */
-	   		NULL,				/* init */
-	   		NULL,				/* exit */
-	   		NULL,               /* info */
-	   		NULL,               /* open */
-	   		NULL,               /* close */
-	   		NULL,               /* status */
-	   		NULL,               /* seek */
-	   		NULL,			   	/* tell */
-	   		NULL,               /* input */
-	   		NULL,               /* output */
-	   		NULL,               /* input_chunk */
-	   		NULL                /* output_chunk */
-		},	{
-			IO_FLOPPY,			/* type */
-			4,					/* count */
-			"ssd\0",            /* file extensions */
-			IO_RESET_NONE,		/* reset if file changed */
-	        NULL,               /* id */
-			bbc_floppy_init,	/* init */
-			bbc_floppy_exit,	/* exit */
-			NULL,				/* info */
-			NULL,				/* open */
-			NULL,				/* close */
-			NULL,				/* status */
-			NULL,				/* seek */
-			NULL,				/* tell */
-	        NULL,               /* input */
-			NULL,				/* output */
-			NULL,				/* input_chunk */
-			NULL				/* output_chunk */
+			IO_FLOPPY,				/* type */
+			2,						/* count */
+	        "ssd\0bbc\0img\0",      /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			bbc_floppy_init,		/* init */
+			basicdsk_floppy_exit,	/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			floppy_status,			/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},    {
+	        IO_CARTSLOT,            /* type */
+	        4,                      /* count */
+	        "rom\0",                /* file extensions */
+	        IO_RESET_NONE,          /* reset if file changed */
+	        0,
+	        bbcb_load_rom,          /* init */
+	        NULL,                   /* exit */
+	        NULL,                   /* info */
+	        NULL,                   /* open */
+	        NULL,                   /* close */
+	        NULL,                   /* status */
+	        NULL,                   /* seek */
+	        NULL,                   /* tell */
+	        NULL,                   /* input */
+	        NULL,                   /* output */
+	        NULL,                   /* input_chunk */
+	        NULL                    /* output_chunk */
 	    },
-	    { IO_END }
+		{ IO_END }
 	};
 	
 	
-	/*     year name	parent	machine	input	init	company */
-	COMPX (1981,bbca,	0,		bbca,	bbca,	0,	"Acorn","BBC Micro Model A",GAME_NOT_WORKING )
-	COMPX (1981,bbcb,	bbca,	bbcb,	bbca,	0,	"Acorn","BBC Micro Model B",GAME_NOT_WORKING )
+	static const struct IODevice io_bbcb1770[] = {
+		{
+			IO_FLOPPY,				/* type */
+			2,						/* count */
+	        "ssd\0bbc\0img\0",      /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			bbc_floppy_init,		/* init */
+			basicdsk_floppy_exit,	/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			floppy_status,			/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},    {
+	        IO_CARTSLOT,            /* type */
+	        4,                      /* count */
+	        "rom\0",                /* file extensions */
+	        IO_RESET_NONE,          /* reset if file changed */
+	        0,
+	        bbcb_load_rom,          /* init */
+	        NULL,                   /* exit */
+	        NULL,                   /* info */
+	        NULL,                   /* open */
+	        NULL,                   /* close */
+	        NULL,                   /* status */
+	        NULL,                   /* seek */
+	        NULL,                   /* tell */
+	        NULL,                   /* input */
+	        NULL,                   /* output */
+	        NULL,                   /* input_chunk */
+	        NULL                    /* output_chunk */
+	    },
+		{ IO_END }
+	};
+	
+	
+	static const struct IODevice io_bbcbp[] = {
+		{
+			IO_FLOPPY,				/* type */
+			2,						/* count */
+	        "ssd\0bbc\0img\0",      /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			bbc_floppy_init,		/* init */
+			basicdsk_floppy_exit,	/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			floppy_status,			/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},    {
+	        IO_CARTSLOT,            /* type */
+	        4,                      /* count */
+	        "rom\0",                /* file extensions */
+	        IO_RESET_NONE,          /* reset if file changed */
+	        0,
+	        bbcb_load_rom,          /* init */
+	        NULL,                   /* exit */
+	        NULL,                   /* info */
+	        NULL,                   /* open */
+	        NULL,                   /* close */
+	        NULL,                   /* status */
+	        NULL,                   /* seek */
+	        NULL,                   /* tell */
+	        NULL,                   /* input */
+	        NULL,                   /* output */
+	        NULL,                   /* input_chunk */
+	        NULL                    /* output_chunk */
+	    },
+		{ IO_END }
+	};
+	
+	static const struct IODevice io_bbcbp128[] = {
+		{
+			IO_FLOPPY,				/* type */
+			2,						/* count */
+	        "ssd\0bbc\0img\0",      /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			bbc_floppy_init,		/* init */
+			basicdsk_floppy_exit,	/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			floppy_status,			/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},    {
+	        IO_CARTSLOT,            /* type */
+	        4,                      /* count */
+	        "rom\0",                /* file extensions */
+	        IO_RESET_NONE,          /* reset if file changed */
+	        0,
+	        bbcb_load_rom,          /* init */
+	        NULL,                   /* exit */
+	        NULL,                   /* info */
+	        NULL,                   /* open */
+	        NULL,                   /* close */
+	        NULL,                   /* status */
+	        NULL,                   /* seek */
+	        NULL,                   /* tell */
+	        NULL,                   /* input */
+	        NULL,                   /* output */
+	        NULL,                   /* input_chunk */
+	        NULL                    /* output_chunk */
+	    },
+		{ IO_END }
+	};
+	
+	
+	
+	static const struct IODevice io_bbcb6502[] = {
+		{
+			IO_FLOPPY,				/* type */
+			2,						/* count */
+	        "ssd\0bbc\0img\0",      /* file extensions */
+			IO_RESET_NONE,			/* reset if file changed */
+			0,
+			bbc_floppy_init,		/* init */
+			basicdsk_floppy_exit,	/* exit */
+			NULL,					/* info */
+			NULL,					/* open */
+			NULL,					/* close */
+			floppy_status,			/* status */
+			NULL,					/* seek */
+			NULL,					/* tell */
+			NULL,					/* input */
+			NULL,					/* output */
+			NULL,					/* input_chunk */
+			NULL					/* output_chunk */
+		},
+		{ IO_END }
+	};
+	
+	
+	
+	/*	   year name	parent	machine  input	init	company */
+	COMP (1981,bbca,	0,		bbca,	 bbca,	0,	"Acorn","BBC Micro Model A" )
+	COMP (1981,bbcb,	bbca,	bbcb,	 bbca,	0,	"Acorn","BBC Micro Model B" )
+	COMP (1981,bbcb1770,bbca,	bbcb1770,bbca,	0,	"Acorn","BBC Micro Model B with WD1770 disc controller" )
+	COMP (1985,bbcbp,   bbca,	bbcbp   ,bbca,  0,  "Acorn","BBC Micro Model B+ 64K" )
+	COMP (1985,bbcbp128,bbca,   bbcbp128,bbca,  0,  "Acorn","BBC Micro Model B+ 128k" )
+	/*
+	COMP (198?,bbcm,    0,      bbcm    ,bbcm,  0,  "Acorn","BBC Master" )
+	*/
+	
+	
+	
+	// This bbc6502 is the BBC second processor upgrade
+	// I have just added the second processor on its own right now until I work out how it works.
+	// then it will get connected up to another BBC driver
+	// The code for this second processor upgrade is more or less complete here now.
+	// It just needs a TUBE driver made to connect it to the BBC
+	
+	COMP (198?,bbcb6502,bbca,      bbcb6502,bbca,  0,  "Acorn","BBC Micro Model B with a 6502 Second Processor")
+	
 }

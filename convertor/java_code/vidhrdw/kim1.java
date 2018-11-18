@@ -15,15 +15,9 @@ package vidhrdw;
 public class kim1
 {
 	
-	static struct artwork_info *kim1_backdrop;
-	
 	public static VhConvertColorPromPtr kim1_init_colors = new VhConvertColorPromPtr() { public void handler(char []palette, char []colortable, UBytePtr color_prom) 
 	{
-		char backdrop_name[200];
-	    int i, nextfree;
-	
-	    /* try to load a backdrop for the machine */
-	    sprintf (backdrop_name, "%s.png", Machine.gamedrv.name);
+	    int i;
 	
 		/* initialize 16 colors with shades of red (orange) */
 	    for (i = 0; i < 16; i++)
@@ -65,29 +59,22 @@ public class kim1
 	    colortable[2 * 16 + 1 * 4 + 1] = 17;
 	    colortable[2 * 16 + 1 * 4 + 2] = 19;
 	    colortable[2 * 16 + 1 * 4 + 3] = 15;
-	
-	    nextfree = 21;
-	
-	    artwork_load (&kim1_backdrop, backdrop_name, nextfree, Machine.drv.total_colors - nextfree);
-		if (kim1_backdrop != 0)
-	    {
-	        logerror("backdrop %s successfully loaded\n", backdrop_name);
-	        memcpy (&palette[nextfree * 3], kim1_backdrop.orig_palette, kim1_backdrop.num_pens_used * 3 * sizeof (unsigned char));
-	    }
-	    else
-	    {
-	        logerror("no backdrop loaded\n");
-	    }
 	} };
 	
 	public static VhStartPtr kim1_vh_start = new VhStartPtr() { public int handler() 
 	{
 	    videoram_size[0] = 6 * 2 + 24;
-	    videoram = malloc (videoram_size[0]);
+	    videoram = auto_malloc (videoram_size[0]);
 		if (!videoram)
 	        return 1;
-	    if (kim1_backdrop != 0)
-	        backdrop_refresh (kim1_backdrop);
+	
+		{
+			char backdrop_name[200];
+		    /* try to load a backdrop for the machine */
+			sprintf (backdrop_name, "%s.png", Machine.gamedrv.name);
+			backdrop_load(backdrop_name, 21);
+		}
+	
 	    if (generic_vh_start () != 0)
 	        return 1;
 	
@@ -96,28 +83,19 @@ public class kim1
 	
 	public static VhStopPtr kim1_vh_stop = new VhStopPtr() { public void handler() 
 	{
-	    if (kim1_backdrop != 0)
-	        artwork_free (&kim1_backdrop);
-	    kim1_backdrop = NULL;
-	    if (videoram != 0)
-	        free (videoram);
 	    videoram = NULL;
 	    generic_vh_stop ();
 	} };
 	
-	public static VhUpdatePtr kim1_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void kim1_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	    int x, y;
 	
 	    if (full_refresh != 0)
 	    {
-	        osd_mark_dirty (0, 0, bitmap.width, bitmap.height, 0);
-	        memset (videoram, 0x0f, videoram_size[0]);
+	        osd_mark_dirty (0, 0, bitmap.width, bitmap.height);
+	        memset (videoram, 0x0f, videoram_size);
 	    }
-	    if (kim1_backdrop != 0)
-	        copybitmap (bitmap, kim1_backdrop.artwork, 0, 0, 0, 0, NULL, TRANSPARENCY_NONE, 0);
-		else
-			fillbitmap (bitmap, Machine.pens[0], &Machine.visible_area);
 	
 	    for (x = 0; x < 6; x++)
 	    {
@@ -154,7 +132,7 @@ public class kim1
 	        }
 	    }
 	
-	} };
+	}
 	
 	
 }

@@ -25,7 +25,7 @@ public class kayproH
 	#define KAYPRO_SCREEN_W	80
 	#define KAYPRO_SCREEN_H   25
 	
-	extern extern extern void kaypro_vh_screenrefresh(struct osd_bitmap * bitmap, int full_refresh);
+	extern extern extern void kaypro_vh_screenrefresh(struct mame_bitmap * bitmap, int full_refresh);
 	
 	extern READ_HANDLER ( kaypro_const_r );
 	extern WRITE_HANDLER ( kaypro_const_w );

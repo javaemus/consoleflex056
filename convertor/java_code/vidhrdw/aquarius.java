@@ -28,13 +28,13 @@ public class aquarius
 		generic_vh_stop();
 	} };
 	
-	public static VhUpdatePtr aquarius_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void aquarius_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 	
 		int	sy, sx;
 	
 		if (full_refresh != 0)
-			memset (dirtybuffer, 1, videoram_size[0]);
+			memset (dirtybuffer, 1, videoram_size);
 	
 		for (sy = 0; sy < 24; sy++)
 		{
@@ -50,6 +50,6 @@ public class aquarius
 				}
 			}
 		}
-	} };
+	}
 	
 }

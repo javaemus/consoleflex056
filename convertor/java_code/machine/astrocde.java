@@ -33,18 +33,12 @@ public class astrocde
 		int size = 0;
 	
 	    /* load a cartidge  */
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 		if (file != 0)
 		{
 			size = osd_fread(file, memory_region(REGION_CPU1) + 0x2000, 0x8000);
 			osd_fclose(file);
 		}
-		return 0;
-	}
-	
-	int astrocade_id_rom(int id)
-	{
-		/* driver doesn't support ID'ing of images */
 		return 0;
 	}
 	
@@ -84,7 +78,7 @@ public class astrocde
 			CurrentScan = 0;
 	    }
 	
-	    if (CurrentScan < 204) AstrocadeCopyLine(CurrentScan);
+	    if (CurrentScan < 204) astrocade_copy_line(CurrentScan);
 	
 	    /* Scanline interrupt enabled ? */
 	

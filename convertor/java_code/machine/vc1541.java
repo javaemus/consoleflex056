@@ -106,6 +106,7 @@ package machine;
 public class vc1541
 {
 	
+	
 	#define VERBOSE_DBG 1
 	
 	
@@ -314,45 +315,37 @@ public class vc1541
 		gcr_double_2_gcr(0, 0, 0, 0, vc1541.head.data+i);i+=5;
 	}
 	
-	static MemoryReadAddress vc1541_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x07ff, MRA_RAM),
-		new MemoryReadAddress(0x1800, 0x180f, via_2_r),		   /* 0 and 1 used in vc20 */
-		new MemoryReadAddress(0x1810, 0x189f, MRA_NOP), /* for debugger */
-		new MemoryReadAddress(0x1c00, 0x1c0f, via_3_r),
-		new MemoryReadAddress(0x1c10, 0x1c9f, MRA_NOP), /* for debugger */
-		new MemoryReadAddress(0xc000, 0xffff, MRA_ROM),
-		MEMORY_TABLE_END
-	};
+	MEMORY_READ_START( vc1541_readmem )
+		{0x0000, 0x07ff, MRA_RAM},
+		{0x1800, 0x180f, via_2_r},		   /* 0 and 1 used in vc20 */
+		{0x1810, 0x189f, MRA_NOP}, /* for debugger */
+		{0x1c00, 0x1c0f, via_3_r},
+		{0x1c10, 0x1c9f, MRA_NOP}, /* for debugger */
+		{0xc000, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress vc1541_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x07ff, MWA_RAM),
-		new MemoryWriteAddress(0x1800, 0x180f, via_2_w),
-		new MemoryWriteAddress(0x1c00, 0x1c0f, via_3_w),
-		new MemoryWriteAddress(0xc000, 0xffff, MWA_ROM),
-		MEMORY_TABLE_END
-	};
+	MEMORY_WRITE_START( vc1541_writemem )
+		{0x0000, 0x07ff, MWA_RAM},
+		{0x1800, 0x180f, via_2_w},
+		{0x1c00, 0x1c0f, via_3_w},
+		{0xc000, 0xffff, MWA_ROM},
+	MEMORY_END
 	
-	static MemoryReadAddress dolphin_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x07ff, MRA_RAM),
-		new MemoryReadAddress(0x1800, 0x180f, via_2_r),		   /* 0 and 1 used in vc20 */
-		new MemoryReadAddress(0x1c00, 0x1c0f, via_3_r),
-		new MemoryReadAddress(0x8000, 0x9fff, MRA_RAM),
-		new MemoryReadAddress(0xa000, 0xffff, MRA_ROM),
-		MEMORY_TABLE_END
-	};
+	MEMORY_READ_START( dolphin_readmem )
+		{0x0000, 0x07ff, MRA_RAM},
+		{0x1800, 0x180f, via_2_r},		   /* 0 and 1 used in vc20 */
+		{0x1c00, 0x1c0f, via_3_r},
+		{0x8000, 0x9fff, MRA_RAM},
+		{0xa000, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress dolphin_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x07ff, MWA_RAM),
-		new MemoryWriteAddress(0x1800, 0x180f, via_2_w),
-		new MemoryWriteAddress(0x1c00, 0x1c0f, via_3_w),
-		new MemoryWriteAddress(0x8000, 0x9fff, MWA_RAM),
-		new MemoryWriteAddress(0xa000, 0xffff, MWA_ROM),
-		MEMORY_TABLE_END
-	};
+	MEMORY_WRITE_START( dolphin_writemem )
+		{0x0000, 0x07ff, MWA_RAM},
+		{0x1800, 0x180f, via_2_w},
+		{0x1c00, 0x1c0f, via_3_w},
+		{0x8000, 0x9fff, MWA_RAM},
+		{0xa000, 0xffff, MWA_ROM},
+	MEMORY_END
 	
 	#if 0
 	INPUT_PORTS_START (vc1541)
@@ -422,10 +415,10 @@ public class vc1541
 		vc1541.via0irq = level;
 		DBG_LOG(2, "vc1541 via0 irq",("level %d %d\n",vc1541.via0irq,vc1541.via1irq));
 		cpu_set_irq_line (vc1541.cpunumber,
-						  M6502_INT_IRQ, vc1541.via1irq || vc1541.via0irq);
+						  M6502_IRQ_LINE, vc1541.via1irq || vc1541.via0irq);
 	}
 	
-	static int vc1541_via0_read_portb (int offset)
+	public static ReadHandlerPtr vc1541_via0_read_portb  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		static int old=-1;
 		int value = 0x7a;
@@ -465,7 +458,7 @@ public class vc1541
 		}
 	
 		return value;
-	}
+	} };
 	
 	static void vc1541_acka(void)
 	{
@@ -479,7 +472,7 @@ public class vc1541
 		}
 	}
 	
-	static void vc1541_via0_write_portb (int offset, int data)
+	public static WriteHandlerPtr vc1541_via0_write_portb = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 		DBG_LOG(2, "vc1541 serial write",("%s %s %s\n",
 										 data&0x10?"ATN":"atn",
@@ -501,7 +494,7 @@ public class vc1541
 			vc1541_serial_clock_write (1, vc1541.drive.serial.serial_clock = !(data & 8));
 		}
 		vc1541_serial_atn_write (1, vc1541.drive.serial.serial_atn = 1);
-	}
+	} };
 	
 	/*
 	 * via 6522 at 0x1c00
@@ -535,24 +528,24 @@ public class vc1541
 		vc1541.via1irq = level;
 		DBG_LOG(2, "vc1541 via1 irq",("level %d %d\n",vc1541.via0irq,vc1541.via1irq));
 		cpu_set_irq_line (vc1541.cpunumber,
-						  M6502_INT_IRQ, vc1541.via1irq || vc1541.via0irq);
+						  M6502_IRQ_LINE, vc1541.via1irq || vc1541.via0irq);
 	}
 	
-	static int vc1541_via1_read_porta (int offset)
+	public static ReadHandlerPtr vc1541_via1_read_porta  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		int data=vc1541.head.data[vc1541.d64.pos];
 		DBG_LOG(2, "vc1541 drive",("port a read %.2x\n", data));
 		return data;
-	}
+	} };
 	
-	static void vc1541_via1_write_porta (int offset, int data)
+	public static WriteHandlerPtr vc1541_via1_write_porta = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 		DBG_LOG(1, "vc1541 drive",("port a write %.2x\n", data));
-	}
+	} };
 	
-	static int vc1541_via1_read_portb (int offset)
+	public static ReadHandlerPtr vc1541_via1_read_portb  = new ReadHandlerPtr() { public int handler(int offset)
 	{
-		int value = 0xff;
+		UINT8 value = 0xff;
 	
 	#if 0
 		if (WRITEPROTECTED != 0)
@@ -563,9 +556,9 @@ public class vc1541
 		}
 	
 		return value;
-	}
+	} };
 	
-	static void vc1541_via1_write_portb (int offset, int data)
+	public static WriteHandlerPtr vc1541_via1_write_portb = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
 		static int old=0;
 		if (data!=old) {
@@ -612,7 +605,7 @@ public class vc1541
 			old=data;
 		}
 		vc1541.led = data & 8;
-	}
+	} };
 	
 	static struct via6522_interface via2 =
 	{
@@ -648,21 +641,21 @@ public class vc1541
 		int size;
 	
 		/*memset (&(drive.d64), 0, sizeof (drive.d64)); */
-		in = (FILE*)image_fopen (IO_FLOPPY, id, OSD_FILETYPE_IMAGE_R, 0);
+		in = (FILE*)image_fopen (IO_FLOPPY, id, OSD_FILETYPE_IMAGE, 0);
 		if (!in)
-			return INIT_FAILED;
+			return INIT_FAIL;
 	
 		size = osd_fsize (in);
 		if (!(vc1541.d64.data = (UINT8*)malloc (size)))
 		{
 			osd_fclose (in);
-			return INIT_FAILED;
+			return INIT_FAIL;
 		}
 		if (size != osd_fread (in, vc1541.d64.data, size))
 		{
 			free (vc1541.d64.data);
 			osd_fclose (in);
-			return INIT_FAILED;
+			return INIT_FAIL;
 		}
 		osd_fclose (in);
 	
@@ -671,7 +664,7 @@ public class vc1541
 		/*vc1541.drive = ; */
 		vc1541.d64.image_type = IO_FLOPPY;
 		vc1541.d64.image_id = id;
-		return INIT_OK;
+		return INIT_PASS;
 	}
 	
 	void vc1541_exit(int id)
@@ -858,7 +851,7 @@ public class vc1541
 	 */
 	static void c1551_timer(int param)
 	{
-		cpu_set_irq_line(vc1541.cpunumber, M6502_INT_IRQ, PULSE_LINE);
+		cpu_set_irq_line(vc1541.cpunumber, M6502_IRQ_LINE, PULSE_LINE);
 	}
 	
 	/*
@@ -996,23 +989,19 @@ public class vc1541
 		return 0;
 	}
 	
-	static MemoryReadAddress c1551_readmem[] =
-	{
-	    new MemoryReadAddress(0x0000, 0x0001, c1551_port_r),
-		new MemoryReadAddress(0x0002, 0x07ff, MRA_RAM),
-	    new MemoryReadAddress(0x4000, 0x4007, tpi6525_0_port_r),
-		new MemoryReadAddress(0xc000, 0xffff, MRA_ROM),
-		MEMORY_TABLE_END
-	};
+	MEMORY_READ_START( c1551_readmem )
+	    {0x0000, 0x0001, c1551_port_r},
+		{0x0002, 0x07ff, MRA_RAM},
+	    {0x4000, 0x4007, tpi6525_0_port_r},
+		{0xc000, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress c1551_writemem[] =
-	{
-	    new MemoryWriteAddress(0x0000, 0x0001, c1551_port_w),
-		new MemoryWriteAddress(0x0002, 0x07ff, MWA_RAM),
-	    new MemoryWriteAddress(0x4000, 0x4007, tpi6525_0_port_w),
-		new MemoryWriteAddress(0xc000, 0xffff, MWA_ROM),
-		MEMORY_TABLE_END
-	};
+	MEMORY_WRITE_START( c1551_writemem )
+	    {0x0000, 0x0001, c1551_port_w},
+		{0x0002, 0x07ff, MWA_RAM},
+	    {0x4000, 0x4007, tpi6525_0_port_w},
+		{0xc000, 0xffff, MWA_ROM},
+	MEMORY_END
 	
 	void c1551x_write_data (TPI6525 *This, int data)
 	{

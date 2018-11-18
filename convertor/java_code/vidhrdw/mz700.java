@@ -62,7 +62,7 @@ public class mz700
 		generic_vh_stop();
 	} };
 	
-	public static VhUpdatePtr mz700_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void mz700_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	    int offs;
 	
@@ -77,7 +77,7 @@ public class mz700
 	    if (full_refresh != 0)
 		{
 			fillbitmap(Machine.scrbitmap, Machine.pens[0], &Machine.visible_area);
-			memset(dirtybuffer, 1, videoram_size[0]);
+			memset(dirtybuffer, 1, videoram_size);
 	    }
 	
 		for( offs = 0; offs < 40*25; offs++ )
@@ -98,7 +98,7 @@ public class mz700
 					&Machine.visible_area,TRANSPARENCY_NONE,0);
 			}
 		}
-	} };
+	}
 	
 	
 }

@@ -133,7 +133,7 @@ public class spectrum
 	                pItem = EventList_GetFirstItem();
 	                set_last_border_color ( pItem[NumItems-1].Event_Data );
 	                EventList_Reset();
-	                EventList_SetOffsetStartTime ( cpu_getcurrentcycles() );
+	                EventList_SetOffsetStartTime ( TIME_TO_CYCLES(0,cpu_getscanline()*cpu_getscanlineperiod()) );
 	                logerror ("Event log reset in callback fn.\n");
 	        }
 	} };
@@ -160,7 +160,7 @@ public class spectrum
 	                pItem = EventList_GetFirstItem();
 	                set_last_border_color ( pItem[NumItems-1].Event_Data );
 	                EventList_Reset();
-	                EventList_SetOffsetStartTime ( cpu_getcurrentcycles() );
+	                EventList_SetOffsetStartTime ( TIME_TO_CYCLES(0,cpu_getscanline()*cpu_getscanlineperiod()) );
 	                logerror ("Event log reset in callback fn.\n");
 	        }
 	} };
@@ -188,7 +188,7 @@ public class spectrum
 	
 	***************************************************************************/
 	
-	public static VhUpdatePtr spectrum_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void spectrum_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int count;
 	        static int last_invert = 0;
@@ -279,7 +279,7 @@ public class spectrum
 	                SPEC_LEFT_BORDER, SPEC_DISPLAY_XSIZE, SPEC_RIGHT_BORDER,
 	                SPEC_LEFT_BORDER_CYCLES, SPEC_DISPLAY_XSIZE_CYCLES,
 	                SPEC_RIGHT_BORDER_CYCLES, SPEC_RETRACE_CYCLES, 200, 0xfe);
-	} };
+	}
 	
 	
 	public static VhStartPtr spectrum_128_vh_start = new VhStartPtr() { public int handler() 
@@ -298,7 +298,7 @@ public class spectrum
 	} };
 	
 	/* Refresh the spectrum 128 screen (code modified from COUPE.C) */
-	public static VhUpdatePtr spectrum_128_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void spectrum_128_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	        /* for now do a full-refresh */
 	        int x, y, b, scrx, scry;
@@ -344,7 +344,7 @@ public class spectrum
 	                SPEC_LEFT_BORDER, SPEC_DISPLAY_XSIZE, SPEC_RIGHT_BORDER,
 	                SPEC_LEFT_BORDER_CYCLES, SPEC_DISPLAY_XSIZE_CYCLES,
 	                SPEC_RIGHT_BORDER_CYCLES, SPEC128_RETRACE_CYCLES, 200, 0xfe);
-	} };
+	}
 	
 	/*******************************************************************
 	 *
@@ -369,7 +369,7 @@ public class spectrum
 	 *******************************************************************/
 	
 	/* Draw a scanline in TS2068/TC2048 hires mode (code modified from COUPE.C) */
-	void ts2068_hires_scanline(struct osd_bitmap *bitmap, int y, int borderlines)
+	void ts2068_hires_scanline(struct mame_bitmap *bitmap, int y, int borderlines)
 	{
 		int x,b,scrx,scry;
 		unsigned short ink,pap;
@@ -414,7 +414,7 @@ public class spectrum
 	}
 	
 	/* Draw a scanline in TS2068/TC2048 64-column mode */
-	void ts2068_64col_scanline(struct osd_bitmap *bitmap, int y, int borderlines, unsigned short inkcolor)
+	void ts2068_64col_scanline(struct mame_bitmap *bitmap, int y, int borderlines, unsigned short inkcolor)
 	{
 		int x,b,scrx,scry;
 	        UBytePtr scr1, *scr2;
@@ -448,7 +448,7 @@ public class spectrum
 	}
 	
 	/* Draw a scanline in TS2068/TC2048 lores (normal Spectrum) mode */
-	void ts2068_lores_scanline(struct osd_bitmap *bitmap, int y, int borderlines, int screen)
+	void ts2068_lores_scanline(struct mame_bitmap *bitmap, int y, int borderlines, int screen)
 	{
 		int x,b,scrx,scry;
 		unsigned short ink,pap;
@@ -492,7 +492,7 @@ public class spectrum
 		}
 	}
 	
-	public static VhUpdatePtr ts2068_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void ts2068_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	        /* for now TS2068 will do a full-refresh */
 		int count;
@@ -528,9 +528,9 @@ public class spectrum
 	                TS2068_LEFT_BORDER, TS2068_DISPLAY_XSIZE, TS2068_RIGHT_BORDER,
 	                SPEC_LEFT_BORDER_CYCLES, SPEC_DISPLAY_XSIZE_CYCLES,
 	                SPEC_RIGHT_BORDER_CYCLES, SPEC_RETRACE_CYCLES, 200, 0xfe);
-	} };
+	}
 	
-	public static VhUpdatePtr tc2048_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void tc2048_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	        /* for now TS2068 will do a full-refresh */
 		int count;
@@ -566,5 +566,5 @@ public class spectrum
 	                TS2068_LEFT_BORDER, TS2068_DISPLAY_XSIZE, TS2068_RIGHT_BORDER,
 	                SPEC_LEFT_BORDER_CYCLES, SPEC_DISPLAY_XSIZE_CYCLES,
 	                SPEC_RIGHT_BORDER_CYCLES, SPEC_RETRACE_CYCLES, 200, 0xfe);
-	} };
+	}
 }

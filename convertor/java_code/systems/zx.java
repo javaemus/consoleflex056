@@ -28,93 +28,70 @@ public class zx
 	#define LOG(x)						   /* x */
 	#endif
 	
-	static MemoryReadAddress readmem_zx80[] =
-	{
-		new MemoryReadAddress(0x0000, 0x0fff, MRA_ROM),
-		new MemoryReadAddress(0x4000, 0x43ff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0xffff, MRA_NOP),
-		new MemoryReadAddress(-1)							   /* end of table */
-	};
+	MEMORY_READ_START( readmem_zx80 )
+		{0x0000, 0x0fff, MRA_ROM},
+		{0x4000, 0x43ff, MRA_RAM},
+		{0x8000, 0xffff, MRA_NOP},
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_zx80[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x0fff, MWA_ROM),
-		new MemoryWriteAddress(0x4000, 0x43ff, MWA_RAM),
-		new MemoryWriteAddress(0x8000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)							   /* end of table */
-	};
+	MEMORY_WRITE_START( writemem_zx80 )
+		{0x0000, 0x0fff, MWA_ROM},
+		{0x4000, 0x43ff, MWA_RAM},
+		{0x8000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
-	static MemoryReadAddress readmem_zx81[] =
-	{
-		new MemoryReadAddress(0x0000, 0x1fff, MRA_ROM),
-		new MemoryReadAddress(0x4000, 0x43ff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0xffff, MRA_NOP),
-		new MemoryReadAddress(-1)							   /* end of table */
-	};
 	
-	static MemoryWriteAddress writemem_zx81[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x3fff, MWA_ROM),
-		new MemoryWriteAddress(0x4000, 0x43ff, MWA_RAM),
-		new MemoryWriteAddress(0x8000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)							   /* end of table */
-	};
+	MEMORY_READ_START( readmem_zx81 )
+		{0x0000, 0x1fff, MRA_ROM},
+		{0x4000, 0x43ff, MRA_RAM},
+		{0x8000, 0xffff, MRA_NOP},
+	MEMORY_END
 	
-	static MemoryReadAddress readmem_pc8300[] =
-	{
-		new MemoryReadAddress(0x0000, 0x1fff, MRA_ROM),
-		new MemoryReadAddress(0x4000, 0x7fff, MRA_RAM),		   /* PC8300 comes with 16K RAM */
-		new MemoryReadAddress(0x8000, 0xffff, MRA_NOP),
-		new MemoryReadAddress(-1)							   /* end of table */
-	};
+	MEMORY_WRITE_START( writemem_zx81 )
+		{0x0000, 0x3fff, MWA_ROM},
+		{0x4000, 0x43ff, MWA_RAM},
+		{0x8000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem_pc8300[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x3fff, MWA_ROM),
-		new MemoryWriteAddress(0x4000, 0x7fff, MWA_RAM),		   /* PC8300 comes with 16K RAM */
-		new MemoryWriteAddress(0x8000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)							   /* end of table */
-	};
+	MEMORY_READ_START( readmem_pc8300 )
+		{0x0000, 0x1fff, MRA_ROM},
+		{0x4000, 0x7fff, MRA_RAM},		   /* PC8300 comes with 16K RAM */
+		{0x8000, 0xffff, MRA_NOP},
+	MEMORY_END
 	
-	static IOReadPort readport[] =
-	{
-		new IOReadPort(0x0000, 0xffff, zx_io_r),
-		new IOReadPort(-1)
-	};
+	MEMORY_WRITE_START( writemem_pc8300 )
+		{0x0000, 0x3fff, MWA_ROM},
+		{0x4000, 0x7fff, MWA_RAM},		   /* PC8300 comes with 16K RAM */
+		{0x8000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
-	static IOWritePort writeport[] =
-	{
-		new IOWritePort(0x0000, 0xffff, zx_io_w),
-		new IOWritePort(-1)
-	};
+	static PORT_READ_START (readport)
+		{0x0000, 0xffff, zx_io_r},
+	PORT_END
 	
-	static MemoryReadAddress readmem_pow3000[] =
-	{
-		new MemoryReadAddress(0x0000, 0x1fff, MRA_ROM),
-		new MemoryReadAddress(0x4000, 0x7fff, MRA_RAM),		   /* Power 3000 comes with 16K RAM */
-		new MemoryReadAddress(0x8000, 0xffff, MRA_NOP),
-		new MemoryReadAddress(-1)							   /* end of table */
-	};
+	static PORT_WRITE_START (writeport)
+		{0x0000, 0xffff, zx_io_w},
+	PORT_END
 	
-	static MemoryWriteAddress writemem_pow3000[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x3fff, MWA_ROM),
-		new MemoryWriteAddress(0x4000, 0x7fff, MWA_RAM),		   /* Power 3000 comes with 16K RAM */
-		new MemoryWriteAddress(0x8000, 0xffff, MWA_NOP),
-		new MemoryWriteAddress(-1)							   /* end of table */
-	};
+	MEMORY_READ_START( readmem_pow3000 )
+		{0x0000, 0x1fff, MRA_ROM},
+		{0x4000, 0x7fff, MRA_RAM},		   /* Power 3000 comes with 16K RAM */
+		{0x8000, 0xffff, MRA_NOP},
+	MEMORY_END
 	
-	static IOReadPort readport_pow3000[] =
-	{
-		new IOReadPort(0x0000, 0xffff, pow3000_io_r),
-		new IOReadPort(-1)
-	};
+	MEMORY_WRITE_START( writemem_pow3000 )
+		{0x0000, 0x3fff, MWA_ROM},
+		{0x4000, 0x7fff, MWA_RAM},		   /* Power 3000 comes with 16K RAM */
+		{0x8000, 0xffff, MWA_NOP},
+	MEMORY_END
 	
-	static IOWritePort writeport_pow3000[] =
-	{
-		new IOWritePort(0x0000, 0xffff, zx_io_w),
-		new IOWritePort(-1)
-	};
+	static PORT_READ_START (readport_pow3000)
+		{0x0000, 0xffff, pow3000_io_r},
+	PORT_END
+	
+	static PORT_WRITE_START (writeport_pow3000)
+		{0x0000, 0xffff, zx_io_w},
+	PORT_END
 	
 	static InputPortPtr input_ports_zx80 = new InputPortPtr(){ public void handler() { 
 	PORT_START(); 							   /* IN0 */
@@ -688,49 +665,49 @@ public class zx
 	);
 	
 	static RomLoadPtr rom_zx80 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("zx80.rom",    0x0000, 0x1000, 0x4c7fc597);
-	    ROM_REGION(0x00100, REGION_GFX1);
+	    ROM_REGION(0x00100, REGION_GFX1,0);
 		/* filled in by zx_init_driver */
 	ROM_END(); }}; 
 	
 	
 	static RomLoadPtr rom_aszmic = new RomLoadPtr(){ public void handler(){ 
-	    ROM_REGION(0x10000, REGION_CPU1);
+	    ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("aszmic.rom",  0x0000, 0x1000, 0x6c123536);
-	    ROM_REGION(0x00100, REGION_GFX1);
+	    ROM_REGION(0x00100, REGION_GFX1,0);
 	    /* filled in by zx_init_driver */
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_zx81 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("zx81.rom",    0x0000, 0x2000, 0x4b1dd6eb);
-		ROM_REGION(0x00100, REGION_GFX1);
+		ROM_REGION(0x00100, REGION_GFX1,0);
 		/* filled in by zx_init_driver */
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_ts1000 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
-		ROM_LOAD("ts1000.rom",  0x0000, 0x2000, 0x4b1dd6eb);
-		ROM_REGION(0x00100, REGION_GFX1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
+		ROM_LOAD("zx81.rom",  0x0000, 0x2000, 0x4b1dd6eb);
+		ROM_REGION(0x00100, REGION_GFX1,0);
 		/* filled in by zx_init_driver */
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_pc8300 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("8300_org.rom",0x0000, 0x2000, 0xa350f2b1);
-		ROM_REGION(0x00100, REGION_GFX1);
+		ROM_REGION(0x00100, REGION_GFX1,0);
 		/* filled in by zx_init_driver */
-		ROM_REGION(0x00200, REGION_GFX2);
+		ROM_REGION(0x00200, REGION_GFX2,0);
 		ROM_LOAD("8300_fnt.bin",0x0000, 0x0200, 0x6bd0408c);
 	ROM_END(); }}; 
 	
 	static RomLoadPtr rom_pow3000 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("pow3000.rom", 0x0000, 0x2000, 0x8a49b2c3);
-		ROM_REGION(0x00100, REGION_GFX1);
+		ROM_REGION(0x00100, REGION_GFX1,0);
 		/* filled in by zx_init_driver */
-		ROM_REGION(0x00200, REGION_GFX2);
+		ROM_REGION(0x00200, REGION_GFX2,0);
 		ROM_LOAD("pow3000.chr", 0x0000, 0x0200, 0x1c42fe46);
 	ROM_END(); }}; 
 	
@@ -797,7 +774,7 @@ public class zx
 	COMPX (1980,   zx80,    0,		 zx80,	   zx80,	 zx,	   "Sinclair Research", "ZX-80", GAME_NOT_WORKING)
 	COMPX (1981,   aszmic,  zx80,	 zx80,	   zx80,	 zx,	   "Sinclair Research", "ZX.Aszmic", GAME_NOT_WORKING)
 	COMPX (1981,   zx81,    0,		 zx81,	   zx81,	 zx,	   "Sinclair Research", "ZX-81", GAME_NOT_WORKING)
-	COMPX (1981,   ts1000,  zx81,	 ts1000,   zx81,	 zx,	   "Timex Sinclair",    "TS1000", GAME_NOT_WORKING)
+	COMPX (1981,   ts1000,  zx81,	 ts1000,   zx81,	 zx,	   "Timex Sinclair",    "TS1000", GAME_NOT_WORKING | GAME_ALIAS)
 	COMPX (198?,   pc8300,  zx81,	 pc8300,   zx81,	 zx,	   "Your Computer",     "PC8300", GAME_NOT_WORKING)
 	COMPX (198?,   pow3000, zx81,	 pow3000,  pow3000,  zx,	   "Creon Enterprises", "Power 3000", GAME_NOT_WORKING)
 	

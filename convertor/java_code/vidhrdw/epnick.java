@@ -103,9 +103,6 @@ public class epnick
 	    memcpy(palette, nick_colour_palette , sizeof(nick_colour_palette));
 	        memcpy(colortable, nick_colour_table, sizeof(nick_colour_table));
 	        //color_prom=malloc(0*sizeof(char));
-	
-	        //palette_recalc();
-	
 	} };
 	
 	/* first clock visible on left hand side */
@@ -219,72 +216,58 @@ public class epnick
 			}
 	}
 	
+	static int Nick_GetColourIndex(int PenIndex)
+	{
+		if ((PenIndex & 0x08) != 0)
+		{
+			return ((Nick.FIXBIAS & 0x01f)<<3) | (PenIndex & 0x07);
+		}
+		else
+		{
+			return Nick.LPT.COL[PenIndex];
+		}
+	}
+	
 	static void Nick_WritePixels2Colour(unsigned char Pen0, unsigned char Pen1, unsigned char DataByte)
 	{
 		int i;
-		int ColIndex;
+		int ColIndex[2];
 		int PenIndex;
 		unsigned char Data;
 	
 		Data = DataByte;
 	
+		ColIndex[0] = Nick_GetColourIndex(Pen0);
+		ColIndex[1] = Nick_GetColourIndex(Pen1);
+	
 		for (i=0; i<8; i++)
 		{
-			if ((Data & 0x080) != 0)
-			{
-				PenIndex = Pen1;
-			}
-			else
-			{
-				PenIndex = Pen0;
-			}
+			PenIndex = ColIndex[(Data>>7) & 0x01];
 	
-	                if ((PenIndex & 0x08) != 0)
-	                {
-	                        ColIndex = ((Nick.FIXBIAS & 0x01f)<<3) | (PenIndex & 0x07);
-	                }
-	                else
-	                {
-	                        ColIndex = Nick.LPT.COL[PenIndex];
-	                }
-	
-			NICK_WRITE_PIXEL(ColIndex, Nick.dest);
+			NICK_WRITE_PIXEL(PenIndex, Nick.dest);
 	
 			Data = Data<<1;
 		}
 	}
 	
-	static void Nick_WritePixels2Colour2(unsigned char Pen0, unsigned char Pen1, unsigned char DataByte)
+	static void Nick_WritePixels2ColourLPIXEL(unsigned char Pen0, unsigned char Pen1, unsigned char DataByte)
 	{
 		int i;
-		int ColIndex;
+		int ColIndex[2];
 		int PenIndex;
 		unsigned char Data;
 	
 		Data = DataByte;
 	
+		ColIndex[0] = Nick_GetColourIndex(Pen0);
+		ColIndex[1] = Nick_GetColourIndex(Pen1);
+	
 		for (i=0; i<8; i++)
 		{
-			if ((Data & 0x080) != 0)
-			{
-				PenIndex = Pen1;
-			}
-			else
-			{
-				PenIndex = Pen0;
-			}
+			PenIndex = ColIndex[(Data>>7) & 0x01];
 	
-	                if ((PenIndex & 0x08) != 0)
-	                {
-	                        ColIndex = ((Nick.FIXBIAS & 0x01f)<<3) | (PenIndex & 0x07);
-	                }
-	                else
-	                {
-	                        ColIndex = Nick.LPT.COL[PenIndex];
-	                }
-	
-			NICK_WRITE_PIXEL(ColIndex, Nick.dest);
-			NICK_WRITE_PIXEL(ColIndex, Nick.dest);
+			NICK_WRITE_PIXEL(PenIndex, Nick.dest);
+			NICK_WRITE_PIXEL(PenIndex, Nick.dest);
 	
 			Data = Data<<1;
 		}
@@ -403,19 +386,12 @@ public class epnick
 				{
 					PenIndex = Nick_PenIndexLookup_16Colour[Data];
 	
-					if ((PenIndex & 0x08) != 0)
-					{
-						PalIndex = ((Nick.FIXBIAS & 0x01f)<<3) | (PenIndex & 0x07);
-					}
-					else
-					{
-						PalIndex = Nick.LPT.COL[PenIndex & 0x07];
-					}
+					PalIndex = Nick_GetColourIndex(PenIndex);
 	
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                                NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 	
 					Data = Data<<1;
 				}
@@ -442,10 +418,10 @@ public class epnick
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 	
 	
 			}
@@ -453,7 +429,7 @@ public class epnick
 		}
 	}
 	
-	static void Nick_WritePixels2(unsigned char DataByte, unsigned char CharIndex)
+	static void Nick_WritePixelsLPIXEL(unsigned char DataByte, unsigned char CharIndex)
 	{
 		int i;
 	
@@ -511,8 +487,7 @@ public class epnick
 	
 	
 	
-	                        Nick_WritePixels2Colour2(PenOffset,
-					(PenOffset|0x01), Data);
+				Nick_WritePixels2ColourLPIXEL(PenOffset,(PenOffset|0x01), Data);
 			}
 			break;
 	
@@ -567,23 +542,16 @@ public class epnick
 				{
 					PenIndex = Nick_PenIndexLookup_16Colour[Data];
 	
-					if ((PenIndex & 0x08) != 0)
-					{
-						PalIndex = ((Nick.FIXBIAS & 0x01f)<<3) | (PenIndex & 0x07);
-					}
-					else
-					{
-						PalIndex = Nick.LPT.COL[PenIndex & 0x07];
-					}
+					PalIndex = Nick_GetColourIndex(PenIndex);
 	
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                                NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                                NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+					NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 	
 					Data = Data<<1;
 				}
@@ -610,19 +578,19 @@ public class epnick
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 	
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
-	                        NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
+				NICK_WRITE_PIXEL(PalIndex, Nick.dest);
 	
 	
 			}
@@ -661,8 +629,7 @@ public class epnick
 			Buf1 =  Nick_FetchByte(Nick.LD1);
 			Nick.LD1++;
 	
-	                Nick_WritePixels2(Buf1,Buf1);
-	                Nick_WritePixels2(Buf1,Buf1);
+			Nick_WritePixelsLPIXEL(Buf1,Buf1);
 		}
 	}
 	
@@ -683,7 +650,7 @@ public class epnick
 				unsigned char BackgroundColour = ((Buf1>>4) & 0x0f);
 				unsigned char ForegroundColour = (Buf1 & 0x0f);
 	
-	                        Nick_WritePixels2Colour2(BackgroundColour, ForegroundColour, Buf2);
+				Nick_WritePixels2ColourLPIXEL(BackgroundColour, ForegroundColour, Buf2);
 			}
 		}
 	}
@@ -699,7 +666,7 @@ public class epnick
 			Nick.LD1++;
 			Buf2 = Nick_FetchByte(ADDR_CH256(Nick.LD2, Buf1));
 	
-	                Nick_WritePixels2(Buf2,Buf1);
+			Nick_WritePixelsLPIXEL(Buf2,Buf1);
 		}
 	}
 	
@@ -714,7 +681,7 @@ public class epnick
 			Nick.LD1++;
 			Buf2 = Nick_FetchByte(ADDR_CH128(Nick.LD2, Buf1));
 	
-	                Nick_WritePixels2(Buf2,Buf1);
+			Nick_WritePixelsLPIXEL(Buf2,Buf1);
 		}
 	}
 	
@@ -729,7 +696,7 @@ public class epnick
 			Nick.LD1++;
 			Buf2 = Nick_FetchByte(ADDR_CH64(Nick.LD2, Buf1));
 	
-	                Nick_WritePixels2(Buf2,Buf1);
+			Nick_WritePixelsLPIXEL(Buf2,Buf1);
 		}
 	}
 	
@@ -979,7 +946,7 @@ public class epnick
 	  }
 	}
 	
-	void    Nick_DoScreen(struct osd_bitmap *bm)
+	void    Nick_DoScreen(struct mame_bitmap *bm)
 	{
 	  int line = 0;
 	

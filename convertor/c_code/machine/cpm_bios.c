@@ -12,15 +12,13 @@
 #include "driver.h"
 #include "memory.h"
 #include "cpu/z80/z80.h"
-#include "machine/wd179x.h"
+#include "includes/wd179x.h"
 #include "cpm_bios.h"
 
 #define VERBOSE 		1
 #define VERBOSE_FDD 	1
 #define VERBOSE_BIOS	1
 #define VERBOSE_CONIO	0
-
-#define REAL_FDD				((void*)-1) /* using real floppy disk drive */
 
 /* buffer for one physical sector */
 typedef struct {
@@ -40,13 +38,11 @@ static int mode[NDSK] = {0,};		/* 0 read only, !0 read/write */
 static int bdos_trk[NDSK] = {0,};	/* BDOS track number */
 static int bdos_sec[NDSK] = {0,};	/* BDOS sector number */
 static void *fp[NDSK] = {NULL, };	/* image file pointer */
-static int ff[NDSK] = {0, };		/* image filenames specified flags */
+static int ff[NDSK] = {0, };            /* image filenames specified flags */
 static void *lp = NULL; 			/* list file handle (ie. PIP LST:=X:FILE.EXT) */
 //static void *pp = NULL;			/* punch file handle (ie. PIP PUN:=X:FILE.EXT) */
 //static void *rp = NULL;			/* reader file handle (ie. PIP X:FILE.EXE=RDR:) */
 static int dma = 0; 				/* DMA transfer address */
-
-static SECBUF dsk[NDSK] = {{0,}, };
 
 static UINT8 zeropage0[8] =
 {
@@ -69,244 +65,8 @@ cpm_dph dph[NDSK] = {
 
 #include "cpm_disk.c"
 
-/*****************************************************************************
- *	fdd_select
- *	The selected floppy is a real FDD drive, so set it's parameters
- *	and start the motor(s)
- *****************************************************************************/
-static void fdd_select(void)
-{
-	dsk_fmt *f = &formats[fmt[curdisk]];
-	int seclen = f->seclen;
-	UINT8 secl = 0;
-	UINT8 eot = 0;
-	int i;
-
-	/* calculate sector length code */
-	while (seclen > 128)
-	{
-		secl++;
-		seclen >>= 1;
-	}
-	/* find highest sector number */
-	for (i = 1; i <= f->spt; i++)
-	{
-		if (f->side1[i] > eot)
-			eot = f->side1[i];
-		if (f->sides == 2)
-			if (f->side2[i] > eot)
-				eot = f->side2[i];
-	}
-	logerror("DISK #%d select den:%d cyl:%d spt:%d eot:%d secl:%d\n",
-			curdisk, f->density, f->cylinders, f->spt, eot, secl);
-	osd_fdc_density(dsk[curdisk].unit, f->density, f->cylinders, f->spt, eot, secl);
-}
-
-/*****************************************************************************
- *	fdd_set_track
- *	Either recalibrate the drive (track == 0) or seek to the give track
- *****************************************************************************/
-static void fdd_set_track(int t)
-{
-	dsk_fmt *f = &formats[fmt[curdisk]];
-	UINT8 pcn;
-
-	logerror("DISK #%d settrk %d\n", curdisk, t);
-	osd_fdc_motors(dsk[curdisk].unit);
-	if (t == 0)
-		osd_fdc_recal(&pcn);
-	else
-	if (t < f->cylinders)
-		osd_fdc_seek(t, &pcn);
-}
-
-/*****************************************************************************
- *	fdd_access_sector
- *	Access a (new) physical sector from the floppy disk according to the
- *	BIOS track and sector numbers. Calculate the offset into a virtual
- *	linear image and convert it back into the physical cylinder, side,
- *	head id and sector numbers using the format description in formats[].
- *	Check them against the values for a buffered sector and only read
- *	the physical sector if they changed (after flushing previous changes).
- *****************************************************************************/
-#define STA_2_ERROR (STA_2_LOST_DAT|STA_2_CRC_ERR|STA_2_REC_N_FND|STA_2_REC_TYPE|STA_2_NOT_READY)
-
-static int fdd_access_sector(int * record_offset)
-{
-	dsk_fmt *f;
-	UINT8 cyl, head, side, sec, n = 0;
-	int recofs, o;
-
-	/* get an index to the disk format */
-	f = &formats[fmt[curdisk]];
-
-	/* calculate offset into disk image */
-	o = RECL * (f->dpb.spt * bdos_trk[curdisk] + bdos_sec[curdisk]);
-
-	recofs = o % f->seclen; 		/* record offset in sector */
-	o /= f->seclen;
-	switch (f->order)
-	{
-		case ORD_CYLINDERS:
-			/* logical sector number (0 .. spt-1) */
-			sec = o % f->spt;
-			o /= f->spt;
-			/* physical side number (0 .. sides-1) */
-			side  = o % f->sides;
-			o /= f->sides;
-			/* physical sector number */
-			sec = (side) ? f->side2[sec+1] : f->side1[sec+1];
-			/* logical head number for this side */
-			head = (side) ? f->side2[0] : f->side1[0];
-			/* physical cylinder number (0 .. cylinders-1) */
-			cyl  = o % f->cylinders;
-			break;
-		case ORD_SIDES:
-			/* logical sector number (0 .. spt-1) */
-			sec = o % f->spt;
-			o /= f->spt;
-			/* physical side number (0 .. sides-1) */
-			side = o % f->sides;
-			o /= f->sides;
-			/* physical sector number */
-			sec = (side) ? f->side2[sec+1] : f->side1[sec+1];
-			/* logical head number for this side */
-			head = (side) ? f->side2[0] : f->side1[0];
-			/* physical cylinder number (0 .. cylinders-1) */
-			cyl = o % f->cylinders;
-			break;
-		case ORD_EAGLE:
-		default:
-			/* logical sector number (0 .. spt-1) */
-			sec = o % f->spt;
-			o /= f->spt;
-			/* physical side number (0 .. sides-1) */
-			side = o % f->sides;
-			o /= f->sides;
-			/* physical sector number */
-			sec = (side) ? f->side2[sec+1] : f->side1[sec+1];
-			/* logical head number for this side */
-			head = (side) ? f->side2[0] : f->side1[0];
-			/* physical cylinder number (0 .. cylinders-1) */
-			cyl  = o % f->cylinders;
-	}
-
-	logerror("DISK #%d access CYL:%d SIDE:%d HEAD:%d SEC:%d RECOFS:0x%04x\n",
-			curdisk, cyl, side, head, sec, recofs);
-	/* changed cylinder, head or sector for this disk ? */
-	if (cyl != dsk[curdisk].cyl ||
-		side != dsk[curdisk].side ||
-		head != dsk[curdisk].head ||
-		sec != dsk[curdisk].sec)
-	{
-		int tries = 0;
-
-		/* sector buffer dirty ? */
-		if (dsk[curdisk].dirty)
-		{
-			/* seek to cylinder number */
-			fdd_set_track(dsk[curdisk].cyl);
-			/* put the sector back */
-			do
-			{
-				n = osd_fdc_put_sector(dsk[curdisk].cyl, dsk[curdisk].side, dsk[curdisk].head, dsk[curdisk].sec, dsk[curdisk].buffer, 0);
-				if (n & STA_2_ERROR)
-				{
-
-					logerror("cpm_access_sector: (put) status 0x%02x:", n);
-					if (n & STA_2_LOST_DAT)
-					  logerror(" LOST_DAT");
-					if (n & STA_2_CRC_ERR)
-					  logerror(" CRC_ERR");
-					if (n & STA_2_REC_N_FND)
-					  logerror(" REC_N_FND");
-					if (n & STA_2_REC_TYPE)
-					  logerror("REC_TYPE");
-					if (n & STA_2_NOT_READY)
-					  logerror(" NOT_READY");
-					logerror(" (try #%d)\n", tries);
-
-				}
-			} while ((tries++ < 10) && (n & STA_2_ERROR));
-			logerror("DISK %d flush  CYL:%d SIDE:%d HEAD:%d SEC:%d -> 0x%02X\n",
-				  curdisk, cyl, side, head, sec, n);
-			dsk[curdisk].dirty = 0; /* seek to current track number */
-			fdd_set_track(cyl);
-		}
-		/*
-		 * store new cylinder, head and sector values
-		 */
-		dsk[curdisk].cyl = cyl;
-		dsk[curdisk].side = side;
-		dsk[curdisk].head = head;
-		dsk[curdisk].sec = sec; /* set track number
-					   (ie. seek) */
-		fdd_set_track(cyl);
-		tries = 0;
-		do {
-		  n = osd_fdc_get_sector(cyl, side, head,
-					 sec, dsk[curdisk].buffer);
-		  if (n & STA_2_ERROR)
-		  {
-				logerror("cpm_access_sector: (get) status 0x%02x:", n);
-				if (n & STA_2_LOST_DAT)
-					logerror(" LOST_DAT");
-				if (n & STA_2_CRC_ERR)
-					logerror("CRC_ERR");
-				if (n & STA_2_REC_N_FND)
-					logerror(" REC_N_FND");
-				if (n & STA_2_REC_TYPE)
-					logerror("REC_TYPE");
-				if (n & STA_2_NOT_READY)
-					logerror(" NOT_READY");
-				logerror(" (try #%d)\n", tries);
-			}
-		} while ((tries++ < 10) && (n & STA_2_ERROR));
-
-		logerror("DISK #%d read   CYL:%d SIDE:%d HEAD:%d SEC:%d -> 0x%02X\n",
-			  curdisk, cyl, side, head, sec, n);
-	}
-	*record_offset = recofs;
-	/* mask DRQ and BUSY bits */
-	return (n & 0xfc);
-}
-
 #define CP(n) ((n)<32?'.':(n))
 
-/*****************************************************************************
- *	fdd_read_sector
- *	access the sector and copy a RECL (128 bytes) to the current DMA
- *****************************************************************************/
-static int fdd_read_sector(void)
-{
-	UINT8 *DMA = memory_region(REGION_CPU1) + dma;
-	int recofs, n = fdd_access_sector(&recofs);
-
-	/* copy a record from the sector buffer to the DMA area */
-	memcpy(DMA, &dsk[curdisk].buffer[recofs], RECL);
-	return n;
-}
-
-/*****************************************************************************
- *	fdd_read_sector
- *	If the DMA memory contains changed data for the (partial) sector,
- *	copy it to the sector buffer and set the dirty flag
- *****************************************************************************/
-static int fdd_write_sector(void)
-{
-	UINT8 *DMA = memory_region(REGION_CPU1) + dma;
-	int recofs, n = fdd_access_sector(&recofs);
-
-	/* did the record really change ? */
-	if (memcmp(&dsk[curdisk].buffer[recofs], DMA, RECL))
-	{
-		/* copy it into the sector buffer */
-		memcpy(&dsk[curdisk].buffer[recofs], DMA, RECL);
-		/* and set the buffer dirty flag */
-		dsk[curdisk].dirty = 1;
-	}
-	return n;
-}
 
 /*****************************************************************************
  *	cpm_jumptable
@@ -364,8 +124,6 @@ int cpm_init(int n, const char *ids[])
 	dsk_fmt *f;
 	int i, d;
 
-	if (!osd_fdc_init())
-		return 0;
 
 	/* fill memory with HALT insn */
 	memset(RAM + 0x100, 0x76, 0xff00);
@@ -380,9 +138,9 @@ int cpm_init(int n, const char *ids[])
 		RAM[i] = zeropage0[i];
 
 #if VERBOSE
-		logerror("CPM CCP     %04X\n", CCP);
-		logerror("CPM BDOS    %04X\n", BDOS);
-		logerror("CPM BIOS    %04X\n", BIOS);
+	logerror("CPM CCP     %04X\n", CCP);
+	logerror("CPM BDOS    %04X\n", BDOS);
+	logerror("CPM BIOS    %04X\n", BIOS);
 #endif
 	/* Start allocating CSV & ALV */
 	i = DATA_START;
@@ -491,32 +249,18 @@ int cpm_init(int n, const char *ids[])
 		/* now try to open the image if a filename is given */
 		if( ff[d] && strlen(device_filename(IO_FLOPPY,d)) )
 		{
-			/* fake name to access the real floppy disk drive A: */
-			if( !stricmp(device_filename(IO_FLOPPY,d), "fd0.dsk") )
-			{
-				fp[d] = REAL_FDD;
-				dsk[d].unit = 0;
-			}
-			else
-			/* fake name to access the real floppy disk drive B: */
-			if( !stricmp(device_filename(IO_FLOPPY,d), "fd1.dsk") )
-			{
-				fp[d] = REAL_FDD;
-				dsk[d].unit = 1;
-			}
-			else
 			{
 				mode[d] = 1;
-				fp[d] = image_fopen(IO_FLOPPY, d, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW);
+				fp[d] = image_fopen(IO_FLOPPY, d, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW);
 				if( !fp[d] )
 				{
 					mode[d] = 0;
-					fp[d] = image_fopen(IO_FLOPPY, d, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+					fp[d] = image_fopen(IO_FLOPPY, d, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 				}
 				if( !fp[d] )
 				{
 					mode[d] = 1;
-					fp[d] = image_fopen(IO_FLOPPY, d, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_WRITE);
+					fp[d] = image_fopen(IO_FLOPPY, d, OSD_FILETYPE_IMAGE, OSD_FOPEN_WRITE);
 				}
 				if( !fp[d] )
 				{
@@ -527,7 +271,7 @@ int cpm_init(int n, const char *ids[])
 	}
 
 	/* create a file to receive list output (ie. PIP LST:=FILE.EXT) */
-	lp = osd_fopen(Machine->gamedrv->name, "cpm.lst", OSD_FILETYPE_IMAGE_RW, 1);
+	lp = osd_fopen(Machine->gamedrv->name, "cpm.lst", OSD_FILETYPE_IMAGE, 1);
 
 	cpm_jumptable();
 
@@ -554,12 +298,9 @@ void cpm_exit(void)
 	{
 		if (fp[d])
 		{
-			if (fp[d] != REAL_FDD)
-				osd_fclose(fp[d]);
 			fp[d] = NULL;
 		}
 	}
-	osd_fdc_exit();
 }
 
 /*****************************************************************************
@@ -568,7 +309,7 @@ void cpm_exit(void)
  *****************************************************************************/
 static void cpm_conout_chr(int data)
 {
-	cpu_writeport(BIOS_CONOUT, data);
+	cpu_writeport16(BIOS_CONOUT, data);
 }
 
 /*****************************************************************************
@@ -661,57 +402,57 @@ static void cpm_disk_image_seek(void)
 
 	switch (f->order)
 	{
-/* TRACK  0   1   2 	   n/2-1	   n/2	   n/2+1	 n/2+2	  n-1 */
-/* F/B	 f0, f1, f2 ... f(n/2)-1, b(n/2)-1, b(n/2)-2, b(n/2)-3 ... b0 */
-		case ORD_CYLINDERS:
-			offs = (bdos_trk[curdisk] % f->cylinders) * 2;
-			offs *= f->dpb.spt * RECL;
-			o = bdos_sec[curdisk] * RECL;
-			r = (o % f->seclen) / RECL;
-			s = o / f->seclen;
-			h = (s >= f->spt) ? f->side2[0] : f->side1[0];
-			s = (s >= f->spt) ? f->side2[s+1] : f->side1[s+1];
-			s -= f->side1[1];		/* subtract first sector number */
-			offs += (h * f->spt + s) * f->seclen + r * RECL;
-			if (bdos_trk[curdisk] >= f->cylinders)
-				offs += (int)f->cylinders * f->sides * f->spt * f->seclen / 2;
+	/* TRACK  0   1   2 	   n/2-1	   n/2	   n/2+1	 n/2+2	  n-1 */
+	/* F/B	 f0, f1, f2 ... f(n/2)-1, b(n/2)-1, b(n/2)-2, b(n/2)-3 ... b0 */
+	case ORD_CYLINDERS:
+		offs = (bdos_trk[curdisk] % f->cylinders) * 2;
+		offs *= f->dpb.spt * RECL;
+		o = bdos_sec[curdisk] * RECL;
+		r = (o % f->seclen) / RECL;
+		s = o / f->seclen;
+		h = (s >= f->spt) ? f->side2[0] : f->side1[0];
+		s = (s >= f->spt) ? f->side2[s+1] : f->side1[s+1];
+		s -= f->side1[1];		/* subtract first sector number */
+		offs += (h * f->spt + s) * f->seclen + r * RECL;
+		if (bdos_trk[curdisk] >= f->cylinders)
+			offs += (int)f->cylinders * f->sides * f->spt * f->seclen / 2;
 #if VERBOSE_FDD
-			logerror("CPM image #%d ord_cylinders C:%2d H:%d S:%2d REC:%d -> 0x%08X\n", curdisk, bdos_trk[curdisk], h, s, r, offs * RECL);
+		logerror("CPM image #%d ord_cylinders C:%2d H:%d S:%2d REC:%d -> 0x%08X\n", curdisk, bdos_trk[curdisk], h, s, r, offs * RECL);
 #endif
 		break;
 
-/* TRACK  0   1   2 	   n/2-1 n/2  n/2+1  n/2+3	   n-1		*/
-/* F/B	 f0, f1, f2 ... f(n/2)-1, b0,	 b1,	b2 ... b(n/2)-1 */
+	/* TRACK  0   1   2 	   n/2-1 n/2  n/2+1  n/2+3	   n-1		*/
+	/* F/B	 f0, f1, f2 ... f(n/2)-1, b0,	 b1,	b2 ... b(n/2)-1 */
 	case ORD_EAGLE:
-			offs = (bdos_trk[curdisk] % f->cylinders) * 2;
-			if (bdos_trk[curdisk] >= f->cylinders)
-				offs = f->cylinders * 2 - 1 - offs;
-			offs *= f->dpb.spt * RECL;
-			o = bdos_sec[curdisk] * RECL;
-			r = (o % f->seclen) / RECL;
-			s = o / f->seclen;
-			h = (s >= f->spt) ? f->side2[0] : f->side1[0];
-			s = (s >= f->spt) ? f->side2[s+1] : f->side1[s+1];
-			s -= f->side1[1];		/* subtract first sector number */
-			offs += (h * f->spt + s) * f->seclen + r * RECL;
+		offs = (bdos_trk[curdisk] % f->cylinders) * 2;
+		if (bdos_trk[curdisk] >= f->cylinders)
+			offs = f->cylinders * 2 - 1 - offs;
+		offs *= f->dpb.spt * RECL;
+		o = bdos_sec[curdisk] * RECL;
+		r = (o % f->seclen) / RECL;
+		s = o / f->seclen;
+		h = (s >= f->spt) ? f->side2[0] : f->side1[0];
+		s = (s >= f->spt) ? f->side2[s+1] : f->side1[s+1];
+		s -= f->side1[1];		/* subtract first sector number */
+		offs += (h * f->spt + s) * f->seclen + r * RECL;
 #if VERBOSE_FDD
 		logerror("CPM image #%d ord_eagle     C:%2d H:%d S:%2d REC:%d -> 0x%08X\n", curdisk, bdos_trk[curdisk], h, s, r, offs);
 #endif
 		break;
 
-/* TRACK	 0		1	  2 		  n-1 */
-/* F/B	 f0/b0, f1/b1 f2/b2 ... fn-1/bn-1 */
-		case ORD_SIDES:
-		default:
-			offs = bdos_trk[curdisk];
-			offs *= f->dpb.spt * RECL;
-			o = bdos_sec[curdisk] * RECL;
-			r = (o % f->seclen) / RECL;
-			s = o / f->seclen;
-			h = (s >= f->spt) ? f->side2[0] : f->side1[0];
-			s = (s >= f->spt) ? f->side2[s+1] : f->side1[s+1];
-			s -= f->side1[1];		/* subtract first sector number */
-			offs += (h * f->spt + s) * f->seclen + r * RECL;
+	/* TRACK	 0		1	  2 		  n-1 */
+	/* F/B	 f0/b0, f1/b1 f2/b2 ... fn-1/bn-1 */
+	case ORD_SIDES:
+	default:
+		offs = bdos_trk[curdisk];
+		offs *= f->dpb.spt * RECL;
+		o = bdos_sec[curdisk] * RECL;
+		r = (o % f->seclen) / RECL;
+		s = o / f->seclen;
+		h = (s >= f->spt) ? f->side2[0] : f->side1[0];
+		s = (s >= f->spt) ? f->side2[s+1] : f->side1[s+1];
+		s -= f->side1[1];		/* subtract first sector number */
+		offs += (h * f->spt + s) * f->seclen + r * RECL;
 #if VERBOSE_FDD
 		logerror("CPM image #%d ord_sides     C:%2d H:%d S:%2d REC:%d -> 0x%08X\n", curdisk, bdos_trk[curdisk], h, s, r, offs);
 #endif
@@ -737,26 +478,20 @@ static int cpm_disk_select(int d)
 		case 0:
 			if (num_disks > 0)
 				return_dph = DPH0;
-
 			break;
 		case 1:
 			if (num_disks > 1)
 				return_dph	= DPH1;
-
 			break;
 		case 2:
 			if (num_disks > 2)
 				return_dph	= DPH2;
-
 			break;
 		case 3:
 			if (num_disks > 3)
 				return_dph	= DPH3;
-
 			break;
 	}
-	if (fp[curdisk] == REAL_FDD)
-		fdd_select();
 	return return_dph;
 
 }
@@ -776,8 +511,6 @@ void cpm_disk_set_sector(int s)
 void cpm_disk_home(void)
 {
 	cpm_disk_set_track(0);
-	if (fp[curdisk] == REAL_FDD)
-		fdd_set_track(0);
 }
 
 void cpm_disk_set_dma(int d)
@@ -820,11 +553,6 @@ int cpm_disk_read_sector(void)
 		bdos_trk[curdisk] >= 0 &&
 		bdos_trk[curdisk] < formats[fmt[curdisk]].sides * formats[fmt[curdisk]].cylinders)
 	{
-		if (fp[curdisk] == REAL_FDD)
-		{
-			result = fdd_read_sector();
-		}
-		else
 		{
 			if (fp[curdisk])
 			{
@@ -855,11 +583,6 @@ int cpm_disk_write_sector(void)
 		bdos_trk[curdisk] >= 0 &&
 		bdos_trk[curdisk] < formats[fmt[curdisk]].sides * formats[fmt[curdisk]].cylinders)
 	{
-		if (fp[curdisk] == REAL_FDD)
-		{
-			result = fdd_write_sector();
-		}
-		else
 		{
 			if (fp[curdisk])
 			{
@@ -946,7 +669,7 @@ WRITE_HANDLER ( cpm_bios_command_w )
 		break;
 
 	case 0x02: /* CSTAT */
-		tmp = cpu_readport(BIOS_CONST) & 0xff;
+		tmp = cpu_readport16(BIOS_CONST) & 0xff;
 		af = (af & 0xff) | (tmp << 8);
 #if VERBOSE_CONIO
 		logerror("BIOS 02 console status      A:%02X\n", tmp);
@@ -954,12 +677,12 @@ WRITE_HANDLER ( cpm_bios_command_w )
 		break;
 
 	case 0x03: /* CONIN */
-		if ( cpu_readport(BIOS_CONST) == 0 )
+		if ( cpu_readport16(BIOS_CONST) == 0 )
 		{
 			cpu_set_reg( Z80_PC, cpu_get_reg(Z80_PC) - 2 );
 			break;
 		}
-		tmp = cpu_readport(BIOS_CONIN) & 0xff;
+		tmp = cpu_readport16(BIOS_CONIN) & 0xff;
 		af = (af & 0xff) | (tmp << 8);
 #if VERBOSE_CONIO
 		logerror("BIOS 03 console input       A:%02X\n", tmp);
@@ -1102,11 +825,11 @@ WRITE_HANDLER ( cpm_bios_command_w )
 
 
 	case 0x11: /* TRAP */
-		sprintf( buff, "Program traps in BIOS:\r\n%s\r\n", cpu_dump_state() );
+		sprintf( buff, "Program traps in BIOS:\r\n%s\r\n", activecpu_dump_state() );
 		cpm_conout_str(buff);
 #if VERBOSE_BIOS
 			logerror("BIOS 11 trap\n");
-			logerror("%s\n", cpu_dump_state() );
+			logerror("%s\n", activecpu_dump_state() );
 #endif
 		break;
 	}

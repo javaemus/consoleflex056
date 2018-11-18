@@ -1,7 +1,8 @@
 /***************************************************************************
 	commodore pet series computer
 
-    peter.trauner@jk.uni-linz.ac.at
+	PeT mess@utanet.at
+
 	documentation
 	 vice emulator
      www.funet.fi
@@ -122,97 +123,85 @@ public class pet
 	
 	#define VERBOSE_DBG 0
 	/*
-	static MemoryReadAddress pet_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x7fff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0x83ff, MRA_RAM ),
-		new MemoryReadAddress(0xa000, 0xe7ff, MRA_ROM ),
-		new MemoryReadAddress(0xe810, 0xe813, pia_0_r ),
-		new MemoryReadAddress(0xe820, 0xe823, pia_1_r ),
-		new MemoryReadAddress(0xe840, 0xe84f, via_0_r ),
-	/*	new MemoryReadAddress(0xe900, 0xe91f, cbm_ieee_state ), // for debugging */
-		new MemoryReadAddress(0xf000, 0xffff, MRA_ROM ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_READ_START( pet_readmem )
+		{0x0000, 0x7fff, MRA_RAM},
+		{0x8000, 0x83ff, MRA_RAM },
+		{0xa000, 0xe7ff, MRA_ROM },
+		{0xe810, 0xe813, pia_0_r },
+		{0xe820, 0xe823, pia_1_r },
+		{0xe840, 0xe84f, via_0_r },
+	/*	{0xe900, 0xe91f, cbm_ieee_state }, // for debugging */
+		{0xf000, 0xffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress pet_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x7fff, MWA_RAM, pet_memory),
-		new MemoryWriteAddress(0x8000, 0x83ff, pet_videoram_w, pet_videoram ),
-		new MemoryWriteAddress(0xa000, 0xe7ff, MWA_ROM ),
-		new MemoryWriteAddress(0xe810, 0xe813, pia_0_w ),
-		new MemoryWriteAddress(0xe820, 0xe823, pia_1_w ),
-		new MemoryWriteAddress(0xe840, 0xe84f, via_0_w ),
-		new MemoryWriteAddress(0xf000, 0xffff, MWA_ROM ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( pet_writemem )
+		{0x0000, 0x7fff, MWA_RAM, &pet_memory},
+		{0x8000, 0x83ff, videoram_w, &videoram, &videoram_size },
+		{0xa000, 0xe7ff, MWA_ROM },
+		{0xe810, 0xe813, pia_0_w },
+		{0xe820, 0xe823, pia_1_w },
+		{0xe840, 0xe84f, via_0_w },
+		{0xf000, 0xffff, MWA_ROM },
+	MEMORY_END
 	
-	static MemoryReadAddress pet40_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x7fff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0x83ff, MRA_RAM ),
-		new MemoryReadAddress(0xa000, 0xe7ff, MRA_ROM ),
-		new MemoryReadAddress(0xe810, 0xe813, pia_0_r ),
-		new MemoryReadAddress(0xe820, 0xe823, pia_1_r ),
-		new MemoryReadAddress(0xe840, 0xe84f, via_0_r ),
-		new MemoryReadAddress(0xe880, 0xe881, crtc6845_port_r ),
-		new MemoryReadAddress(0xf000, 0xffff, MRA_ROM ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_READ_START( pet40_readmem )
+		{0x0000, 0x7fff, MRA_RAM},
+		{0x8000, 0x83ff, MRA_RAM },
+		{0xa000, 0xe7ff, MRA_ROM },
+		{0xe810, 0xe813, pia_0_r },
+		{0xe820, 0xe823, pia_1_r },
+		{0xe840, 0xe84f, via_0_r },
+		{0xe880, 0xe881, crtc6845_0_port_r },
+		{0xf000, 0xffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress pet40_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x7fff, MWA_RAM, pet_memory),
-		new MemoryWriteAddress(0x8000, 0x83ff, crtc6845_videoram_w, pet_videoram ),
-		new MemoryWriteAddress(0xa000, 0xe7ff, MWA_ROM ),
-		new MemoryWriteAddress(0xe810, 0xe813, pia_0_w ),
-		new MemoryWriteAddress(0xe820, 0xe823, pia_1_w ),
-		new MemoryWriteAddress(0xe840, 0xe84f, via_0_w ),
-		new MemoryWriteAddress(0xe880, 0xe881, crtc6845_port_w ),
-		new MemoryWriteAddress(0xf000, 0xffff, MWA_ROM ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( pet40_writemem )
+		{0x0000, 0x7fff, MWA_RAM, &pet_memory},
+		{0x8000, 0x83ff, videoram_w, &videoram, &videoram_size },
+		{0xa000, 0xe7ff, MWA_ROM },
+		{0xe810, 0xe813, pia_0_w },
+		{0xe820, 0xe823, pia_1_w },
+		{0xe840, 0xe84f, via_0_w },
+		{0xe880, 0xe881, crtc6845_0_port_w },
+		{0xf000, 0xffff, MWA_ROM },
+	MEMORY_END
 	
-	static MemoryReadAddress pet80_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x7fff, MRA_RAM ),
-		new MemoryReadAddress(0x8000, 0x8fff, MRA_BANK1 ),
-		new MemoryReadAddress(0x9000, 0x9fff, MRA_BANK2 ),
-		new MemoryReadAddress(0xa000, 0xafff, MRA_BANK3 ),
-		new MemoryReadAddress(0xb000, 0xbfff, MRA_BANK4 ),
-		new MemoryReadAddress(0xc000, 0xe7ff, MRA_BANK6 ),
+	static MEMORY_READ_START( pet80_readmem )
+		{0x0000, 0x7fff, MRA_RAM },
+		{0x8000, 0x8fff, MRA_BANK1 },
+		{0x9000, 0x9fff, MRA_BANK2 },
+		{0xa000, 0xafff, MRA_BANK3 },
+		{0xb000, 0xbfff, MRA_BANK4 },
+		{0xc000, 0xe7ff, MRA_BANK6 },
 	#if 1
-		new MemoryReadAddress(0xe800, 0xefff, MRA_BANK7 ),
+		{0xe800, 0xefff, MRA_BANK7 },
 	#else
-		new MemoryReadAddress(0xe810, 0xe813, pia_0_r ),
-		new MemoryReadAddress(0xe820, 0xe823, pia_1_r ),
-		new MemoryReadAddress(0xe840, 0xe84f, via_0_r ),
-		new MemoryReadAddress(0xe880, 0xe881, crtc6845_port_r ),
+		{0xe810, 0xe813, pia_0_r },
+		{0xe820, 0xe823, pia_1_r },
+		{0xe840, 0xe84f, via_0_r },
+		{0xe880, 0xe881, crtc6845_0_port_r },
 	#endif
-		new MemoryReadAddress(0xf000, 0xffff, MRA_BANK8 ),
-		MEMORY_TABLE_END
-	};
+		{0xf000, 0xffff, MRA_BANK8 },
+	MEMORY_END
 	
-	static MemoryWriteAddress pet80_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x7fff, MWA_RAM, pet_memory),
-		new MemoryWriteAddress(0x8000, 0x8fff, MWA_BANK1, pet_videoram ),
-		new MemoryWriteAddress(0x9000, 0x9fff, MWA_BANK2 ),
-		new MemoryWriteAddress(0xa000, 0xafff, MWA_BANK3 ),
-		new MemoryWriteAddress(0xb000, 0xbfff, MWA_BANK4 ),
-		new MemoryWriteAddress(0xc000, 0xe7ff, MWA_BANK6 ),
+	static MEMORY_WRITE_START( pet80_writemem )
+		{0x0000, 0x7fff, MWA_RAM, &pet_memory},
+		{0x8000, 0x8fff, MWA_BANK1, &videoram },
+		{0x9000, 0x9fff, MWA_BANK2 },
+		{0xa000, 0xafff, MWA_BANK3 },
+		{0xb000, 0xbfff, MWA_BANK4 },
+		{0xc000, 0xe7ff, MWA_BANK6 },
 	#if 1
-		new MemoryWriteAddress(0xe800, 0xefff, MWA_BANK7 ),
+		{0xe800, 0xefff, MWA_BANK7 },
 	#else
-		new MemoryWriteAddress(0xe810, 0xe813, pia_0_w ),
-		new MemoryWriteAddress(0xe820, 0xe823, pia_1_w ),
-		new MemoryWriteAddress(0xe840, 0xe84f, via_0_w ),
-		new MemoryWriteAddress(0xe880, 0xe881, crtc6845_pet_port_w ),
+		{0xe810, 0xe813, pia_0_w },
+		{0xe820, 0xe823, pia_1_w },
+		{0xe840, 0xe84f, via_0_w },
+		{0xe880, 0xe881, crtc6845_0_port_w },
 	#endif
-		new MemoryWriteAddress(0xf000, 0xffef, MWA_BANK8 ),
-	    new MemoryWriteAddress(0xfff1, 0xffff, MWA_BANK9 ),
-		MEMORY_TABLE_END
-	};
+		{0xf000, 0xffef, MWA_BANK8 },
+	    {0xfff1, 0xffff, MWA_BANK9 },
+	MEMORY_END
 	
 	
 	/* 0xe880 crtc
@@ -230,66 +219,57 @@ public class pet
 	        bit 7    1=enable system latch
 	
 	*/
-	static MemoryReadAddress superpet_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x7fff, MRA_RAM),
-		new MemoryReadAddress(0x8000, 0x87ff, MRA_RAM ),
-		new MemoryReadAddress(0xa000, 0xe7ff, MRA_ROM ),
-		new MemoryReadAddress(0xe810, 0xe813, pia_0_r ),
-		new MemoryReadAddress(0xe820, 0xe823, pia_1_r ),
-		new MemoryReadAddress(0xe840, 0xe84f, via_0_r ),
-		new MemoryReadAddress(0xe880, 0xe881, crtc6845_port_r ),
+	static MEMORY_READ_START( superpet_readmem )
+		{0x0000, 0x7fff, MRA_RAM},
+		{0x8000, 0x87ff, MRA_RAM },
+		{0xa000, 0xe7ff, MRA_ROM },
+		{0xe810, 0xe813, pia_0_r },
+		{0xe820, 0xe823, pia_1_r },
+		{0xe840, 0xe84f, via_0_r },
+		{0xe880, 0xe881, crtc6845_0_port_r },
 		/* 0xefe0, 0xefe3, mos 6702 */
 		/* 0xeff0, 0xeff3, acia6551 */
-		new MemoryReadAddress(0xeff8, 0xefff, superpet_r ),
-		new MemoryReadAddress(0xf000, 0xffff, MRA_ROM ),
-		MEMORY_TABLE_END
-	};
+		{0xeff8, 0xefff, superpet_r },
+		{0xf000, 0xffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress superpet_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x7fff, MWA_RAM, pet_memory),
-		new MemoryWriteAddress(0x8000, 0x87ff, crtc6845_videoram_w, pet_videoram ),
-		new MemoryWriteAddress(0xa000, 0xe7ff, MWA_ROM ),
-		new MemoryWriteAddress(0xe810, 0xe813, pia_0_w ),
-		new MemoryWriteAddress(0xe820, 0xe823, pia_1_w ),
-		new MemoryWriteAddress(0xe840, 0xe84f, via_0_w ),
-		new MemoryWriteAddress(0xe880, 0xe881, crtc6845_pet_port_w ),
-		new MemoryWriteAddress(0xeff8, 0xefff, superpet_w ),
-		new MemoryWriteAddress(0xf000, 0xffff, MWA_ROM ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( superpet_writemem )
+		{0x0000, 0x7fff, MWA_RAM, &pet_memory},
+		{0x8000, 0x87ff, videoram_w, &videoram, &videoram_size },
+		{0xa000, 0xe7ff, MWA_ROM },
+		{0xe810, 0xe813, pia_0_w },
+		{0xe820, 0xe823, pia_1_w },
+		{0xe840, 0xe84f, via_0_w },
+		{0xe880, 0xe881, crtc6845_0_port_w },
+		{0xeff8, 0xefff, superpet_w },
+		{0xf000, 0xffff, MWA_ROM },
+	MEMORY_END
 	
-	static MemoryReadAddress superpet_m6809_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x7fff, MRA_BANK1,),
-		new MemoryReadAddress(0x8000, 0x87ff, MRA_BANK2 ),
-	    new MemoryReadAddress(0x9000, 0x9fff, MRA_BANK3 ),
-		new MemoryReadAddress(0xa000, 0xe7ff, MRA_ROM ),
-		new MemoryReadAddress(0xe810, 0xe813, pia_0_r ),
-		new MemoryReadAddress(0xe820, 0xe823, pia_1_r ),
-		new MemoryReadAddress(0xe840, 0xe84f, via_0_r ),
-		new MemoryReadAddress(0xe880, 0xe881, crtc6845_port_r ),
-		new MemoryReadAddress(0xeff8, 0xefff, superpet_r ),
-		new MemoryReadAddress(0xf000, 0xffff, MRA_ROM ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_READ_START( superpet_m6809_readmem)
+		{0x0000, 0x7fff, MRA_BANK1,},
+		{0x8000, 0x87ff, MRA_BANK2 },
+	    {0x9000, 0x9fff, MRA_BANK3 },
+		{0xa000, 0xe7ff, MRA_ROM },
+		{0xe810, 0xe813, pia_0_r },
+		{0xe820, 0xe823, pia_1_r },
+		{0xe840, 0xe84f, via_0_r },
+		{0xe880, 0xe881, crtc6845_0_port_r },
+		{0xeff8, 0xefff, superpet_r },
+		{0xf000, 0xffff, MRA_ROM },
+	MEMORY_END
 	
-	static MemoryWriteAddress superpet_m6809_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x7fff, MWA_BANK1 ), /* same memory as m6502 */
-		new MemoryWriteAddress(0x8000, 0x87ff, crtc6845_videoram_w ), /* same memory as m6502 */
-	    new MemoryWriteAddress(0x9000, 0x9fff, MWA_BANK3 ), /* 64 kbyte ram turned in */
-		new MemoryWriteAddress(0xa000, 0xe7ff, MWA_ROM ),
-		new MemoryWriteAddress(0xe810, 0xe813, pia_0_w ),
-		new MemoryWriteAddress(0xe820, 0xe823, pia_1_w ),
-		new MemoryWriteAddress(0xe840, 0xe84f, via_0_w ),
-		new MemoryWriteAddress(0xe880, 0xe881, crtc6845_pet_port_w ),
-		new MemoryWriteAddress(0xeff8, 0xefff, superpet_w ),
-		new MemoryWriteAddress(0xf000, 0xffff, MWA_ROM ),
-		new MemoryWriteAddress(0x10000, 0x1ffff, MWA_RAM, superpet_memory ),
-		MEMORY_TABLE_END
-	};
+	static MEMORY_WRITE_START( superpet_m6809_writemem )
+		{0x0000, 0x7fff, MWA_BANK1 }, /* same memory as m6502 */
+		{0x8000, 0x87ff, videoram_w }, /* same memory as m6502 */
+	    {0x9000, 0x9fff, MWA_BANK3 }, /* 64 kbyte ram turned in */
+		{0xa000, 0xe7ff, MWA_ROM },
+		{0xe810, 0xe813, pia_0_w },
+		{0xe820, 0xe823, pia_1_w },
+		{0xe840, 0xe84f, via_0_w },
+		{0xe880, 0xe881, crtc6845_0_port_w },
+		{0xeff8, 0xefff, superpet_w },
+		{0xf000, 0xffff, MWA_ROM },
+	MEMORY_END
 	
 	#define DIPS_HELPER(bit, name, keycode) \
 	   PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, IP_JOY_NONE);
@@ -587,16 +567,16 @@ public class pet
 		0,0x80,0, /* green */
 	};
 	
-	static unsigned short pet_colortable[] = {
-		0, 1,
+	static unsigned short pet_colortable[][2] = {
+		{ 0, 1 },
 		/* reverse */
-		1, 0
+		{ 1, 0 }
 	};
 	
 	static GfxLayout pet_charlayout = new GfxLayout
 	(
 	        8,8,
-	        512,                                    /* 256 characters */
+	        256,                                    /* 256 characters */
 	        1,                      /* 1 bits per pixel */
 	        new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
 	        /* x offsets */
@@ -607,27 +587,39 @@ public class pet
 	        8*8
 	);
 	
-	static GfxLayout superpet_charlayout = new GfxLayout
+	static GfxLayout pet80_charlayout = new GfxLayout
 	(
-	        8,8,
-	        1024,                                    /* 256 characters */
+	        8,16,
+	        256,                                    /* 256 characters */
 	        1,                      /* 1 bits per pixel */
 	        new int[] { 0 },                  /* no bitplanes; 1 bit per pixel */
 	        /* x offsets */
 	        new int[] { 0,1,2,3,4,5,6,7 },
 	        /* y offsets */
-	        new int[] { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+	        new int[] {
+				0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+				8*8, 9*8, 10*8, 11*8, 12*8, 13*8, 14*8, 15*8
 	        },
-	        8*8
+	        8*16
 	);
 	
 	static GfxDecodeInfo pet_gfxdecodeinfo[] ={
-		new GfxDecodeInfo( 1, 0x0000, pet_charlayout,                     0, 2 ),
+		new GfxDecodeInfo( 1, 0x0000, pet_charlayout,                     0, 1 ),
+		new GfxDecodeInfo( 1, 0x0800, pet_charlayout,                     0, 1 ),
+	    new GfxDecodeInfo( -1 ) /* end of array */
+	};
+	
+	static GfxDecodeInfo pet80_gfxdecodeinfo[] ={
+		new GfxDecodeInfo( 1, 0x0000, pet80_charlayout,                     0, 1 ),
+		new GfxDecodeInfo( 1, 0x1000, pet80_charlayout,                     0, 1 ),
 	    new GfxDecodeInfo( -1 ) /* end of array */
 	};
 	
 	static GfxDecodeInfo superpet_gfxdecodeinfo[] ={
-		new GfxDecodeInfo( 2, 0x0000, superpet_charlayout,                     0, 2 ),
+		new GfxDecodeInfo( 2, 0x0000, pet80_charlayout,                     0, 1 ),
+		new GfxDecodeInfo( 2, 0x1000, pet80_charlayout,                     0, 1 ),
+		new GfxDecodeInfo( 2, 0x2000, pet80_charlayout,                     0, 1 ),
+		new GfxDecodeInfo( 2, 0x3000, pet80_charlayout,                     0, 1 ),
 	    new GfxDecodeInfo( -1 ) /* end of array */
 	};
 	
@@ -639,7 +631,7 @@ public class pet
 	
 	/* basic 1 */
 	ROM_START (pet)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901447.09", 0xc000, 0x800, 0x03cf16d0);
 	    ROM_LOAD ("901447.02", 0xc800, 0x800, 0x69fd8a8f);
 	    ROM_LOAD ("901447.03", 0xd000, 0x800, 0xd349f2d4);
@@ -647,148 +639,148 @@ public class pet
 	    ROM_LOAD ("901447.05", 0xe000, 0x800, 0x9e1c5cea);
 	    ROM_LOAD ("901447.06", 0xf000, 0x800, 0x661a814a);
 	    ROM_LOAD ("901447.07", 0xf800, 0x800, 0xc4f47ad1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x1000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.08", 0x0000, 0x800, 0x54f32f45);
 	ROM_END(); }}; 
 	
 	/* basic 2 */
 	ROM_START (pet2)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.01", 0xc000, 0x1000, 0x63a7fe4a);
 	    ROM_LOAD ("901465.02", 0xd000, 0x1000, 0xae4cb035);
 	    ROM_LOAD ("901447.24", 0xe000, 0x800, 0xe459ab32);
 	    ROM_LOAD ("901465.03", 0xf000, 0x1000, 0xf02238e2);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x1000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.08", 0x0000, 0x800, 0x54f32f45);
 	ROM_END(); }}; 
 	
 	/* basic 2 business */
 	ROM_START (pet2b)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.01", 0xc000, 0x1000, 0x63a7fe4a);
 	    ROM_LOAD ("901465.02", 0xd000, 0x1000, 0xae4cb035);
 	    ROM_LOAD ("901474.01", 0xe000, 0x800, 0x05db957e);
 	    ROM_LOAD ("901465.03", 0xf000, 0x1000, 0xf02238e2);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x1000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.10", 0x0000, 0x800, 0xd8408674);
 	ROM_END(); }}; 
 	
 	/* basic 4 business */
 	ROM_START (pet4b)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("901474.02", 0xe000, 0x800, 0x75ff4af7);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x1000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.10", 0x0000, 0x800, 0xd8408674);
 	ROM_END(); }}; 
 	
 	/* basic 4 crtc*/
 	ROM_START (pet4)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("901499.01", 0xe000, 0x800, 0x5f85bdf8);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x1000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.08", 0x0000, 0x800, 0x54f32f45);
 	ROM_END(); }}; 
 	
 	/* basic 4 crtc 50 hz */
 	ROM_START (pet4pal)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("901498.01", 0xe000, 0x800, 0x3370e359);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x1000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.08", 0x0000, 0x800, 0x54f32f45);
 	ROM_END(); }}; 
 	
 	/* basic 4 business 80 columns */
 	ROM_START (pet80)
-		ROM_REGION (0x20000, REGION_CPU1);
+		ROM_REGION (0x20000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("901474.03", 0xe000, 0x800, 0x5674dd5e);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.10", 0x0000, 0x800, 0xd8408674);
 	ROM_END(); }}; 
 	
 	/* basic 4 business 80 columns 50 hz */
 	ROM_START (pet80pal)
-		ROM_REGION (0x20000, REGION_CPU1);
+		ROM_REGION (0x20000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("901474.04", 0xe000, 0x800, 0xabb000e7);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.10", 0x0000, 0x800, 0xd8408674);
 	ROM_END(); }}; 
 	
 	ROM_START (cbm80ger)
-		ROM_REGION (0x20000, REGION_CPU1);
+		ROM_REGION (0x20000, REGION_CPU1, 0);
 		ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 		ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 		ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 		ROM_LOAD ("german.bin", 0xe000, 0x800, 0x1c1e597d);
 		ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 		ROM_LOAD ("chargen.de", 0x0000, 0x800, 0x3bb8cb87);
 	ROM_END(); }}; 
 	
 	ROM_START (cbm80swe)
-		ROM_REGION (0x20000, REGION_CPU1);
+		ROM_REGION (0x20000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("editswe.bin", 0xe000, 0x800, 0x75901dd7);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x1000, REGION_GFX1);
+		ROM_REGION (0x2000, REGION_GFX1, 0);
 	    ROM_LOAD ("901447.14", 0x0000, 0x800, 0x48c77d29);
 	ROM_END(); }}; 
 	
 	ROM_START (superpet)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("901474.04", 0xe000, 0x800, 0xabb000e7);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x20000, REGION_CPU2);
+		ROM_REGION (0x20000, REGION_CPU2, 0);
 	    ROM_LOAD ("901898.01", 0xa000, 0x1000, 0x728a998b);
 	    ROM_LOAD ("901898.02", 0xb000, 0x1000, 0x6beb7c62);
 	    ROM_LOAD ("901898.03", 0xc000, 0x1000, 0x5db4983d);
 	    ROM_LOAD ("901898.04", 0xd000, 0x1000, 0xf55fc559);
 	    ROM_LOAD ("901897.01", 0xe000, 0x800, 0xb2cee903);
 	    ROM_LOAD ("901898.05", 0xf000, 0x1000, 0xf42df0cb);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x4000, REGION_GFX1, 0);
 	    ROM_LOAD ("901640.01", 0x0000, 0x1000, 0xee8229c4);
 	ROM_END(); }}; 
 	
 	/* swedish m6809 roms needed */
 	ROM_START (mmf9000)
-		ROM_REGION (0x10000, REGION_CPU1);
+		ROM_REGION (0x10000, REGION_CPU1, 0);
 	    ROM_LOAD ("901465.23", 0xb000, 0x1000, 0xae3deac0);
 	    ROM_LOAD ("901465.20", 0xc000, 0x1000, 0x0fc17b9c);
 	    ROM_LOAD ("901465.21", 0xd000, 0x1000, 0x36d91855);
 	    ROM_LOAD ("editswe.bin", 0xe000, 0x800, 0x75901dd7);
 	    ROM_LOAD ("901465.22", 0xf000, 0x1000, 0xcc5298a1);
-		ROM_REGION (0x20000, REGION_CPU2);
+		ROM_REGION (0x20000, REGION_CPU2, 0);
 	    ROM_LOAD ("901898.01", 0xa000, 0x1000, 0x728a998b);
 	    ROM_LOAD ("901898.02", 0xb000, 0x1000, 0x6beb7c62);
 	    ROM_LOAD ("901898.03", 0xc000, 0x1000, 0x5db4983d);
 	    ROM_LOAD ("901898.04", 0xd000, 0x1000, 0xf55fc559);
 	    ROM_LOAD ("901897.01", 0xe000, 0x800, 0xb2cee903);
 	    ROM_LOAD ("901898.05", 0xf000, 0x1000, 0xf42df0cb);
-		ROM_REGION (0x2000, REGION_GFX1);
+		ROM_REGION (0x4000, REGION_GFX1, 0);
 	    ROM_LOAD ("charswe.bin", 0x0000, 0x1000, 0xda1cd630);
 	ROM_END(); }}; 
 	
@@ -899,8 +891,7 @@ public class pet
 				1000000,
 				pet_readmem, pet_writemem,
 				null, null,
-				null, null,
-				pet_raster_irq, 15625,
+				pet_frame_interrupt, 1,
 			),
 		},
 		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -914,12 +905,12 @@ public class pet
 		new rectangle(0, 320 - 1, 0, 200 - 1),		   /* visible_area */
 		pet_gfxdecodeinfo,			   /* graphics decode info */
 		sizeof (pet_palette) / sizeof (pet_palette[null]) / 3,
-		sizeof (pet_colortable) / sizeof(pet_colortable[null]),
+		sizeof (pet_colortable) / sizeof(pet_colortable[null][null]),
 		pet_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 		null,
-		pet_vh_start,
-		pet_vh_stop,
+		generic_vh_start,
+		generic_vh_stop,
 		pet_vh_screenrefresh,
 	
 	  /* sound hardware */
@@ -938,8 +929,7 @@ public class pet
 				1000000,
 				pet40_readmem, pet40_writemem,
 				null, null,
-				null, null,
-				crtc6845_raster_irq, 15625,
+				pet_frame_interrupt, 1,
 			),
 		},
 		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -953,13 +943,13 @@ public class pet
 		new rectangle(0, 320 - 1, 0, 200 - 1),		   /* visible_area */
 		pet_gfxdecodeinfo,			   /* graphics decode info */
 		sizeof (pet_palette) / sizeof (pet_palette[null]) / 3,
-		sizeof (pet_colortable) / sizeof(pet_colortable[null]),
+		sizeof (pet_colortable) / sizeof(pet_colortable[null][null]),
 		pet_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		pet40_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
@@ -977,8 +967,7 @@ public class pet
 				1000000,
 				pet40_readmem, pet40_writemem,
 				null, null,
-				null, null,
-				crtc6845_raster_irq, 15625,
+				pet_frame_interrupt, 1,
 			),
 		},
 		50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -992,13 +981,13 @@ public class pet
 		new rectangle(0, 320 - 1, 0, 200 - 1),		   /* visible_area */
 		pet_gfxdecodeinfo,			   /* graphics decode info */
 		sizeof (pet_palette) / sizeof (pet_palette[null]) / 3,
-		sizeof (pet_colortable) / sizeof(pet_colortable[null]),
+		sizeof (pet_colortable) / sizeof(pet_colortable[null][null]),
 		pet_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		pet40_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
@@ -1016,8 +1005,7 @@ public class pet
 				1000000,
 				pet80_readmem, pet80_writemem,
 				null, null,
-				null, null,
-				crtc6845_raster_irq, 15625,
+				pet_frame_interrupt, 1,
 			),
 		},
 		60, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -1029,19 +1017,19 @@ public class pet
 		640,							   /* screen width */
 		250,							   /* screen height */
 		new rectangle(0, 640 - 1, 0, 250 - 1),		   /* visible_area */
-		pet_gfxdecodeinfo,			   /* graphics decode info */
+		pet80_gfxdecodeinfo,			   /* graphics decode info */
 		sizeof (pet_palette) / sizeof (pet_palette[null]) / 3,
-		sizeof (pet_colortable) / sizeof(pet_colortable[null]),
+		sizeof (pet_colortable) / sizeof(pet_colortable[null][null]),
 		pet_init_palette,				   /* convert color prom */
 	#ifdef PET_TEST_CODE
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#else
-		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#endif
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		pet80_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
@@ -1059,8 +1047,7 @@ public class pet
 				1000000,
 				pet80_readmem, pet80_writemem,
 				null, null,
-				null, null,
-				crtc6845_raster_irq, 15625,
+				pet_frame_interrupt, 1,
 			),
 		},
 		50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -1072,19 +1059,19 @@ public class pet
 		640,							   /* screen width */
 		250,							   /* screen height */
 		new rectangle(0, 640 - 1, 0, 250 - 1),		   /* visible_area */
-		pet_gfxdecodeinfo,			   /* graphics decode info */
+		pet80_gfxdecodeinfo,			   /* graphics decode info */
 		sizeof (pet_palette) / sizeof (pet_palette[null]) / 3,
-		sizeof (pet_colortable) / sizeof(pet_colortable[null]),
+		sizeof (pet_colortable) / sizeof(pet_colortable[null][null]),
 		pet_init_palette,				   /* convert color prom */
 	#ifdef PET_TEST_CODE
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#else
-		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#endif
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		pet80_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
@@ -1097,20 +1084,19 @@ public class pet
 	(
 	  /* basic machine hardware */
 		new MachineCPU[] {
-	#if 1
 			new MachineCPU(
 				CPU_M6502,
 				1000000,
 				superpet_readmem, superpet_writemem,
 				null, null,
-				null, null,
-				crtc6845_raster_irq, 15625,
+				pet_frame_interrupt, 1,
 			),
-	#endif
 			new MachineCPU(
 				CPU_M6809,
 				1000000,
 				superpet_m6809_readmem, superpet_m6809_writemem,
+				null, null,
+				pet_frame_interrupt, 1,
 			),
 		},
 		50, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -1124,17 +1110,17 @@ public class pet
 		new rectangle(0, 640 - 1, 0, 250 - 1),		   /* visible_area */
 		superpet_gfxdecodeinfo,			   /* graphics decode info */
 		sizeof (pet_palette) / sizeof (pet_palette[null]) / 3,
-		sizeof (pet_colortable) / sizeof(pet_colortable[null]),
+		sizeof (pet_colortable) / sizeof(pet_colortable[null][null]),
 		pet_init_palette,				   /* convert color prom */
 	#ifdef PET_TEST_CODE
-		VIDEO_TYPE_RASTER,
+		VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#else
-		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER,
+		VIDEO_PIXEL_ASPECT_RATIO_1_2|VIDEO_TYPE_RASTER|VIDEO_SUPPORTS_DIRTY,
 	#endif
 		null,
-		crtc6845_vh_start,
-		crtc6845_vh_stop,
-		crtc6845_vh_screenrefresh,
+		generic_vh_start,
+		generic_vh_stop,
+		pet80_vh_screenrefresh,
 	
 	  /* sound hardware */
 		0, 0, 0, 0,
@@ -1146,7 +1132,7 @@ public class pet
 	static const struct IODevice io_pet[] =
 	{
 		IODEVICE_CBM_PET1_QUICK,
-		IODEVICE_CBM_ROM("crt\0a0\0b0\0", NULL),
+		IODEVICE_CBM_ROM("crt\0a0\0b0\0"),
 		IODEVICE_CBM_DRIVE,
 		{IO_END}
 	};
@@ -1154,7 +1140,7 @@ public class pet
 	static const struct IODevice io_pet2[] =
 	{
 		IODEVICE_CBM_PET_QUICK,
-		IODEVICE_CBM_ROM("crt\0a0\0b0\0", NULL),
+		IODEVICE_CBM_ROM("crt\0a0\0b0\0"),
 		IODEVICE_CBM_DRIVE,
 		{IO_END}
 	};
@@ -1162,7 +1148,7 @@ public class pet
 	static const struct IODevice io_pet4[] =
 	{
 		IODEVICE_CBM_PET_QUICK,
-		IODEVICE_CBM_ROM("crt\0a0\0", NULL),
+		IODEVICE_CBM_ROM("crt\0a0\0"),
 		IODEVICE_CBM_DRIVE,
 		{IO_END}
 	};
@@ -1209,4 +1195,25 @@ public class pet
 	
 	// please leave the following as testdriver only
 	COMP (198?, 	mmf9000,	pet,	superpet,	superpet,superpet,"Commodore Business Machines Co.",  "MMF9000 (50Hz) Swedish")
+	
+	#ifdef RUNTIME_LOADER
+	extern void pet_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"pet")==0) drivers[i]=&driver_pet;
+			if ( strcmp(drivers[i].name,"cbm30")==0) drivers[i]=&driver_cbm30;
+			if ( strcmp(drivers[i].name,"cbm30b")==0) drivers[i]=&driver_cbm30b;
+			if ( strcmp(drivers[i].name,"cbm40")==0) drivers[i]=&driver_cbm40;
+			if ( strcmp(drivers[i].name,"cbm40pal")==0) drivers[i]=&driver_cbm40pal;
+			if ( strcmp(drivers[i].name,"cbm40b")==0) drivers[i]=&driver_cbm40b;
+			if ( strcmp(drivers[i].name,"cbm80")==0) drivers[i]=&driver_cbm80;
+			if ( strcmp(drivers[i].name,"cbm80pal")==0) drivers[i]=&driver_cbm80pal;
+			if ( strcmp(drivers[i].name,"cbm80ger")==0) drivers[i]=&driver_cbm80ger;
+			if ( strcmp(drivers[i].name,"cbm80swe")==0) drivers[i]=&driver_cbm80swe;
+			if ( strcmp(drivers[i].name,"superpet")==0) drivers[i]=&driver_superpet;
+			if ( strcmp(drivers[i].name,"mmf9000")==0) drivers[i]=&driver_mmf9000;
+		}
+	}
+	#endif
 }

@@ -9,7 +9,7 @@ extern struct DACinterface vc20tape_sound_interface;
    IO_CASSETTE,        /* type */\
    1,                  /* count */\
    "wav\0",    /* TAP, LNX and T64(maybe) later file extensions */\
-   NULL,               /* private */\
+   IO_RESET_NONE,      /* reset if file changed */\
    NULL,               /* id */\
    vc20_tape_attach_image,	/* init */\
    vc20_tape_detach_image,	/* exit */\
@@ -26,7 +26,7 @@ extern struct DACinterface vc20tape_sound_interface;
 }
 
 /* the function which should be called by change on readline */
-extern void vc20_tape_open (void (*read_callback) (UINT32, UINT32));
+extern void vc20_tape_open (void (*read_callback) (UINT32, UINT8));
 extern extern 
 /* call this with the name of the tape image */
 int vc20_tape_attach_image (int id);

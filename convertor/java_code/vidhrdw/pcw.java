@@ -56,11 +56,11 @@ public class pcw
 	}
 	
 	/***************************************************************************
-	  Draw the game screen in the given osd_bitmap.
+	  Draw the game screen in the given mame_bitmap.
 	  Do NOT call osd_update_display() from this function,
 	  it will be called by the main emulation engine.
 	***************************************************************************/
-	public static VhUpdatePtr pcw_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void pcw_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int x,y,b;
 		unsigned short roller_ram_offs;
@@ -191,5 +191,5 @@ public class pcw
 	
 			fillbitmap(bitmap, pen0, &rect);
 		}
-	} };
+	}
 }

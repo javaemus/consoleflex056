@@ -113,7 +113,7 @@ public class apple1
 		}
 	}
 	
-	public static VhUpdatePtr apple1_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void	apple1_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int offs;
 		int code;
@@ -121,16 +121,16 @@ public class apple1
 	
 		/* do we need a full refresh? */
 	
-		if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size[0]);
+		if (full_refresh != 0) memset (dirtybuffer, 1, videoram_size);
 	
-		for (offs = 0; offs < videoram_size[0]; offs++ )
+		for (offs = 0; offs < videoram_size; offs++ )
 		{
 			if (dirtybuffer[offs] || (offs == dsp_pntr))
 			{
 				if (offs == dsp_pntr) code = 1;
 				else code = videoram.read(offs);
 				sy = (offs / 40) * 8;
-				sx = (offs % 40) * 6;
+				sx = (offs % 40) * 7;
 	
 				drawgfx (bitmap, Machine.gfx[0], code, 1,
 				  0, 0, sx,sy, &Machine.visible_area, TRANSPARENCY_NONE, 0);
@@ -138,5 +138,5 @@ public class apple1
 				dirtybuffer[offs] = 0;
 			}
 		}
-	} };
+	}
 }

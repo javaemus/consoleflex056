@@ -15,8 +15,6 @@ package machine;
 public class mbee
 {
 	
-	static int flop_specified[4] = {0,0,0,0};
-	static void *fdc_file[4] = {NULL,NULL};
 	static UINT8 fdc_drv = 0;
 	static UINT8 fdc_head = 0;
 	static UINT8 fdc_den = 0;
@@ -38,18 +36,12 @@ public class mbee
 	public static InitMachinePtr mbee_init_machine = new InitMachinePtr() { public void handler() 
 	{
 		z80pio_init(&pio_intf);
-		wd179x_init(1);
+	    wd179x_init(WD_TYPE_179X,mbee_fdc_callback);
 	} };
 	
 	void mbee_shutdown_machine(void)
 	{
-		int i;
-		for( i = 0; i < 4; i++ )
-		{
-			if( fdc_file[i] )
-				osd_fclose(fdc_file[i]);
-			fdc_file[i] = NULL;
-		}
+		wd179x_exit();
 	}
 	
 	/* PIO B data bits
@@ -124,7 +116,17 @@ public class mbee
 		fdc_drv = data & 3;
 		fdc_head = (data >> 2) & 1;
 		fdc_den = (data >> 3) & 1;
-		fdc_file[fdc_drv] = wd179x_select_drive(fdc_drv, fdc_head, mbee_fdc_callback, device_filename(IO_FLOPPY,fdc_drv));
+		wd179x_set_drive(fdc_drv);
+		wd179x_set_side(fdc_head);
+		if (data & (1<<3))
+		{
+		   wd179x_set_density(DEN_FM_HI);
+		}
+		else
+		{
+		   wd179x_set_density(DEN_MFM_LO);
+		}
+	
 	}
 	
 	public static InterruptPtr mbee_interrupt = new InterruptPtr() { public int handler() 
@@ -147,48 +149,29 @@ public class mbee
 	
 	int mbee_cassette_init(int id)
 	{
-		void *file;
-	
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
-		if (file != 0)
-		{
-			struct wave_args wa = {0,};
-			wa.file = file;
-			wa.display = 1;
-			if( device_open(IO_CASSETTE,id,0,&wa) )
-				return INIT_FAILED;
-	        return INIT_OK;
-		}
-		file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW_CREATE);
-		if (file != 0)
-	    {
-			struct wave_args wa = {0,};
-			wa.file = file;
-			wa.display = 1;
-			wa.smpfreq = 11025;
-			if( device_open(IO_CASSETTE,id,1,&wa) )
-	            return INIT_FAILED;
-			return INIT_OK;
-	    }
-		return INIT_FAILED;
+		struct cassette_args args;
+		memset(&args, 0, sizeof(args));
+		args.create_smpfreq = 11025;
+		return cassette_init(id, &args);
 	}
 	
 	void mbee_cassette_exit(int id)
 	{
 		device_close(IO_CASSETTE,id);
 	}
-	
+	#if 0
 	int mbee_floppy_init(int id)
 	{
 		flop_specified[id] = device_filename(IO_FLOPPY,id) != NULL;
 		return 0;
 	}
+	#endif
 	
 	int mbee_rom_load(int id)
 	{
 	    void *file;
 	
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		if (file != 0)
 		{
 			int size = osd_fsize(file);
@@ -203,20 +186,7 @@ public class mbee
 			}
 			osd_fclose(file);
 		}
-		return INIT_OK;
+		return INIT_PASS;
 	}
-	
-	int mbee_rom_id(int id)
-	{
-	    void *file;
-	
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
-	    if (file != 0)
-	    {
-			osd_fclose(file);
-	    }
-	    return 1;
-	}
-	
 	
 }

@@ -40,15 +40,13 @@ extern extern
 extern int a800_floppy_init(int id);
 extern void a800_floppy_exit(int id);
 
-extern int a800_id_rom(int id);
 extern int a800_rom_init(int id);
 extern void a800_rom_exit(int id);
 
 extern extern int a800xl_load_rom(int id);
 extern int a800xl_id_rom(int id);
 
-extern extern int a5200_id_rom(int id);
-extern int a5200_rom_init(int id);
+extern extern int a5200_rom_init(int id);
 extern void a5200_rom_exit(int id);
 
 extern 

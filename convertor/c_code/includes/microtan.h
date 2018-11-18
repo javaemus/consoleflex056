@@ -17,6 +17,7 @@
 #include "cpu/m6502/m6502.h"
 #include "machine/6522via.h"
 #include "sound/ay8910.h"
+#include "includes/6551.h"
 
 /* from src/mess/vidhrdw/microtan.c */
 
@@ -26,16 +27,15 @@ extern UINT8 *microtan_chunky_buffer;
 /* from src/mess/machine/microtan.c */
 extern void init_microtan(void);
 extern void microtan_init_machine(void);
+extern void microtan_exit_machine(void);
 
-extern int microtan_cassette_id(int id);
 extern int microtan_cassette_init(int id);
 extern void microtan_cassette_exit(int id);
 
-extern int microtan_snapshot_id(int id);
+
 extern int microtan_snapshot_init(int id);
 extern void microtan_snapshot_exit(int id);
 
-extern int microtan_hexfile_id(int id);
 extern int microtan_hexfile_init(int id);
 extern void microtan_hexfile_exit(int id);
 
@@ -62,4 +62,4 @@ extern WRITE_HANDLER ( microtan_videoram_w );
 extern void microtan_init_colors (unsigned char *palette, unsigned short *colortable, const unsigned char *color_prom);
 extern int microtan_vh_start (void);
 extern void microtan_vh_stop (void);
-extern void microtan_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh);
+extern void microtan_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);

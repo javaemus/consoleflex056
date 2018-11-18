@@ -199,8 +199,7 @@
 	E000-FFFF ROM	  BIOS ROM
 ******************************************************************************/
 
-static struct MemoryReadAddress readmem_a400[] =
-{
+MEMORY_READ_START( readmem_a400 )
 	{ 0x0000, 0x3fff, MRA_RAM },
 //	{ 0x4000, 0x9fff, MRA_RAM },	/* optional RAM */
 	{ 0xa000, 0xbfff, MRA_BANK1 },
@@ -212,11 +211,9 @@ static struct MemoryReadAddress readmem_a400[] =
 	{ 0xd400, 0xd4ff, MRA_ANTIC },
 	{ 0xd500, 0xd7ff, MRA_NOP },
 	{ 0xd800, 0xffff, MRA_ROM },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress writemem_a400[] =
-{
+MEMORY_WRITE_START( writemem_a400 )
 	{ 0x0000, 0x3fff, MWA_RAM },
 //	{ 0x4000, 0x9fff, MRA_RAM },	/* optional RAM */
 	{ 0xa000, 0xbfff, MWA_BANK1 },
@@ -228,11 +225,9 @@ static struct MemoryWriteAddress writemem_a400[] =
 	{ 0xd400, 0xd4ff, MWA_ANTIC },
 	{ 0xd500, 0xd7ff, MWA_NOP },
 	{ 0xd800, 0xffff, MWA_ROM },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryReadAddress readmem_a800[] =
-{
+MEMORY_READ_START( readmem_a800 )
 	{ 0x0000, 0x9fff, MRA_RAM },
 	{ 0xa000, 0xbfff, MRA_BANK1 },
 	{ 0xc000, 0xcfff, MRA_ROM },
@@ -243,11 +238,9 @@ static struct MemoryReadAddress readmem_a800[] =
 	{ 0xd400, 0xd4ff, MRA_ANTIC },
 	{ 0xd500, 0xd7ff, MRA_NOP },
 	{ 0xd800, 0xffff, MRA_ROM },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress writemem_a800[] =
-{
+MEMORY_WRITE_START( writemem_a800 )
 	{ 0x0000, 0x9fff, MWA_RAM },
 	{ 0xa000, 0xbfff, MWA_BANK1 },
 	{ 0xc000, 0xcfff, MWA_ROM },
@@ -258,11 +251,9 @@ static struct MemoryWriteAddress writemem_a800[] =
 	{ 0xd400, 0xd4ff, MWA_ANTIC },
 	{ 0xd500, 0xd7ff, MWA_NOP },
 	{ 0xd800, 0xffff, MWA_ROM },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryReadAddress readmem_a800xl[] =
-{
+MEMORY_READ_START( readmem_a800xl )
 	{ 0x0000, 0x4fff, MRA_RAM },
 	{ 0x5000, 0x57ff, MRA_BANK2 },
 	{ 0x5800, 0x9fff, MRA_RAM },
@@ -275,11 +266,9 @@ static struct MemoryReadAddress readmem_a800xl[] =
 	{ 0xd400, 0xd4ff, MRA_ANTIC },
 	{ 0xd500, 0xd7ff, MRA_NOP },
 	{ 0xd800, 0xffff, MRA_BANK4 },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress writemem_a800xl[] =
-{
+MEMORY_WRITE_START( writemem_a800xl )
 	{ 0x0000, 0x4fff, MWA_RAM },
 	{ 0x5000, 0x57ff, MWA_BANK2 },
 	{ 0x5800, 0x9fff, MWA_RAM },
@@ -292,30 +281,25 @@ static struct MemoryWriteAddress writemem_a800xl[] =
 	{ 0xd400, 0xd4ff, MWA_ANTIC },
 	{ 0xd500, 0xd7ff, MWA_NOP },
 	{ 0xd800, 0xffff, MWA_BANK4 },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryReadAddress readmem_5200[] =
-{
+MEMORY_READ_START( readmem_5200 )
 	{ 0x0000, 0x3fff, MRA_RAM },
 	{ 0x4000, 0xbfff, MRA_ROM },
 	{ 0xc000, 0xc0ff, MRA_GTIA },
 	{ 0xd400, 0xd5ff, MRA_ANTIC },
 	{ 0xe800, 0xe8ff, pokey1_r },
     { 0xf800, 0xffff, MRA_ROM },
-    {-1}
-};
+MEMORY_END
 
-static struct MemoryWriteAddress writemem_5200[] =
-{
+MEMORY_WRITE_START( writemem_5200 )
 	{ 0x0000, 0x3fff, MWA_RAM },
 	{ 0x4000, 0xbfff, MWA_ROM },
 	{ 0xc000, 0xc0ff, MWA_GTIA },
 	{ 0xd400, 0xd5ff, MWA_ANTIC },
 	{ 0xe800, 0xe8ff, pokey1_w },
     { 0xf800, 0xffff, MWA_ROM },
-    {-1}
-};
+MEMORY_END
 
 INPUT_PORTS_START( a800 )
 
@@ -1090,37 +1074,37 @@ static struct MachineDriver machine_driver_a5200 =
 };
 
 ROM_START(a400)
-	ROM_REGION(0x14000,REGION_CPU1) /* 64K for the CPU + 2 * 8K for cartridges */
+	ROM_REGION(0x14000,REGION_CPU1,0) /* 64K for the CPU + 2 * 8K for cartridges */
 	ROM_LOAD("floatpnt.rom", 0xd800, 0x0800, 0x6a5d766e)
 	ROM_LOAD("atari400.rom", 0xe000, 0x2000, 0xcb4db9af)
 ROM_END
 
 ROM_START(a400pal)
-	ROM_REGION(0x14000,REGION_CPU1) /* 64K for the CPU + 2 * 8K for cartridges */
+	ROM_REGION(0x14000,REGION_CPU1,0) /* 64K for the CPU + 2 * 8K for cartridges */
 	ROM_LOAD("floatpnt.rom", 0xd800, 0x0800, 0x6a5d766e)
 	ROM_LOAD("atari400.rom", 0xe000, 0x2000, 0xcb4db9af)
 ROM_END
 
 ROM_START(a800)
-	ROM_REGION(0x14000,REGION_CPU1) /* 64K for the CPU + 2 * 8K for cartridges */
+	ROM_REGION(0x14000,REGION_CPU1,0) /* 64K for the CPU + 2 * 8K for cartridges */
 	ROM_LOAD("floatpnt.rom", 0xd800, 0x0800, 0x6a5d766e)
 	ROM_LOAD("atari800.rom", 0xe000, 0x2000, 0xcb4db9af)
 ROM_END
 
 ROM_START(a800pal)
-	ROM_REGION(0x14000,REGION_CPU1) /* 64K for the CPU + 2 * 8K for cartridges */
+	ROM_REGION(0x14000,REGION_CPU1,0) /* 64K for the CPU + 2 * 8K for cartridges */
 	ROM_LOAD("floatpnt.rom", 0xd800, 0x0800, 0x6a5d766e)
 	ROM_LOAD("atari800.rom", 0xe000, 0x2000, 0xcb4db9af)
 ROM_END
 
 ROM_START(a800xl)
-	ROM_REGION(0x18000,REGION_CPU1) /* 64K for the CPU + 16K + 2 * 8K for cartridges */
+	ROM_REGION(0x18000,REGION_CPU1,0) /* 64K for the CPU + 16K + 2 * 8K for cartridges */
 	ROM_LOAD("basic.rom",   0x10000, 0x2000, 0x7d684184)
     ROM_LOAD("atarixl.rom", 0x14000, 0x4000, 0x1f9cd270)
 ROM_END
 
 ROM_START(a5200)
-	ROM_REGION(0x14000,REGION_CPU1) /* 64K for the CPU + 16K for cartridges */
+	ROM_REGION(0x14000,REGION_CPU1,0) /* 64K for the CPU + 16K for cartridges */
 	ROM_LOAD("5200.rom", 0xf800, 0x0800, 0x4248d3e3)
 ROM_END
 
@@ -1130,7 +1114,7 @@ static const struct IODevice io_a400[] = {
 		1,					/* count */
 		"rom\0bin\0",       /* file extensions */
 		IO_RESET_ALL,		/* reset if file changed */
-        a800_id_rom,        /* id */
+        0,
 		a800_rom_init,		/* init */
 		a800_rom_exit,		/* exit */
 		NULL,				/* info */
@@ -1173,7 +1157,7 @@ static const struct IODevice io_a800[] = {
 		2,					/* count */
 		"rom\0bin\0",       /* file extensions */
 		IO_RESET_ALL,		/* reset if file changed */
-        a800_id_rom,        /* id */
+        0,
 		a800_rom_init,		/* init */
         a800_rom_exit,      /* exit */
         NULL,               /* info */
@@ -1217,7 +1201,7 @@ static const struct IODevice io_a5200[] = {
 		1,					/* count */
 		"rom\0bin\0",       /* file extensions */
 		IO_RESET_ALL,		/* reset if file changed */
-        a5200_id_rom,       /* id */
+        0,
 		a5200_rom_init, 	/* init */
 		a5200_rom_exit, 	/* exit */
 		NULL,				/* info */

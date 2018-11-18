@@ -79,7 +79,7 @@ public class microtan
 		microtan_chunky_buffer = NULL;
 	} };
 	
-	public static VhUpdatePtr microtan_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void microtan_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	    int offs;
 	
@@ -94,7 +94,7 @@ public class microtan
 	    if (full_refresh != 0)
 		{
 			fillbitmap(Machine.scrbitmap, Machine.pens[0], &Machine.visible_area);
-			memset(dirtybuffer, 1, videoram_size[0]);
+			memset(dirtybuffer, 1, videoram_size);
 	    }
 	
 		for( offs = 0; offs < 32*16; offs++ )
@@ -110,7 +110,7 @@ public class microtan
 	            dirtybuffer[offs] = 0;
 			}
 		}
-	} };
+	}
 	
 	
 }

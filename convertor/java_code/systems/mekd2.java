@@ -35,6 +35,7 @@ package systems;
 public class mekd2
 {
 	
+	
 	#ifndef VERBOSE
 	#define VERBOSE 1
 	#endif
@@ -45,14 +46,6 @@ public class mekd2
 	#define LOG(x)	/* x */
 	#endif
 	
-	/* from src/mess/machine/mekd2.c */
-	extern extern 
-	extern int mekd2_rom_load (int id);
-	extern int mekd2_rom_id (int id);
-	
-	extern 
-	/* from src/mess/vidhrdw/mekd2.c */
-	extern extern extern extern 
 	static READ_HANDLER(mekd2_pia_r) { return 0xff; }
 	static READ_HANDLER(mekd2_cas_r) { return 0xff; }
 	static READ_HANDLER(mekd2_kbd_r) { return 0xff; }
@@ -78,60 +71,56 @@ public class mekd2
 			{
 				videoram.write(1*2+0,~pia[0]);
 				videoram.write(1*2+1,14);
-	        }
+			}
 			if ((data & 0x08) != 0)
 			{
 				videoram.write(2*2+0,~pia[0]);
 				videoram.write(2*2+1,14);
-	        }
+			}
 			if ((data & 0x04) != 0)
 			{
 				videoram.write(3*2+0,~pia[0]);
 				videoram.write(3*2+1,14);
-	        }
+			}
 			if ((data & 0x02) != 0)
 			{
 				videoram.write(4*2+0,~pia[0]);
 				videoram.write(4*2+1,14);
-	        }
+			}
 			if ((data & 0x01) != 0)
 			{
 				videoram.write(5*2+0,~pia[0]);
 				videoram.write(5*2+1,14);
-	        }
+			}
 			break;
-	    }
+		}
 	}
 	
 	
-	static MemoryReadAddress readmem[] =
-	{
-		new MemoryReadAddress( 0x0000, 0x00ff, MRA_RAM ),
-	//	new MemoryReadAddress( 0x0100, 0x01ff, MRA_RAM ),	/* optional, set up in mekd2_init_machine */
-	//	new MemoryReadAddress( 0x6000, 0x67ff, MRA_ROM ),	/* -"- */
-	//	  new MemoryReadAddress( 0x8004, 0x8007, mekd2_pia_r ),
-	//	  new MemoryReadAddress( 0x8008, 0x8008, mekd2_cas_r ),
-	//	  new MemoryReadAddress( 0x8020, 0x8023, mekd2_kbd_r ),
-		new MemoryReadAddress( 0xa000, 0xa07f, MRA_RAM ),
-	//	new MemoryReadAddress( 0xc000, 0xc7ff, MRA_RAM ),	/* optional, set up in mekd2_init_machine */
-		new MemoryReadAddress( 0xe000, 0xe3ff, MRA_ROM ),	/* JBUG ROM */
-		new MemoryReadAddress( 0xe400, 0xffff, mekd2_mirror_r ),
-	    new MemoryReadAddress(-1)
-	};
+	static MEMORY_READ_START( readmem )
+		{ 0x0000, 0x00ff, MRA_RAM },
+	//	{ 0x0100, 0x01ff, MRA_RAM },	/* optional, set up in mekd2_init_machine */
+	//	{ 0x6000, 0x67ff, MRA_ROM },	/* -"- */
+	//	  { 0x8004, 0x8007, mekd2_pia_r },
+	//	  { 0x8008, 0x8008, mekd2_cas_r },
+	//	  { 0x8020, 0x8023, mekd2_kbd_r },
+		{ 0xa000, 0xa07f, MRA_RAM },
+	//	{ 0xc000, 0xc7ff, MRA_RAM },	/* optional, set up in mekd2_init_machine */
+		{ 0xe000, 0xe3ff, MRA_ROM },	/* JBUG ROM */
+		{ 0xe400, 0xffff, mekd2_mirror_r },
+	MEMORY_END
 	
-	static MemoryWriteAddress writemem[] =
-	{
-		new MemoryWriteAddress( 0x0000, 0x00ff, MWA_RAM ),
-	//	new MemoryWriteAddress( 0x0100, 0x01ff, MWA_RAM ),	/* optional, set up in mekd2_init_machine */
-	//	new MemoryWriteAddress( 0x6000, 0x67ff, MWA_ROM ),	/* -"- */
-	//	  new MemoryWriteAddress( 0x8004, 0x8007, mekd2_pia_w ),
-	//	  new MemoryWriteAddress( 0x8008, 0x8008, mekd2_cas_w ),
-		new MemoryWriteAddress( 0x8020, 0x8023, mekd2_kbd_w ),
-		new MemoryWriteAddress( 0xa000, 0xa07f, MWA_RAM ),
-	//  new MemoryWriteAddress( 0xc000, 0xc7ff, MWA_RAM ),    /* optional, set up in mekd2_init_machine */
-		new MemoryWriteAddress( 0xe000, 0xe3ff, MWA_ROM ),	/* JBUG ROM */
-	    new MemoryWriteAddress(-1)
-	};
+	static MEMORY_WRITE_START( writemem )
+		{ 0x0000, 0x00ff, MWA_RAM },
+	//	{ 0x0100, 0x01ff, MWA_RAM },	/* optional, set up in mekd2_init_machine */
+	//	{ 0x6000, 0x67ff, MWA_ROM },	/* -"- */
+	//	  { 0x8004, 0x8007, mekd2_pia_w },
+	//	  { 0x8008, 0x8008, mekd2_cas_w },
+		{ 0x8020, 0x8023, mekd2_kbd_w },
+		{ 0xa000, 0xa07f, MWA_RAM },
+	//	{ 0xc000, 0xc7ff, MWA_RAM },	/* optional, set up in mekd2_init_machine */
+		{ 0xe000, 0xe3ff, MWA_ROM },	/* JBUG ROM */
+	MEMORY_END
 	
 	static InputPortPtr input_ports_mekd2 = new InputPortPtr(){ public void handler() { 
 		PORT_START(); 			/* IN0 keys row 0 */
@@ -194,7 +183,7 @@ public class mekd2
 				614400, /* 614.4 kHz */
 				readmem,writemem,null,null,
 				mekd2_interrupt, 1
-	        )
+			)
 		},
 		/* frames per second, VBL duration */
 		60, DEFAULT_60HZ_VBLANK_DURATION,
@@ -205,7 +194,7 @@ public class mekd2
 		/* video hardware (well, actually there was no video ;) */
 		600, 768, { 0, 600 - 1, 0, 768 - 1},
 		gfxdecodeinfo,
-		256*3,
+		21 + 32768,
 		256,
 		mekd2_init_colors,		 /* convert color prom */
 	
@@ -218,48 +207,57 @@ public class mekd2
 		/* sound hardware */
 		0,0,0,0,
 		new MachineSound[] {
-	        new MachineSound(
+			new MachineSound(
 				SOUND_DAC,
 				dac_interface
 			)
-	    }
+		}
 	);
 	
 	static RomLoadPtr rom_mekd2 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000,REGION_CPU1);
+		ROM_REGION(0x10000,REGION_CPU1,0);
 			ROM_LOAD("jbug.rom",    0xe000, 0x0400, 0xa2a56502);
-		ROM_REGION(128 * 24 * 3,REGION_GFX1);
+		ROM_REGION(128 * 24 * 3,REGION_GFX1,0);
 			/* space filled with 7segement graphics by mekd2_init_driver */
-		ROM_REGION( 24 * 18 * 3 * 2,REGION_GFX2);
+		ROM_REGION( 24 * 18 * 3 * 2,REGION_GFX2,0);
 			/* space filled with key icons by mekd2_init_driver */
 	ROM_END(); }}; 
 	
 	
 	
 	static const struct IODevice io_mekd2[] = {
-	    {
-	        IO_CARTSLOT,        /* type */
-	        1,                  /* count */
+		{
+			IO_CARTSLOT,		/* type */
+			1,					/* count */
 			"d2\0",             /* file extensions */
-	        NULL,               /* private */
-			mekd2_rom_id,		/* id */
+			IO_RESET_ALL,		/* reset if file changed */
+			0,
 			mekd2_rom_load, 	/* init */
 			NULL,				/* exit */
-	        NULL,               /* info */
-	        NULL,               /* open */
-	        NULL,               /* close */
-	        NULL,               /* status */
-	        NULL,               /* seek */
+			NULL,				/* info */
+			NULL,				/* open */
+			NULL,				/* close */
+			NULL,				/* status */
+			NULL,				/* seek */
 			NULL,				/* tell */
-	        NULL,               /* input */
-	        NULL,               /* output */
-	        NULL,               /* input_chunk */
-	        NULL                /* output_chunk */
-	    },
-	    { IO_END }
+			NULL,				/* input */
+			NULL,				/* output */
+			NULL,				/* input_chunk */
+			NULL				/* output_chunk */
+		},
+		{ IO_END }
 	};
 	
 	/*	  YEAR	NAME	  PARENT	MACHINE   INPUT 	INIT	  COMPANY	  FULLNAME */
 	CONS( 1977, mekd2,	   0,		mekd2,	  mekd2,	mekd2,	  "Motorola", "MEK6800D2" )
 	
+	#ifdef RUNTIME_LOADER
+	extern void mekd2_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"mekd2")==0) drivers[i]=&driver_mekd2;
+		}
+	}
+	#endif
 }

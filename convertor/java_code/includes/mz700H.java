@@ -20,7 +20,6 @@ public class mz700H
 	
 	/* from src/mess/machine/mz700.c */
 	extern extern extern 
-	extern int mz700_cassette_id(int id);
 	extern int mz700_cassette_init(int id);
 	extern void mz700_cassette_exit(int id);
 	
@@ -34,9 +33,7 @@ public class mz700H
 	extern char mz700_frame_message[64+1];
 	extern int mz700_frame_time;
 	
-	extern extern extern extern 
-	/* from src/mess/sndhrdw/mz700.c */
-	extern extern extern extern void mz700_sh_set_clock(int clock);
+	extern extern extern extern void mz700_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);
 	
 	/******************************************************************************
 	 *	Sharp MZ800

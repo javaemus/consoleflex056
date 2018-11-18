@@ -834,7 +834,7 @@ public class atari
 	 * Refresh screen bitmap.
 	 * Note: Actual drawing is done scanline wise during atari_interrupt
 	 ************************************************************************/
-	public static VhUpdatePtr atari_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void atari_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 		if( tv_artifacts != (readinputport(0) & 0x40) )
 		{
@@ -850,7 +850,7 @@ public class atari
 		}
 	    if (full_refresh != 0)
 			fillbitmap(Machine.scrbitmap, Machine.pens[0], &Machine.visible_area);
-	} };
+	}
 	
 	static renderer_function antic_renderer = antic_mode_0_xx;
 	
@@ -1008,6 +1008,7 @@ public class atari
 		int x, y;
 		UINT8 *src;
 		UINT32 *dst;
+		UINT32 scanline[4 + (HCHARS * 2) + 4];
 	
 		/* increment the scanline */
 	    if( ++antic.scanline == Machine.drv.screen_height )
@@ -1024,7 +1025,7 @@ public class atari
 	
 		y = antic.scanline - MIN_Y;
 		src = &antic.cclock[PMOFFSET - antic.hscrol_old + 12];
-		dst = (UINT32 *)&Machine.scrbitmap.line[y][12];
+		dst = scanline;
 	
 		if (tv_artifacts != 0)
 		{
@@ -1056,6 +1057,8 @@ public class atari
 		dst[1] = antic.color_lookup[PBK] | antic.color_lookup[PBK] << 16;
 		dst[2] = antic.color_lookup[PBK] | antic.color_lookup[PBK] << 16;
 		dst[3] = antic.color_lookup[PBK] | antic.color_lookup[PBK] << 16;
+	
+		draw_scanline8(Machine.scrbitmap, 12, y, sizeof(scanline), (const UINT8 *) scanline, Machine.pens, -1);
 	}
 	
 	#if VERBOSE

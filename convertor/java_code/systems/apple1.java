@@ -35,37 +35,33 @@ public class apple1
 	
 	/* memory w/r functions */
 	
-	static MemoryReadAddress apple1_readmem[] =
-	{
-		new MemoryReadAddress(0x0000, 0x1fff, MRA_RAM),
-		new MemoryReadAddress(0x2000, 0xcfff, MRA_NOP),
-		new MemoryReadAddress(0xd000, 0xd00f, MRA_NOP),
-		new MemoryReadAddress(0xd010, 0xd013, pia_0_r),
-		new MemoryReadAddress(0xd014, 0xfeff, MRA_NOP),
-		new MemoryReadAddress(0xff00, 0xffff, MRA_ROM),
-		new MemoryReadAddress(-1)
-	};
+	MEMORY_READ_START( apple1_readmem )
+		{0x0000, 0x1fff, MRA_RAM},
+		{0x2000, 0xcfff, MRA_NOP},
+		{0xd000, 0xd00f, MRA_NOP},
+		{0xd010, 0xd013, pia_0_r},
+		{0xd014, 0xfeff, MRA_NOP},
+		{0xff00, 0xffff, MRA_ROM},
+	MEMORY_END
 	
-	static MemoryWriteAddress apple1_writemem[] =
-	{
-		new MemoryWriteAddress(0x0000, 0x1fff, MWA_RAM),
-		new MemoryWriteAddress(0x2000, 0xcfff, MWA_NOP),
-		new MemoryWriteAddress(0xd000, 0xd00f, MWA_NOP),
-		new MemoryWriteAddress(0xd010, 0xd013, pia_0_w),
-		new MemoryWriteAddress(0xd014, 0xfeff, MWA_NOP),
-		new MemoryWriteAddress(0xff00, 0xffff, MWA_ROM),
-		new MemoryWriteAddress(-1)
-	};
+	MEMORY_WRITE_START( apple1_writemem )
+		{0x0000, 0x1fff, MWA_RAM},
+		{0x2000, 0xcfff, MWA_NOP},
+		{0xd000, 0xd00f, MWA_NOP},
+		{0xd010, 0xd013, pia_0_w},
+		{0xd014, 0xfeff, MWA_NOP},
+		{0xff00, 0xffff, MWA_ROM},
+	MEMORY_END
 	
 	/* graphics output */
 	
 	static GfxLayout apple1_charlayout = new GfxLayout
 	(
-		6, 8,
+		7, 8,
 		128,
 		1,
 		new int[] { 0 },
-		new int[] { 0, 1, 2, 3, 4, 5 },
+		new int[] { 7, 6, 5, 4, 3, 2, 1 },
 		new int[] { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 },
 		8 * 8
 	);
@@ -73,27 +69,26 @@ public class apple1
 	static GfxDecodeInfo apple1_gfxdecodeinfo[] =
 	{
 		new GfxDecodeInfo( REGION_GFX1, 0x0000, apple1_charlayout, 0, 1),
-		new GfxDecodeInfo( -1 )
-	};
+	MEMORY_END
 	
 	static unsigned char apple1_palette[] =
-	{
+	new GfxDecodeInfo(
 		0x00, 0x00, 0x00,	/* Black */
 		0x00, 0xff, 0x00	/* Green */
-	};
+	);
 	
 	static unsigned short apple1_colortable[] =
-	{
+	new GfxDecodeInfo(
 		0, 1
-	};
+	);
 	
 	static void apple1_init_palette (UBytePtr sys_palette,
 						unsigned short *sys_colortable,
 						const UBytePtr color_prom)
-	{
+	new GfxDecodeInfo(
 		memcpy (sys_palette, apple1_palette, sizeof (apple1_palette));
 		memcpy (sys_colortable, apple1_colortable, sizeof (apple1_colortable));
-	}
+	)
 	
 	/* keyboard input */
 	
@@ -182,9 +177,9 @@ public class apple1
 		1,
 		apple1_init_machine,
 		apple1_stop_machine,
-		40 * 6,
+		40 * 7,
 		24 * 8,
-		new rectangle( 0, 40 * 6 - 1, 0, 24 * 8 - 1 ),
+		new rectangle( 0, 40 * 7 - 1, 0, 24 * 8 - 1 ),
 		apple1_gfxdecodeinfo,
 		sizeof (apple1_palette) / 3,
 		sizeof (apple1_colortable),
@@ -198,10 +193,10 @@ public class apple1
 	);
 	
 	static RomLoadPtr rom_apple1 = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x10000, REGION_CPU1);
+		ROM_REGION(0x10000, REGION_CPU1,0);
 		ROM_LOAD("apple1.rom", 0xff00, 0x0100, 0xa30b6af5);
-		ROM_REGION(0x0400, REGION_GFX1);
-		ROM_LOAD("apple1.chr", 0x0000, 0x0400, 0xbe70bb85);
+		ROM_REGION(0x0400, REGION_GFX1,0);
+		ROM_LOAD("apple1.vid", 0x0000, 0x0400, 0xa3f2d66f);
 	ROM_END(); }}; 
 	
 	static	const	struct	IODevice io_apple1[] = {

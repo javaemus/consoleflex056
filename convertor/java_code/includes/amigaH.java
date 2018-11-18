@@ -90,14 +90,15 @@ extern void amiga_reload_sprite_info( int spritenum );
 ***************************************************************************/
 
 /* from machine/amiga.c */
-extern READ_HANDLER  ( amiga_cia_r );
-extern WRITE_HANDLER ( amiga_cia_w );
-extern READ_HANDLER  ( amiga_custom_r );
-extern WRITE_HANDLER ( amiga_custom_w );
+extern READ16_HANDLER  ( amiga_cia_r );
+extern WRITE16_HANDLER ( amiga_cia_w );
+extern READ16_HANDLER  ( amiga_custom_r );
+extern WRITE16_HANDLER ( amiga_custom_w );
 extern extern extern int amiga_fdc_init( int id );
 
 /* from vidhrdw/amiga.c */
-extern extern extern extern 
+extern void amiga_vh_screenrefresh( struct mame_bitmap *bitmap, int full_refresh );
+extern extern extern 
 
 /* from vidhrdw */
 extern void copper_setpc( unsigned long pc );

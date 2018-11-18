@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "snprintf.h"
 #include <ctype.h>
 #include <string.h>
 #include "driver.h"
@@ -7,7 +8,7 @@
 
 #define VERBOSE_DBG 1				   /* general debug messages */
 #include "includes/cbm.h"
-#include "includes/c1551.h"
+#include "includes/cbmserb.h"
 #include "includes/cbmieeeb.h"
 
 #include "includes/cbmdrive.h"
@@ -343,39 +344,39 @@ static int c1551_fs_command (CBM_Drive * c1551, unsigned char *name)
 	char n[32];
 
 	strcpy(n,(char*)name);
-	fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE_R, 0);
+	fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE, 0);
 
 	if (!fp)
 	{
 		for (i = 0; n[i] != 0; i++)
 			n[i] = tolower (n[i]);
-		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE, 0);
 	}
 	if (!fp)
 	{
 		strcpy(n, (char*)name);
 		strcat ((char *) n, ".prg");
 
-		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE, 0);
 	}
 	if (!fp)
 	{
 		for (i = 0; n[i] != 0; i++)
 			n[i] = tolower (n[i]);
-		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE, 0);
 	}
 	if (!fp)
 	{
 		type=1;
 		strcpy(n,(char*)name);
 		strcat(n,".p00");
-		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE, 0);
 	}
 	if (!fp)
 	{
 		for (i = 0; n[i] != 0; i++)
 			n[i] = tolower (n[i]);
-		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE_R, 0);
+		fp = (FILE*)osd_fopen (Machine->gamedrv->name, n, OSD_FILETYPE_IMAGE, 0);
 	}
 	if (fp)
 	{

@@ -35,7 +35,7 @@
 	run on it!!!!!!!!!!!!!!
 
     Later systems had:
-		- black/white monitor, 
+		- black/white monitor,
 		- dedicated printer was removed, and support for any printer was added
 		- 3" internal drive replaced by a 3.5" drive
 
@@ -86,7 +86,7 @@
   compatible with the previous models (though documents ARE compatible)"
 
 
-  TODO: 
+  TODO:
   - Printer hardware emulation (8256 etc)
   - Parallel port emulation (9512, 9512+, 10)
   - emulation of serial hardware
@@ -109,7 +109,7 @@ void pcw_fdc_interrupt(int);
 void *pcw_int_timer = NULL;
 
 // pointer to pcw ram
-unsigned char *pcw_ram;
+unsigned char *pcw_ram = NULL;
 unsigned int roller_ram_addr;
 // flag to indicate if boot-program is enabled/disabled
 static int 	pcw_boot;
@@ -195,6 +195,8 @@ void pcw_timer_interrupt(int dummy)
 	pcw_interrupt_handle();
 }
 
+static int previous_fdc_int_state;
+
 /* set/clear fdc interrupt */
 void	pcw_trigger_fdc_int(void)
 {
@@ -207,19 +209,20 @@ void	pcw_trigger_fdc_int(void)
 		/* attach fdc to nmi */
 		case 0:
 		{
-			if (state)
+			/* I'm assuming that the nmi is edge triggered */
+			/* a interrupt from the fdc will cause a change in line state, and
+			the nmi will be triggered, but when the state changes because the int
+			is cleared this will not cause another nmi */
+			/* I'll emulate it like this to be sure */
+
+			if (state!=previous_fdc_int_state)
 			{
-#ifdef VERBOSE
-				logerror("asserting nmi\r\n");
-#endif
-				cpu_set_nmi_line(0, ASSERT_LINE);
-			}
-			else
-			{
-#ifdef VERBOSE
-				logerror("clearing nmi\r\n");
-#endif
-				cpu_set_nmi_line(0, CLEAR_LINE);
+				if (state)
+				{
+					/* I'll pulse it because if I used hold-line I'm not sure
+					it would clear - to be checked */
+					cpu_set_nmi_line(0, PULSE_LINE);
+				}
 			}
 		}
 		break;
@@ -236,6 +239,8 @@ void	pcw_trigger_fdc_int(void)
 		default:
 			break;
 	}
+
+	previous_fdc_int_state = state;
 }
 
 /* fdc interrupt callback. set/clear fdc int */
@@ -261,8 +266,7 @@ void pcw_fdc_interrupt(int state)
   block 3 could be paged into any bank, and this explains the
   setup of the memory below.
  */
-static struct MemoryReadAddress readmem_pcw[] =
-{
+MEMORY_READ_START( readmem_pcw )
 	{0x0000, 0x03fef, MRA_BANK1},
 	{0x3ff0, 0x03fff, MRA_BANK2},
 
@@ -274,21 +278,16 @@ static struct MemoryReadAddress readmem_pcw[] =
 
 	{0xC000, 0x0ffef, MRA_BANK7},
 	{0xfff0, 0x0ffff, MRA_BANK8},
-
-	{0x010000, 0x013fff, MRA_ROM},	   /* OS */
-	{-1}							   /* end of table */
-};
+MEMORY_END
 
 /* AFAIK the keyboard data is not writeable. So we don't need
 the same memory layout as above */
-static struct MemoryWriteAddress writemem_pcw[] =
-{
+MEMORY_WRITE_START( writemem_pcw )
 	{0x00000, 0x03fff, MWA_BANK9},
 	{0x04000, 0x07fff, MWA_BANK10},
 	{0x08000, 0x0bfff, MWA_BANK11},
 	{0x0c000, 0x0ffff, MWA_BANK12},
-	{-1}							   /* end of table */
-};
+MEMORY_END
 
 /* PCW keyboard is mapped into memory */
 READ_HANDLER(pcw_keyboard_r)
@@ -306,7 +305,7 @@ static void pcw_update_memory_block(int block, int bank)
 	{
 		/* when upper 16 bytes are accessed use keyboard read
 		handler */
-		cpu_setbankhandler_r((block<<1)+2, pcw_keyboard_r);
+		memory_set_bankhandler_r((block<<1)+2, 0, pcw_keyboard_r);
 	}
 	else
 	{
@@ -337,7 +336,7 @@ static void pcw_update_memory_block(int block, int bank)
 			break;
 		}
 
-		cpu_setbankhandler_r((block<<1)+2, mra);
+		memory_set_bankhandler_r((block<<1)+2, 0, mra);
 	}
 }
 
@@ -491,7 +490,7 @@ READ_HANDLER(pcw_interrupt_counter_r)
 WRITE_HANDLER(pcw_bank_select_w)
 {
 #ifdef VERBOSE
-	logerror("BANK: %2x %x\r\n",offset, data);
+	logerror("BANK: %2x %x\n",offset, data);
 #endif
 	pcw_banks[offset] = data;
 
@@ -531,7 +530,7 @@ WRITE_HANDLER(pcw_vdu_video_control_register_w)
 WRITE_HANDLER(pcw_system_control_w)
 {
 #ifdef VERBOSE
-	logerror("SYSTEM CONTROL: %d\r\n",data);
+	logerror("SYSTEM CONTROL: %d\n",data);
 #endif
 
 	switch (data)
@@ -651,23 +650,20 @@ WRITE_HANDLER(pcw_system_control_w)
 		/* disc motor on */
 		case 9:
 		{
-                        floppy_drive_set_motor_state(0,1);
-                        floppy_drive_set_motor_state(1,1);
-                        floppy_drive_set_ready_state(0,1,1);
-                        floppy_drive_set_ready_state(1,1,1);
-
-                }
+			floppy_drive_set_motor_state(0,1);
+			floppy_drive_set_motor_state(1,1);
+			floppy_drive_set_ready_state(0,1,1);
+			floppy_drive_set_ready_state(1,1,1);
+		}
 		break;
 
 		/* disc motor off */
 		case 10:
 		{
-                        floppy_drive_set_motor_state(0,0);
-                        floppy_drive_set_motor_state(1,0);
-                        floppy_drive_set_ready_state(0,1,1);
-                        floppy_drive_set_ready_state(1,1,1);
-
-
+			floppy_drive_set_motor_state(0,0);
+			floppy_drive_set_motor_state(1,0);
+			floppy_drive_set_ready_state(0,1,1);
+			floppy_drive_set_ready_state(1,1,1);
 		}
 		break;
 
@@ -698,23 +694,46 @@ READ_HANDLER(pcw_system_status_r)
 the PCW custom ASIC */
 READ_HANDLER(pcw_expansion_r)
 {
-	/* spectravideo joystick */
-	if (offset == (0x0e0-0x080))
+	logerror("pcw expansion r: %04x\n",offset+0x080);
+
+	switch (offset-0x080)
 	{
-		if (readinputport(16) & 0x020)
+		case 0x0e0:
 		{
-			return readinputport(17);
+			/* spectravideo joystick */
+			if (readinputport(16) & 0x020)
+			{
+				return readinputport(17);
+			}
+			else
+			{
+				return 0x0ff;
+			}
 		}
-		else
+
+		case 0x09f:
 		{
+
+			/* kempston joystick */
+			return readinputport(18);
+		}
+
+		case 0x0e1:
+		{
+			return 0x07f;
+		}
+
+		case 0x085:
+		{
+			return 0x0fe;
+		}
+
+		case 0x087:
+		{
+
 			return 0x0ff;
 		}
-	}
 
-	/* kempston joystick */
-	if (offset == (0x09f-0x080))
-	{
-		return readinputport(18);
 	}
 
 	/* result from floating bus/no peripherial at this port */
@@ -725,6 +744,13 @@ READ_HANDLER(pcw_expansion_r)
 the PCW custom ASIC */
 WRITE_HANDLER(pcw_expansion_w)
 {
+	logerror("pcw expansion w: %04x %02x\n",offset+0x080, data);
+
+
+
+
+
+
 }
 
 READ_HANDLER(pcw_fdc_r)
@@ -769,42 +795,43 @@ READ_HANDLER(pcw_printer_status_r)
 /* TODO: Implement parallel port! */
 READ_HANDLER(pcw9512_parallel_r)
 {
-	return 0x0ff;
+	if (offset==1)
+	{
+		return 0xff^0x020;
+	}
+
+	logerror("pcw9512 parallel r: offs: %04x %02x\n",offset);
+	return 0x00;
 }
 
 /* TODO: Implement parallel port! */
 WRITE_HANDLER(pcw9512_parallel_w)
 {
+	logerror("pcw9512 parallel w: offs: %04x data: %02x\n",offset,data);
 }
 
 
 
-static struct IOReadPort readport_pcw[] =
-{
+PORT_READ_START( readport_pcw )
 	{0x000, 0x07f, pcw_fdc_r},
 	{0x080, 0x0ef, pcw_expansion_r},
 	{0x0f4, 0x0f4, pcw_interrupt_counter_r},
 	{0x0f8, 0x0f8, pcw_system_status_r},
 	{0x0fc, 0x0fc, pcw_printer_data_r},
 	{0x0fd, 0x0fd, pcw_printer_status_r},
-	{-1}							   /* end of table */
-};
+PORT_END
 
 
-#if 0 /* unused */
-static struct IOReadPort readport_pcw9512[] =
-{
+/* unused */
+PORT_READ_START( readport_pcw9512 )
 	{0x000, 0x07f, pcw_fdc_r},
 	{0x080, 0x0ef, pcw_expansion_r},
 	{0x0f4, 0x0f4, pcw_interrupt_counter_r},
 	{0x0f8, 0x0f8, pcw_system_status_r},
 	{0x0fc, 0x0fd, pcw9512_parallel_r},
-	{-1}							   /* end of table */
-};
-#endif
+PORT_END
 
-static struct IOWritePort writeport_pcw[] =
-{
+PORT_WRITE_START( writeport_pcw )
 	{0x000, 0x07f, pcw_fdc_w},
 	{0x080, 0x0ef, pcw_expansion_w},
 	{0x0f0, 0x0f3, pcw_bank_select_w},
@@ -816,13 +843,11 @@ static struct IOWritePort writeport_pcw[] =
 
 	{0x0fc, 0x0fd, pcw_printer_data_w},
 	{0x0fd, 0x0fd, pcw_printer_command_w},
-	{-1}							   /* end of table */
-};
+PORT_END
 
 
-#if 0 /* unused */
-static struct IOWritePort writeport_pcw9512[] =
-{
+ /* unused */
+PORT_WRITE_START( writeport_pcw9512 )
 	{0x000, 0x07f, pcw_fdc_w},
 	{0x080, 0x0ef, pcw_expansion_w},
 	{0x0f0, 0x0f3, pcw_bank_select_w},
@@ -833,33 +858,32 @@ static struct IOWritePort writeport_pcw9512[] =
 	{0x0f8, 0x0f8, pcw_system_control_w},
 
 	{0x0fc, 0x0fd, pcw9512_parallel_w},
-	{-1}							   /* end of table */
-};
-#endif
+PORT_END
+
 
 void pcw_init_machine(void)
 {
 
 	pcw_boot = 1;
 
-	cpu_setbankhandler_r(1, MRA_BANK1);
-	cpu_setbankhandler_r(2, MRA_BANK2);
-	cpu_setbankhandler_r(3, MRA_BANK3);
-	cpu_setbankhandler_r(4, MRA_BANK4);
-	cpu_setbankhandler_r(5, MRA_BANK5);
-	cpu_setbankhandler_r(6, MRA_BANK6);
-	cpu_setbankhandler_r(7, MRA_BANK7);
-	cpu_setbankhandler_r(8, MRA_BANK8);
+/*	memory_set_bankhandler_r(1, 0, MRA_BANK1);
+	memory_set_bankhandler_r(2, 0, MRA_BANK2);
+	memory_set_bankhandler_r(3, 0, MRA_BANK3);
+	memory_set_bankhandler_r(4, 0, MRA_BANK4);
+	memory_set_bankhandler_r(5, 0, MRA_BANK5);
+	memory_set_bankhandler_r(6, 0, MRA_BANK6);
+	memory_set_bankhandler_r(7, 0, MRA_BANK7);
+	memory_set_bankhandler_r(8, 0, MRA_BANK8);
 
-	cpu_setbankhandler_w(9, MWA_BANK9);
-	cpu_setbankhandler_w(10, MWA_BANK10);
-	cpu_setbankhandler_w(11, MWA_BANK11);
-	cpu_setbankhandler_w(12, MWA_BANK12);
+	memory_set_bankhandler_w(9, 0, MWA_BANK9);
+	memory_set_bankhandler_w(10, 0, MWA_BANK10);
+	memory_set_bankhandler_w(11, 0, MWA_BANK11);
+	memory_set_bankhandler_w(12, 0, MWA_BANK12);
+*/
 
+	cpu_irq_line_vector_w(0, 0,0x0ff);
 
-	cpu_0_irq_line_vector_w(0, 0x0ff);
-
-	nec765_init(&pcw_nec765_interface,NEC765A);
+    nec765_init(&pcw_nec765_interface,NEC765A);
 
 
 	/* ram paging is actually undefined at power-on */
@@ -878,27 +902,23 @@ void pcw_init_machine(void)
 	pcw_system_status &= ~((1<<6) | (1<<5) | (1<<4));
 
 	pcw_interrupt_counter = 0;
+	fdc_interrupt_code = 0;
 
 	floppy_drive_set_geometry(0, FLOPPY_DRIVE_DS_80);
-	floppy_drive_set_geometry(1, FLOPPY_DRIVE_DS_80);
-        floppy_drive_set_flag_state(0, FLOPPY_DRIVE_PRESENT, 1);
-        floppy_drive_set_flag_state(1, FLOPPY_DRIVE_PRESENT, 1);
-
 
 	roller_ram_offset = 0;
 
 	pcw_int_timer = timer_pulse(TIME_IN_HZ(300), 0, pcw_timer_interrupt);
 
-        beep_set_state(0,0);
-        beep_set_frequency(0,3750);
+	beep_set_state(0,0);
+	beep_set_frequency(0,3750);
 }
 
 void pcw_init_memory(int size)
 {
-	pcw_ram = NULL;
-
 	switch (size)
 	{
+		default:
 		case 256:
 		{
 			/* 256k ram */
@@ -906,7 +926,7 @@ void pcw_init_memory(int size)
 			pcw_ram = malloc(256*1024);
 		}
 		break;
-	
+
 		case 512:
 		{
 			pcw_ram_size = 2;
@@ -919,31 +939,38 @@ void pcw_init_memory(int size)
 void	init_pcw8256(void)
 {
 	pcw_init_memory(256);
+	pcw_init_machine();
 }
 
 void	init_pcw8512(void)
 {
 	pcw_init_memory(512);
+	pcw_init_machine();
 }
 
 void	init_pcw9256(void)
 {
 	pcw_init_memory(256);
+	pcw_init_machine();
 }
 
 void	init_pcw9512(void)
 {
 	pcw_init_memory(512);
+	pcw_init_machine();
 }
 
 void	init_pcw10(void)
 {
 	pcw_init_memory(512);
+	pcw_init_machine();
 }
 
 
 void pcw_shutdown_machine(void)
 {
+	nec765_stop();
+
 	if (pcw_ram!=NULL)
 	{
 		free(pcw_ram);
@@ -1156,7 +1183,8 @@ INPUT_PORTS_END
 
 static struct beep_interface pcw_beep_interface =
 {
-        1
+	1,
+	{100}
 };
 
 /* PCW8256, PCW8512, PCW9256 */
@@ -1173,14 +1201,14 @@ static struct MachineDriver machine_driver_pcw =
 			readport_pcw,		   /* IOReadPort */
 			writeport_pcw,		   /* IOWritePort */
 			0,
-			1,
+			0,
 			0, 0,
 		},
 	},
 	50, 							   /* frames per second */
 	DEFAULT_REAL_60HZ_VBLANK_DURATION /*DEFAULT_60HZ_VBLANK_DURATION*/,	   /* vblank duration */
 	1,								   /* cpu slices per frame */
-	pcw_init_machine,			   /* init machine */
+	NULL,			   /* init machine */
 	pcw_shutdown_machine,
 	/* video hardware */
 	PCW_SCREEN_WIDTH,			   /* screen width */
@@ -1219,17 +1247,17 @@ static struct MachineDriver machine_driver_pcw9512 =
 			4000000,	/* clock supplied to chip, but in reality it is 3,4Mhz */
 			readmem_pcw,		   /* MemoryReadAddress */
 			writemem_pcw,		   /* MemoryWriteAddress */
-			readport_pcw,		   /* IOReadPort */
-			writeport_pcw,		   /* IOWritePort */
+			readport_pcw9512,		   /* IOReadPort */
+			writeport_pcw9512,		   /* IOWritePort */
 			0,
-			1,
+			0,
 			0, 0,
 		},
 	},
 	50, 							   /* frames per second */
 	DEFAULT_REAL_60HZ_VBLANK_DURATION /*DEFAULT_60HZ_VBLANK_DURATION*/,	   /* vblank duration */
 	1,								   /* cpu slices per frame */
-	pcw_init_machine,			   /* init machine */
+	NULL,			   /* init machine */
 	pcw_shutdown_machine,
 	/* video hardware */
 	PCW_SCREEN_WIDTH,			   /* screen width */
@@ -1264,13 +1292,13 @@ static struct MachineDriver machine_driver_pcw9512 =
 
 ***************************************************************************/
 
-/* I am loading the boot-program outside of the Z80 memory area, because it 
+/* I am loading the boot-program outside of the Z80 memory area, because it
 is banked. */
 
 // for now all models use the same rom
 #define ROM_PCW(model) \
 ROM_START(model) \
-	ROM_REGION(0x014000, REGION_CPU1) \
+	ROM_REGION(0x014000, REGION_CPU1,0) \
 	ROM_LOAD("pcwboot.bin", 0x010000, 608, BADCRC(0x679b0287)) \
 ROM_END \
 
@@ -1281,6 +1309,14 @@ ROM_PCW(pcw9512)
 ROM_PCW(pcw10)
 
 
+int pcw_floppy_init(int id)
+{
+	if (device_filename(IO_FLOPPY, id)==NULL)
+		return INIT_PASS;
+
+	return dsk_floppy_load(id);
+}
+
 static const struct IODevice io_pcw[] =
 {
 	{
@@ -1288,13 +1324,13 @@ static const struct IODevice io_pcw[] =
 		2,					/* count */
 		"dsk\0",            /* file extensions */
 		IO_RESET_NONE,		/* reset if file changed */
-		dsk_floppy_id,		/* id */
-		dsk_floppy_load,	/* init */
+		0,
+		pcw_floppy_init,	/* init */
 		dsk_floppy_exit,	/* exit */
 		NULL,				/* info */
 		NULL,				/* open */
 		NULL,				/* close */
-		NULL,				/* status */
+                floppy_status,                           /* status */
 		NULL,				/* seek */
 		NULL,				/* tell */
 		NULL,				/* input */

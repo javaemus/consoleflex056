@@ -1,9 +1,6 @@
 #ifndef __VIC6567_H_
 #define __VIC6567_H_
 
-
-#include "praster.h"
-
 /*
  * if you need this chip in another mame/mess emulation than let it me know
  * I will split this from the c64 driver
@@ -17,10 +14,6 @@
 /* dma_read: videochip fetched 1 byte data from system bus */
 extern void vic6567_init (int vic2e, int pal, int (*dma_read) (int),
 						  int (*dma_read_color) (int), void (*irq) (int));
-
-extern void vic4567_init (int pal, int (*dma_read) (int),
-						  int (*dma_read_color) (int), void (*irq) (int),
-						  void (*param_port_changed)(int));
 
 extern void vic2_set_rastering(int onoff);
 
@@ -54,11 +47,10 @@ extern void vic2_set_rastering(int onoff);
 
 extern int vic2_vh_start (void);
 extern void vic2_vh_stop (void);
-extern void vic2_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh);
+extern void vic2_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh);
 extern int vic2_raster_irq (void);
 
 extern unsigned char vic2_palette[16 * 3];
-extern unsigned char vic3_palette[0x100 * 3];
 
 /* to be inserted in GameDriver-Structure */
 
@@ -74,12 +66,8 @@ int vic2e_k0_r (void);
 int vic2e_k1_r (void);
 int vic2e_k2_r (void);
 
-WRITE_HANDLER( vic3_palette_w );
-
 /* to be called each vertical retrace */
 extern int vic2_frame_interrupt (void);
-
-extern void (*vic2_display_state)(PRASTER *This); /* calls machine after rastering frame*/
 
 /* private area */
 

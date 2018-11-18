@@ -33,25 +33,20 @@ Aquarius Memory map
 
 /* port i/o functions */
 
-static	struct	IOReadPort	aquarius_readport[] =
-{
+PORT_READ_START( aquarius_readport )
 	{0xfe, 0xfe, aquarius_port_fe_r},
 	{0xff, 0xff, aquarius_port_ff_r},
-	{-1}
-};
+PORT_END
 
-static	struct	IOWritePort	aquarius_writeport[] =
-{
+PORT_WRITE_START( aquarius_writeport )
 	{0xfc, 0xfc, aquarius_port_fc_w},
 	{0xfe, 0xfe, aquarius_port_fe_w},
 	{0xff, 0xff, aquarius_port_ff_w},
-	{-1}
-};
+PORT_END
 
 /* Memory w/r functions */
 
-static	struct	MemoryReadAddress	aquarius_readmem[] =
-{
+MEMORY_READ_START( aquarius_readmem )
 	{0x0000, 0x1fff, MRA_ROM},
 	{0x2000, 0x2fff, MRA_NOP},
 	{0x3000, 0x37ff, videoram_r},
@@ -59,19 +54,16 @@ static	struct	MemoryReadAddress	aquarius_readmem[] =
 	{0x4000, 0x7fff, MRA_NOP},
 	{0x8000, 0xffff, MRA_NOP},
 
-	{-1}
-};
+MEMORY_END
 
-static	struct	MemoryWriteAddress	aquarius_writemem[] =
-{
+MEMORY_WRITE_START( aquarius_writemem )
 	{0x0000, 0x1fff, MWA_ROM},
 	{0x2000, 0x2fff, MWA_NOP},
 	{0x3000, 0x37ff, videoram_w, &videoram, &videoram_size},
 	{0x3800, 0x3fff, MWA_RAM},
 	{0x4000, 0x7fff, MWA_NOP},
 	{0x8000, 0xffff, MWA_NOP},
-	{-1}
-};
+MEMORY_END
 
 /* graphics output */
 
@@ -90,27 +82,26 @@ struct	GfxLayout	aquarius_charlayout =
 static	struct	GfxDecodeInfo	aquarius_gfxdecodeinfo[] =
 {
 	{ 1, 0x0000, &aquarius_charlayout, 0, 256},
-	{-1}
-};
+MEMORY_END
 
 static	unsigned	char	aquarius_palette[] =
 {
 	0x00, 0x00, 0x00,	/* Black */
-	0x00, 0x00, 0xff,	/* Blue */
-	0x00, 0xff, 0x00,	/* Green */
-	0xff, 0x00, 0x00,	/* Red */
-	0x00, 0xff, 0xff,	/* Cyan*/
-	0xff, 0x00, 0xff,	/* Magenta */
-	0xff, 0xff, 0x00,	/* Yellow */
-	0x55, 0x55, 0x55,	/* Dark Grey */
-	0x80, 0x80, 0xff,	/* */
-	0x80, 0xff, 0x80,	/* */
-	0xff, 0x80, 0x80,	/* */
-	0x80, 0xff, 0xff,	/* */
-	0xff, 0x80, 0xff,	/* */
-	0xff, 0xff, 0x80,	/* */
-	0xaa, 0xaa, 0xaa,	/* Light Grey */
+	0xff, 0x7f, 0x7f,	/* Red */
+	0x7f, 0xff, 0x7f,	/* Green */
+	0xff, 0xff, 0x7f,	/* Yellow */
+	0x7f, 0x7f, 0xff,	/* Blue */
+	0xff, 0x7f, 0xff,	/* Magenta */
+	0x7f, 0xff, 0xff,	/* Cyan */
 	0xff, 0xff, 0xff,	/* White */
+	0x00, 0x00, 0x00,	/* Black */
+	0x7f, 0x00, 0x00,	/* Dark Red */
+	0x00, 0x7f, 0x00,	/* Dark Green */
+	0x7f, 0x7f, 0x00,	/* Dark Yellow */
+	0x00, 0x00, 0x7f,	/* Dark Blue */
+	0x7f, 0x00, 0x7f,	/* Dark Magenta */
+	0x00, 0x7f, 0x7f,	/* Dark Cyan */
+	0x7f, 0x7f, 0x7f,	/* Grey */
 };
 
 static	unsigned	short	aquarius_colortable[] =
@@ -273,9 +264,9 @@ static	struct	MachineDriver	machine_driver_aquarius =
 };
 
 ROM_START(aquarius)
-	ROM_REGION(0x10000, REGION_CPU1)
+	ROM_REGION(0x10000, REGION_CPU1,0)
 	ROM_LOAD("aq2.rom", 0x0000, 0x2000, 0xa2d15bcf)
-	ROM_REGION(0x0800, REGION_GFX1)
+	ROM_REGION(0x0800, REGION_GFX1,0)
 	ROM_LOAD("aq2.chr", 0x0000, 0x0800, BADCRC(0x0b3edeed))
 ROM_END
 
@@ -285,4 +276,4 @@ static	const	struct	IODevice	io_aquarius[] =
 };
 
 /*		YEAR	NAME		PARENT		MACHINE		INPUT		INIT	COMPANY		FULLNAME */
-COMPX(	1983,	aquarius,	0,			aquarius,	aquarius,	0,		"Mattel",	"Aquarius", GAME_WRONG_COLORS )
+COMP(	1983,	aquarius,	0,			aquarius,	aquarius,	0,		"Mattel",	"Aquarius" )

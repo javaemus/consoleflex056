@@ -60,6 +60,7 @@ public class nec765H
 	/* reset pin of nec765 */
 	void	nec765_set_reset_state(int);
 	
+	/* stop emulation and clean-up */
 	
 	/*********************/
 	/* STATUS REGISTER 1 */

@@ -26,32 +26,21 @@ public class trs80
 	
 	UINT8 trs80_port_ff = 0;
 	
-	#define IRQ_TIMER       0x80
-	#define IRQ_FDC         0x40
+	#define IRQ_TIMER		0x80
+	#define IRQ_FDC 		0x40
 	static	UINT8			irq_status = 0;
 	
-	#define MAX_LUMPS       192     /* crude storage units - don't now much about it */
-	#define MAX_GRANULES    8       /* lumps consisted of granules.. aha */
-	#define MAX_SECTORS     5       /* and granules of sectors */
+	#define MAX_LUMPS		192 	/* crude storage units - don't now much about it */
+	#define MAX_GRANULES	8		/* lumps consisted of granules.. aha */
+	#define MAX_SECTORS 	5		/* and granules of sectors */
 	
-	/* this indicates whether the floppy images geometry shall be calculated */
-	static UINT8 first_fdc_access = 1;
-	static UINT8 motor_drive = 0;				/* currently running drive */
-	static short motor_count = 0;				/* time out for motor in frames */
-	static int flop_specified[4] = {0,};		/* filenames specified for the images? */
-	static UINT8 tracks[4] = {0, }; 			/* total tracks count per drive */
-	static UINT8 heads[4] = {0, };				/* total heads count per drive */
-	static UINT8 spt[4] = {0, };				/* sector per track count per drive */
 	#if USE_TRACK
 	static UINT8 track[4] = {0, };				/* current track per drive */
 	#endif
-	static UINT8 head[4] = {0, };				/* current head per drive */
+	static UINT8 head;							 /* current head per drive */
 	#if USE_SECTOR
 	static UINT8 sector[4] = {0, }; 			/* current sector per drive */
 	#endif
-	static short dir_sector[4] = {0, }; 		/* first directory sector (aka DDSL) */
-	static short dir_length[4] = {0, }; 		/* length of directory in sectors (aka DDGA) */
-	
 	static UINT8 irq_mask = 0;
 	
 	static UINT8 *cas_buff = NULL;
@@ -67,14 +56,14 @@ public class trs80
 	/* tape buffer for the first eight bytes at write (to extract a filename) */
 	static UINT8 tape_buffer[8];
 	
-	static int tape_count = 0;      /* file offset within tape file */
-	static int put_bit_count = 0;   /* number of sync and data bits that were written */
-	static int get_bit_count = 0;   /* number of sync and data bits to read */
-	static int tape_bits = 0;       /* sync and data bits mask */
-	static int tape_time = 0;       /* time in cycles for the next bit at read */
-	static int in_sync = 0;         /* flag if writing to tape detected the sync header A5 already */
-	static int put_cycles = 0;      /* cycle count at last output port change */
-	static int get_cycles = 0;      /* cycle count at last input port read */
+	static int tape_count = 0;		/* file offset within tape file */
+	static int put_bit_count = 0;	/* number of sync and data bits that were written */
+	static int get_bit_count = 0;	/* number of sync and data bits to read */
+	static int tape_bits = 0;		/* sync and data bits mask */
+	static int tape_time = 0;		/* time in cycles for the next bit at read */
+	static int in_sync = 0; 		/* flag if writing to tape detected the sync header A5 already */
+	static int put_cycles = 0;		/* cycle count at last output port change */
+	static int get_cycles = 0;		/* cycle count at last input port read */
 	
 	int trs80_videoram_r(int offset);
 	void trs80_videoram_w(int offset, int data);
@@ -88,32 +77,32 @@ public class trs80
 	public static InitDriverPtr init_trs80 = new InitDriverPtr() { public void handler() 
 	{
 		UINT8 *FNT = memory_region(REGION_GFX1);
-	    int i, y;
+		int i, y;
 	
-	    for( i = 0x000; i < 0x080; i++ )
-	    {
+		for( i = 0x000; i < 0x080; i++ )
+		{
 			/* copy eight lines from the character generator */
-	        for (y = 0; y < 8; y++)
+			for (y = 0; y < 8; y++)
 				FNT[i*FH+y] = FNT[0x0800+i*8+y] << 3;
 			/* wipe out the lower lines (no descenders!) */
 			for (y = 8; y < FH; y++)
 				FNT[i*FH+y] = 0;
-	    }
+		}
 		/* setup the 2x3 chunky block graphics (two times 64 characters) */
 		for( i = 0x080; i < 0x100; i++ )
-	    {
-	        UINT8 b0, b1, b2, b3, b4, b5;
-	        b0 = (i & 0x01) ? 0xe0 : 0x00;
-	        b1 = (i & 0x02) ? 0x1c : 0x00;
-	        b2 = (i & 0x04) ? 0xe0 : 0x00;
-	        b3 = (i & 0x08) ? 0x1c : 0x00;
-	        b4 = (i & 0x10) ? 0xe0 : 0x00;
-	        b5 = (i & 0x20) ? 0x1c : 0x00;
+		{
+			UINT8 b0, b1, b2, b3, b4, b5;
+			b0 = (i & 0x01) ? 0xe0 : 0x00;
+			b1 = (i & 0x02) ? 0x1c : 0x00;
+			b2 = (i & 0x04) ? 0xe0 : 0x00;
+			b3 = (i & 0x08) ? 0x1c : 0x00;
+			b4 = (i & 0x10) ? 0xe0 : 0x00;
+			b5 = (i & 0x20) ? 0x1c : 0x00;
 	
 			FNT[i*FH+ 0] = FNT[i*FH+ 1] = FNT[i*FH+ 2] = FNT[i*FH+ 3] = b0 | b1;
 			FNT[i*FH+ 4] = FNT[i*FH+ 5] = FNT[i*FH+ 6] = FNT[i*FH+ 7] = b2 | b3;
 			FNT[i*FH+ 8] = FNT[i*FH+ 9] = FNT[i*FH+10] = FNT[i*FH+11] = b4 | b5;
-	    }
+		}
 	} };
 	
 	public static timer_callback cas_copy_callback = new timer_callback() { public void handler(int param) 
@@ -161,23 +150,9 @@ public class trs80
 		cpu_set_reg(Z80_PC, entry);
 	} };
 	
-	int trs80_cas_id(int id)
-	{
-		void *file = image_fopen(IO_CASSETTE,id,OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
-		if (file != 0)
-		{
-			UINT8 buffer[8];
-			osd_fread(file, buffer, 8);
-			osd_fclose(file);
-			if (buffer[1] == 0x55)	/* SYSTEM tape */
-				return 1;
-		}
-	    return 0;
-	}
-	
 	int trs80_cas_init(int id)
 	{
-		void *file = image_fopen(IO_CASSETTE,id,OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+		void *file = image_fopen(IO_CASSETTE,id,OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		if (file != 0)
 		{
 			cas_size = osd_fsize(file);
@@ -204,7 +179,7 @@ public class trs80
 				cas_size = 0;
 			}
 		}
-	    return 0;
+		return 0;
 	}
 	
 	void trs80_cas_exit(int id)
@@ -263,7 +238,7 @@ public class trs80
 					temp = cmd_buff[offs++];
 					temp += 256 * cmd_buff[offs++];
 					LOG(("trs80_cmd_load 2nd entry ($%02X) at $%04X ignored\n", data, temp));
-	            }
+				}
 				cmd_size -= 3;
 				break;
 			default:
@@ -274,14 +249,9 @@ public class trs80
 		cpu_set_reg(Z80_PC, entry);
 	} };
 	
-	int trs80_cmd_id(int id)
-	{
-	    return 0;
-	}
-	
 	int trs80_cmd_init(int id)
 	{
-		void *file = image_fopen(IO_QUICKLOAD,id,OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+		void *file = image_fopen(IO_QUICKLOAD,id,OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		if (file != 0)
 		{
 			cmd_size = osd_fsize(file);
@@ -297,7 +267,7 @@ public class trs80
 				cmd_size = 0;
 			}
 		}
-	    return 0;
+		return 0;
 	}
 	
 	void trs80_cmd_exit(int id)
@@ -310,25 +280,81 @@ public class trs80
 	
 	int trs80_floppy_init(int id)
 	{
-		flop_specified[id] = device_filename(IO_FLOPPY,id) != NULL;
-		return 0;
+		static UINT8 pdrive[4*16];
+		int i;
+		int tracks; 	/* total tracks count per drive */
+		int heads;		/* total heads count per drive */
+		int spt;		/* sector per track count per drive */
+		int dir_sector; /* first directory sector (aka DDSL) */
+		int dir_length; /* length of directory in sectors (aka DDGA) */
+	    void *file;
+	
+	    if (basicdsk_floppy_init(id) != INIT_PASS)
+			return INIT_FAIL;
+	
+	    if (id == 0)        /* first floppy? */
+		{
+			file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
+			if (file != 0)
+			{
+	
+	            osd_fseek(file, 0, SEEK_SET);
+				osd_fread(file, pdrive, 2);
+	#if 0
+				if (pdrive[0] != 0x00 || pdrive[1] != 0xfe)
+				{
+					basicdsk_read_sectormap(id, &tracks[id], &heads[id], &spt[id]);
+				}
+				else
+	#endif
+	
+				osd_fseek(file, 2 * 256, SEEK_SET);
+				osd_fread(file, pdrive, 4*16);
+				osd_fclose(file);
+			}
+		}
+	
+		tracks = pdrive[id*16+3] + 1;
+		heads = (pdrive[id*16+7] & 0x40) ? 2 : 1;
+		spt = pdrive[id*16+4] / heads;
+		dir_sector = 5 * pdrive[id*16+0] * pdrive[id*16+5];
+		dir_length = 5 * pdrive[id*16+9];
+	
+	    /* set geometry so disk image can be read */
+		basicdsk_set_geometry(id, tracks, heads, spt, 256, 0, 0);
+	
+		/* mark directory sectors with deleted data address mark */
+		/* assumption dir_sector is a sector offset */
+		for (i = 0; i < dir_length; i++)
+		{
+			int track, side, sector_id;
+			int track_offset, sector_offset;
+	
+			/* calc sector offset */
+			sector_offset = dir_sector + i;
+	
+			/* get track offset */
+			track_offset = sector_offset / spt;
+	
+			/* calc track */
+			track = track_offset / heads;
+	
+			/* calc side */
+			side = track_offset % heads;
+	
+			/* calc sector id - first sector id is 0! */
+			sector_id = sector_offset % spt;
+	
+			/* set deleted data address mark for sector specified */
+			basicdsk_set_ddam(id, track, side, sector_id, 1);
+		}
+	    return INIT_PASS;
 	}
 	
-	void trs80_floppy_exit(int id)
-	{
-		wd179x_stop_drive();
-		flop_specified[id] = 0;
-	    first_fdc_access = 1;
-	}
 	
 	public static InitMachinePtr trs80_init_machine = new InitMachinePtr() { public void handler() 
 	{
-		if( flop_specified[0] )
-			wd179x_init(1);
-		else
-			wd179x_init(0);
-	
-	    first_fdc_access = 1;
+		wd179x_init(WD_TYPE_179X,trs80_fdc_callback);
 	
 		if (cas_size != 0)
 		{
@@ -336,22 +362,22 @@ public class trs80
 			timer_set(0.5, 0, cas_copy_callback);
 		}
 	
-	    if (cmd_size != 0)
+		if (cmd_size != 0)
 		{
 			LOG(("trs80_init_machine: schedule cmd_copy_callback (%d)\n", cmd_size));
 			timer_set(0.5, 0, cmd_copy_callback);
-	    }
+		}
 	} };
 	
 	void trs80_shutdown_machine(void)
 	{
+		wd179x_exit();
 		tape_put_close();
-		wd179x_stop_drive();
 	}
 	
 	/*************************************
 	 *
-	 *              Tape emulation.
+	 *				Tape emulation.
 	 *
 	 *************************************/
 	
@@ -368,8 +394,8 @@ public class trs80
 					char filename[12+1];
 					UINT8 zeroes[256] = {0,};
 	
-	                sprintf(filename, "basic%c.cas", tape_buffer[4]);
-					tape_put_file = osd_fopen(Machine.gamedrv.name, filename, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW);
+					sprintf(filename, "basic%c.cas", tape_buffer[4]);
+					tape_put_file = osd_fopen(Machine.gamedrv.name, filename, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW);
 					osd_fwrite(tape_put_file, zeroes, 256);
 					osd_fwrite(tape_put_file, tape_buffer, 8);
 				}
@@ -380,8 +406,8 @@ public class trs80
 					char filename[12+1];
 					UINT8 zeroes[256] = {0,};
 	
-	                sprintf(filename, "%-6.6s.cas", tape_buffer+2);
-					tape_put_file = osd_fopen(Machine.gamedrv.name, filename, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW);
+					sprintf(filename, "%-6.6s.cas", tape_buffer+2);
+					tape_put_file = osd_fopen(Machine.gamedrv.name, filename, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW);
 					osd_fwrite(tape_put_file, zeroes, 256);
 					osd_fwrite(tape_put_file, tape_buffer, 8);
 				}
@@ -458,18 +484,18 @@ public class trs80
 	
 		if (!tape_get_file)
 		{
-	        char filename[12+1];
+			char filename[12+1];
 	
-	        sprintf(filename, "%-6.6s.cas", RAM + 0x41e8);
+			sprintf(filename, "%-6.6s.cas", RAM + 0x41e8);
 			logerror("filename %s\n", filename);
-			tape_get_file = osd_fopen(Machine.gamedrv.name, filename, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+			tape_get_file = osd_fopen(Machine.gamedrv.name, filename, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 			tape_count = 0;
 		}
 	}
 	
 	/*************************************
 	 *
-	 *              Port handlers.
+	 *				Port handlers.
 	 *
 	 *************************************/
 	
@@ -625,7 +651,7 @@ public class trs80
 	
 	/*************************************
 	 *
-	 *      Interrupt handlers.
+	 *		Interrupt handlers.
 	 *
 	 *************************************/
 	
@@ -646,7 +672,7 @@ public class trs80
 		{
 			irq_status |= IRQ_FDC;
 			cpu_set_irq_line (0, 0, HOLD_LINE);
-	        return 0;
+			return 0;
 		}
 		return ignore_interrupt ();
 	} };
@@ -666,8 +692,6 @@ public class trs80
 	
 	public static InterruptPtr trs80_frame_interrupt = new InterruptPtr() { public int handler() 
 	{
-		if (motor_count && !--motor_count)
-			wd179x_stop_drive();
 		return 0;
 	} };
 	
@@ -677,9 +701,9 @@ public class trs80
 	}
 	
 	/*************************************
-	 *                                   *
-	 *      Memory handlers              *
-	 *                                   *
+	 *									 *
+	 *		Memory handlers 			 *
+	 *									 *
 	 *************************************/
 	
 	READ_HANDLER ( trs80_printer_r )
@@ -707,123 +731,61 @@ public class trs80
 	
 	public static WriteHandlerPtr trs80_motor_w = new WriteHandlerPtr() {public void handler(int offset, int data)
 	{
-		UINT8 buff[16];
 		UINT8 drive = 255;
-		int n;
-		void *file0, *file1;
 	
 		LOG(("trs80 motor_w $%02X\n", data));
 	
 		switch (data)
 		{
-			case 1:
-				drive = 0;
-				head[drive] = 0;
-				break;
-			case 2:
-				drive = 1;
-				head[drive] = 0;
-				break;
-			case 4:
-				drive = 2;
-				head[drive] = 0;
-				break;
-			case 8:
-				drive = 3;
-				head[drive] = 0;
-				break;
-			case 9:
-				drive = 0;
-				head[drive] = 1;
-				break;
-			case 10:
-				drive = 1;
-				head[drive] = 1;
-				break;
-			case 12:
-				drive = 2;
-				head[drive] = 1;
-				break;
+		case 1:
+			drive = 0;
+			head = 0;
+			break;
+		case 2:
+			drive = 1;
+			head = 0;
+			break;
+		case 4:
+			drive = 2;
+			head = 0;
+			break;
+		case 8:
+			drive = 3;
+			head = 0;
+			break;
+		case 9:
+			drive = 0;
+			head = 1;
+			break;
+		case 10:
+			drive = 1;
+			head = 1;
+			break;
+		case 12:
+			drive = 2;
+			head = 1;
+			break;
 		}
 	
 		if (drive > 3)
 			return;
 	
-		/* no image name given for that drive ? */
-		if (!flop_specified[drive])
-			return;
+	    wd179x_set_drive(drive);
+		wd179x_set_side(head);
 	
-		/* currently selected drive */
-		motor_drive = drive;
-	
-		/* let it run about 5 seconds */
-		motor_count = 5 * 60;
-	
-		/* select the drive / head */
-		file0 = wd179x_select_drive(drive, head[drive], trs80_fdc_callback, device_filename(IO_FLOPPY,drive));
-	
-		if (!file0)
-			return;
-		/* first drive selected first time ? */
-		if (!first_fdc_access)
-			return;
-	
-		first_fdc_access = 0;
-	
-		if (file0 == REAL_FDD)
-			return;
-	
-		/* read first bytes from boot sector */
-		for (n = 0; n < 4; n++)
-		{
-			file1 = wd179x_select_drive(n, head[n], trs80_fdc_callback, device_filename(IO_FLOPPY,n));
-			if (!file1)
-				continue;
-			if (file1 == REAL_FDD)
-			{
-				osd_fseek(file0, 2 * 256 + n * 16, SEEK_SET);
-				osd_fread(file0, buff, 16);
-				tracks[n] = buff[3] + 1;
-				heads[n] = (buff[7] & 0x40) ? 2 : 1;
-				spt[n] = buff[4] / heads[n];
-				dir_sector[n] = 5 * buff[0] * buff[5];
-				dir_length[n] = 5 * buff[9];
-			}
-			else
-			{
-				osd_fseek(file1, 0, SEEK_SET);
-				osd_fread(file1, buff, 2);
-				if (buff[0] != 0x00 || buff[1] != 0xfe)
-				{
-					wd179x_read_sectormap(n, &tracks[n], &heads[n], &spt[n]);
-				}
-				else
-				{
-					osd_fseek(file0, 2 * 256 + n * 16, SEEK_SET);
-					osd_fread(file0, buff, 16);
-					tracks[n] = buff[3] + 1;
-					heads[n] = (buff[7] & 0x40) ? 2 : 1;
-					spt[n] = buff[4] / heads[n];
-					dir_sector[n] = 5 * buff[0] * buff[5];
-					dir_length[n] = 5 * buff[9];
-				}
-	        }
-			wd179x_set_geometry(n, tracks[n], heads[n], spt[n], 256, dir_sector[n], dir_length[n], 0);
-		}
-		wd179x_select_drive(drive, head[drive], trs80_fdc_callback, device_filename(IO_FLOPPY,drive));
 	} };
 	
 	/*************************************
-	 *      Keyboard                     *
+	 *		Keyboard					 *
 	 *************************************/
 	public static ReadHandlerPtr trs80_keyboard_r  = new ReadHandlerPtr() { public int handler(int offset)
 	{
 		int result = 0;
 	
-	    if( setup_active() || onscrd_active() )
+		if( setup_active() || onscrd_active() )
 			return result;
 	
-	    if ((offset & 1) != 0)
+		if ((offset & 1) != 0)
 			result |= input_port_1_r.handler(0);
 		if ((offset & 2) != 0)
 			result |= input_port_2_r.handler(0);

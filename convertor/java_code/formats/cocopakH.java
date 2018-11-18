@@ -16,8 +16,6 @@ public class cocopakH
 	} pak_header;
 	
 	typedef struct {
-		UINT16 video_base;
-		UINT16 video_end;
 		UINT16 reg_pc;
 		UINT16 reg_x;
 		UINT16 reg_y;
@@ -27,8 +25,8 @@ public class cocopakH
 		UINT8 reg_b;
 		UINT8 reg_a;
 		UINT8 reg_cc;
-		UINT8 io_pia[8];
-		UINT8 enable_hiram;
+		UINT8 pia[8];
+		UINT16 sam;
 	} pak_decodedtrailer;
 	
 	/* This function takes a set of bytes, interprets a PAK trailer and

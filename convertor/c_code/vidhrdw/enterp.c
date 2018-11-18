@@ -7,7 +7,7 @@
 #include "driver.h"
 #include "vidhrdw/nick.h"
 #include "vidhrdw/epnick.h"
-#include "vidhrdw/enterp.h"
+#include "includes/enterp.h"
 
 /***************************************************************************
   Start the video hardware emulation.
@@ -23,11 +23,11 @@ void    enterprise_vh_stop(void) {
 }
 
 /***************************************************************************
-  Draw the game screen in the given osd_bitmap.
+  Draw the game screen in the given mame_bitmap.
   Do NOT call osd_update_display() from this function,
   it will be called by the main emulation engine.
 ***************************************************************************/
-void enterprise_vh_screenrefresh(struct osd_bitmap *bitmap,int fullupdate)
+void enterprise_vh_screenrefresh(struct mame_bitmap *bitmap,int fullupdate)
 {
 		Nick_DoScreen(bitmap);
 }

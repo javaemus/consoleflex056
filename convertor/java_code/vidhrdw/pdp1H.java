@@ -13,6 +13,7 @@ package vidhrdw;
 public class pdp1H
 {
 	
+	void pdp1_vh_update (struct mame_bitmap *bitmap, int full_refresh);
 	
 	extern int fio_dec;
 	extern int concise;

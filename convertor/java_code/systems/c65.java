@@ -1,142 +1,12 @@
 /***************************************************************************
 
 	commodore c65 home computer
-	peter.trauner@jk.uni-linz.ac.at
+	PeT mess@utanet.at
+
     documention
      www.funet.fi
 
 ***************************************************************************/
-
-/*
-------------------------------------
-c65	commodore c65 (ntsc version)
-c65pal	commodore c65 (pal version)
-------------------------------------
-(preliminary version)
-
-if the game runs to fast with the ntsc version, try the pal version!
-flickering affects in one video version, try the other video version
-
-c65 prototype
- hardware emulation mode for c64
-  adapter needed for c64 cartridges (many should work)
-  only standard c64 keys plus cursor-up and cursor-left
-  cpu not full compatible (no illegal instructions)
- enhanced keyboard
- m65ce02 processor core (1 or 3.5 Mhz frequency)
- vic3 (4567) with additional capabilities
-  vic2 compatibility mode
-  graphic modes
-  80 column modes
- second sid audio chip (both 8580)
- uart 6511 rs232 chip
- special dma controller
- 128 kb ram
- 128 kb rom (kernel, editor, basic, monitor, characters, c64 roms)
- build in mfm floppy disk 3 1/2 inch double sided double density
- connector for second mem floppy disk
- special ram expansion slot
- rs232 connector (round din)
- no tape connector
- new expansion slot
-
-state
------
-only booting
-major memory management problems
-
-rasterline based video system
- quick modified vic6567/c64 video chip
- no support for enhanced features, only 80 column mode
- no cpu holding
- imperfect scrolling support (when 40 columns or 25 lines)
- lightpen support not finished
- rasterline not finished
-no sound
-cia6526's look in machine/cia6526.c
-keyboard
-gameport a
- paddles 1,2
- joystick 1
- 2 button joystick/mouse joystick emulation
- no mouse
- lightpen (not finished)
-gameport b
- paddles 3,4
- joystick 2
- 2 button joystick/mouse joystick emulation
- no mouse
-serial bus
- simple disk drives
- no printer or other devices
-expansion modules
- none (did there any exist)
-expansion modules c64 (adapter needed)
- ultimax rom cartridges
- rom cartridges (exrom)
- no other rom cartridges (bankswitching logic in it, switching exrom, game)
- no ieee488 support
- no cpm cartridge
- no speech cartridge (no circuit diagram found)
- no fm sound cartridge
- no other expansion modules
-no userport
- no rs232/v.24 interface
-preliminary quickloader
-
-Keys
-----
-Some PC-Keyboards does not behave well when special two or more keys are
-pressed at the same time
-(with my keyboard printscreen clears the pressed pause key!)
-
-shift-cbm switches between upper-only and normal character set
-(when wrong characters on screen this can help)
-run (shift-stop) loads pogram from type and starts it
-
-Lightpen
---------
-Paddle 5 x-axe
-Paddle 6 y-axe
-
-Discs
------
-only file load from drive 8 and 9 implemented
- loads file from rom directory (*.prg,*.p00) (must NOT be specified on commandline
- or file from d64 image (here also directory LOAD"$",8 supported)
-use LOAD"filename",8
-or LOAD"filename",8,1 (for loading machine language programs at their address)
-for loading
-type RUN or the appropriate sys call to start them
-
-several programs rely on more features
-(loading other file types, writing, ...)
-
-most games rely on starting own programs in the floppy drive
-(and therefor cpu level emulation is needed)
-
-Roms
-----
-.prg
-.crt
-.80 .90 .a0 .b0 .e0 .f0
-files with boot-sign in it
-  recogniced as roms
-
-.prg files loaded at address in its first two bytes
-.?0 files to address specified in extension
-.crt roms to addresses in crt file
-
-Quickloader
------------
-.prg and .p00 files supported
-loads program into memory and sets program end pointer
-(works with most programs)
-program ready to get started with RUN
-loads first rom when you press quickload key (numeric slash)
-
-when problems start with -log and look into error.log file
-*/
 
 /*
  * ported to v0.37b7
@@ -150,38 +20,35 @@ public class c65
 	#define VERBOSE_DBG 0
 	
 	
-	static MemoryReadAddress c65_readmem[] =
-	{
-		new MemoryReadAddress(0x00000, 0x00001, c64_m6510_port_r),
-		new MemoryReadAddress(0x00002, 0x07fff, MRA_RAM),
-		new MemoryReadAddress(0x08000, 0x09fff, MRA_BANK1),
-		new MemoryReadAddress(0x0a000, 0x0bfff, MRA_BANK2),
-		new MemoryReadAddress(0x0c000, 0x0cfff, MRA_BANK3),
-		new MemoryReadAddress(0x0d000, 0x0d7ff, MRA_BANK4),
-		new MemoryReadAddress(0x0d800, 0x0dbff, MRA_BANK6),
-		new MemoryReadAddress(0x0dc00, 0x0dfff, MRA_BANK8),
-		new MemoryReadAddress(0x0e000, 0x0ffff, MRA_BANK10),
-		new MemoryReadAddress(0x10000, 0x1ffff, MRA_RAM),
-		new MemoryReadAddress(0x20000, 0x3ffff, MRA_ROM),
-		new MemoryReadAddress(0x40000, 0x7ffff, MRA_NOP),
-		new MemoryReadAddress(0x80000, 0xfffff, MRA_RAM),
+	static MEMORY_READ_START( c65_readmem )
+		{0x00000, 0x00001, c64_m6510_port_r},
+		{0x00002, 0x07fff, MRA_RAM},
+		{0x08000, 0x09fff, MRA_BANK1},
+		{0x0a000, 0x0bfff, MRA_BANK2},
+		{0x0c000, 0x0cfff, MRA_BANK3},
+		{0x0d000, 0x0d7ff, MRA_BANK4},
+		{0x0d800, 0x0dbff, MRA_BANK6},
+		{0x0dc00, 0x0dfff, MRA_BANK8},
+		{0x0e000, 0x0ffff, MRA_BANK10},
+		{0x10000, 0x1ffff, MRA_RAM},
+		{0x20000, 0x3ffff, MRA_ROM},
+		{0x40000, 0x7ffff, MRA_NOP},
+		{0x80000, 0xfffff, MRA_RAM},
 		/* 8 megabyte full address space! */
-		MEMORY_TABLE_END
-	};
+	MEMORY_END
 	
-	static MemoryWriteAddress c65_writemem[] =
-	{
-		new MemoryWriteAddress(0x00000, 0x00001, c64_m6510_port_w, c64_memory),
-		new MemoryWriteAddress(0x00002, 0x07fff, MWA_RAM),
-		new MemoryWriteAddress(0x08000, 0x09fff, MWA_RAM),
-		new MemoryWriteAddress(0x0a000, 0x0cfff, MWA_RAM),
-		new MemoryWriteAddress(0x0d000, 0x0d7ff, MWA_BANK5),
-		new MemoryWriteAddress(0x0d800, 0x0dbff, MWA_BANK7),
-		new MemoryWriteAddress(0x0dc00, 0x0dfff, MWA_BANK9),
-		new MemoryWriteAddress(0x0e000, 0x0ffff, MWA_RAM),
-		new MemoryWriteAddress(0x10000, 0x1f7ff, MWA_RAM),
-		new MemoryWriteAddress(0x1f800, 0x1ffff, MWA_RAM, c64_colorram),
-		new MemoryWriteAddress(0x20000, 0x23fff, MWA_ROM), /* c65_dos},	   maps to 0x8000    */
+	static MEMORY_WRITE_START( c65_writemem )
+		{0x00000, 0x00001, c64_m6510_port_w, &c64_memory},
+		{0x00002, 0x07fff, MWA_RAM},
+		{0x08000, 0x09fff, MWA_RAM},
+		{0x0a000, 0x0cfff, MWA_RAM},
+		{0x0d000, 0x0d7ff, MWA_BANK5},
+		{0x0d800, 0x0dbff, MWA_BANK7},
+		{0x0dc00, 0x0dfff, MWA_BANK9},
+		{0x0e000, 0x0ffff, MWA_RAM},
+		{0x10000, 0x1f7ff, MWA_RAM},
+		{0x1f800, 0x1ffff, MWA_RAM, &c64_colorram},
+		{0x20000, 0x23fff, MWA_ROM}, /* &c65_dos},	   maps to 0x8000    */
 		{0x24000, 0x28fff, MWA_ROM}, /* reserved */
 		{0x29000, 0x29fff, MWA_ROM, &c65_chargen},
 		{0x2a000, 0x2bfff, MWA_ROM, &c64_basic},
@@ -196,8 +63,7 @@ public class c65
 		{0x40000, 0x7ffff, MWA_NOP},
 		{0x80000, 0xfffff, MWA_RAM},
 	/*	{0x80000, 0xfffff, MWA_BANK16}, */
-		MEMORY_TABLE_END
-	};
+	MEMORY_END
 	
 	#define DIPS_HELPER(bit, name, keycode) \
 	   PORT_BITX(bit, IP_ACTIVE_HIGH, IPT_KEYBOARD, name, keycode, IP_JOY_NONE);
@@ -452,41 +318,89 @@ public class c65
 	#endif
 	
 	ROM_START (c65)
-		ROM_REGION (0x800000, REGION_CPU1);
-	/*	ROM_REGION (0x100000, REGION_CPU1);*/
+		ROM_REGION (0x800000, REGION_CPU1, 0);
+	/*	ROM_REGION (0x100000, REGION_CPU1, 0);*/
 		ROM_LOAD ("911001.bin", 0x20000, 0x20000, 0x0888b50f);
 	ROM_END(); }}; 
 	
 	ROM_START (c65e)
-		ROM_REGION (0x800000, REGION_CPU1);
-	/*	ROM_REGION (0x100000, REGION_CPU1);*/
+		ROM_REGION (0x800000, REGION_CPU1, 0);
+	/*	ROM_REGION (0x100000, REGION_CPU1, 0);*/
 		ROM_LOAD ("910828.bin", 0x20000, 0x20000, 0x3ee40b06);
 	ROM_END(); }}; 
 	
 	ROM_START (c65d)
-		ROM_REGION (0x800000, REGION_CPU1);
-	/*	ROM_REGION (0x100000, REGION_CPU1);*/
+		ROM_REGION (0x800000, REGION_CPU1, 0);
+	/*	ROM_REGION (0x100000, REGION_CPU1, 0);*/
 		ROM_LOAD ("910626.bin", 0x20000, 0x20000, 0x12527742);
 	ROM_END(); }}; 
 	
 	ROM_START (c65c)
-		ROM_REGION (0x800000, REGION_CPU1);
-	/*	ROM_REGION (0x100000, REGION_CPU1);*/
+		ROM_REGION (0x800000, REGION_CPU1, 0);
+	/*	ROM_REGION (0x100000, REGION_CPU1, 0);*/
 		ROM_LOAD ("910523.bin", 0x20000, 0x20000, 0xe8235dd4);
 	ROM_END(); }}; 
 	
 	ROM_START (c65ger)
-		ROM_REGION (0x800000, REGION_CPU1);
-	/*	ROM_REGION (0x100000, REGION_CPU1);*/
+		ROM_REGION (0x800000, REGION_CPU1, 0);
+	/*	ROM_REGION (0x100000, REGION_CPU1, 0);*/
 		ROM_LOAD ("910429.bin", 0x20000, 0x20000, 0xb025805c);
 	ROM_END(); }}; 
 	
 	ROM_START (c65a)
-		ROM_REGION (0x800000, REGION_CPU1);
-	/*	ROM_REGION (0x100000, REGION_CPU1);*/
+		ROM_REGION (0x800000, REGION_CPU1, 0);
+	/*	ROM_REGION (0x100000, REGION_CPU1, 0);*/
 		ROM_LOAD ("910111.bin", 0x20000, 0x20000, 0xc5d8d32e);
 	ROM_END(); }}; 
 	
+	
+	static SID6581_interface ntsc_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		2,
+		{
+			{
+				MIXER(50, MIXER_PAN_RIGHT),
+				MOS8580,
+				985248,
+				c64_paddle_read
+			},
+			{
+				MIXER(50, MIXER_PAN_LEFT),
+				MOS8580,
+				985248,
+				NULL
+			}
+		}
+	};
+	
+	static SID6581_interface pal_sound_interface =
+	{
+		{
+			sid6581_custom_start,
+			sid6581_custom_stop,
+			sid6581_custom_update
+		},
+		2,
+		{
+			{
+				MIXER(50, MIXER_PAN_RIGHT),
+				MOS8580,
+				1022727,
+				c64_paddle_read
+			},
+			{
+				MIXER(50, MIXER_PAN_LEFT),
+				MOS8580,
+				1022727,
+				NULL
+			}
+		}
+	};
 	
 	static MachineDriver machine_driver_c65 = new MachineDriver
 	(
@@ -498,7 +412,7 @@ public class c65
 				c65_readmem, c65_writemem,
 				0, null,
 				c64_frame_interrupt, 1,
-				vic2_raster_irq, VIC2_HRETRACERATE,
+				vic3_raster_irq, VIC2_HRETRACERATE,
 			),
 		},
 		VIC6567_VRETRACERATE, DEFAULT_REAL_60HZ_VBLANK_DURATION,	/* frames per second, vblank duration */
@@ -514,16 +428,16 @@ public class c65
 		sizeof (vic3_palette) / sizeof (vic3_palette[null]) / 3,
 		null,
 		c65_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER|VIDEO_MODIFIES_PALETTE,
+		VIDEO_TYPE_RASTER,
 		null,
 		vic2_vh_start,
 		vic2_vh_stop,
 		vic2_vh_screenrefresh,
 	
 	  /* sound hardware */
-		0, 0, 0, 0,
+		SOUND_SUPPORTS_STEREO, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, ntsc_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -538,7 +452,7 @@ public class c65
 				c65_readmem, c65_writemem,
 				0, null,
 				c64_frame_interrupt, 1,
-				vic2_raster_irq, VIC2_HRETRACERATE,
+				vic3_raster_irq, VIC2_HRETRACERATE,
 			),
 		},
 		VIC6569_VRETRACERATE,
@@ -555,16 +469,16 @@ public class c65
 		sizeof (vic3_palette) / sizeof (vic3_palette[null]) / 3,
 		null,
 		c65_init_palette,				   /* convert color prom */
-		VIDEO_TYPE_RASTER|VIDEO_MODIFIES_PALETTE,
+		VIDEO_TYPE_RASTER,
 		null,
 		vic2_vh_start,
 		vic2_vh_stop,
 		vic2_vh_screenrefresh,
 	
 	  /* sound hardware */
-		0, 0, 0, 0,
+		SOUND_SUPPORTS_STEREO, 0, 0, 0,
 		new MachineSound[] {
-			new MachineSound( SOUND_CUSTOM, sid6581_sound_interface ),
+			new MachineSound( SOUND_CUSTOM, pal_sound_interface ),
 			new MachineSound( 0 )
 		}
 	);
@@ -572,9 +486,6 @@ public class c65
 	static const struct IODevice io_c65[] =
 	{
 		IODEVICE_CBM_C65_QUICK,
-	#if 0
-		IODEVICE_CBM_ROM(c64_rom_id),
-	#endif
 		IODEVICE_CBM_DRIVE,
 		{IO_END}
 	};
@@ -590,11 +501,25 @@ public class c65
 	#define io_c65a io_c65
 	
 	/*		YEAR	NAME	PARENT	MACHINE INPUT	INIT		COMPANY 							FULLNAME */
-	COMPX ( 199?,	c65,	0,		c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 911001)",        GAME_NOT_WORKING | GAME_IMPERFECT_SOUND)
-	COMPX ( 199?,	c65e,	c65,	c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910828)",        GAME_NOT_WORKING | GAME_IMPERFECT_SOUND)
-	COMPX ( 199?,	c65d,	c65,	c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910626)",        GAME_NOT_WORKING | GAME_IMPERFECT_SOUND)
-	COMPX ( 199?,	c65c,	c65,	c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910523)",        GAME_NOT_WORKING | GAME_IMPERFECT_SOUND)
-	COMPX ( 199?,	c65ger, c65,	c65pal, c65ger, c65pal, 	"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, German PAL, 910429)",  GAME_NOT_WORKING | GAME_IMPERFECT_SOUND)
-	COMPX ( 199?,	c65a,	c65,	c65,	c65,	c65_alpha1, "Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910111)",        GAME_NOT_WORKING | GAME_IMPERFECT_SOUND)
+	COMPX ( 199?,	c65,	0,		c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 911001)",        GAME_NOT_WORKING)
+	COMPX ( 199?,	c65e,	c65,	c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910828)",        GAME_NOT_WORKING)
+	COMPX ( 199?,	c65d,	c65,	c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910626)",        GAME_NOT_WORKING)
+	COMPX ( 199?,	c65c,	c65,	c65,	c65,	c65,		"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910523)",        GAME_NOT_WORKING)
+	COMPX ( 199?,	c65ger, c65,	c65pal, c65ger, c65pal, 	"Commodore Business Machines Co.",  "C65 / C64DX (Prototype, German PAL, 910429)",  GAME_NOT_WORKING)
+	COMPX ( 199?,	c65a,	c65,	c65,	c65,	c65_alpha1, "Commodore Business Machines Co.",  "C65 / C64DX (Prototype, NTSC, 910111)",        GAME_NOT_WORKING)
 	
+	#ifdef RUNTIME_LOADER
+	extern void c65_runtime_loader_init(void)
+	{
+		int i;
+		for (i=0; drivers[i]; i++) {
+			if ( strcmp(drivers[i].name,"c65")==0) drivers[i]=&driver_c65;
+			if ( strcmp(drivers[i].name,"c65e")==0) drivers[i]=&driver_c65e;
+			if ( strcmp(drivers[i].name,"c65d")==0) drivers[i]=&driver_c65d;
+			if ( strcmp(drivers[i].name,"c65c")==0) drivers[i]=&driver_c65c;
+			if ( strcmp(drivers[i].name,"c65ger")==0) drivers[i]=&driver_c65ger;
+			if ( strcmp(drivers[i].name,"c65a")==0) drivers[i]=&driver_c65a;
+		}
+	}
+	#endif
 }

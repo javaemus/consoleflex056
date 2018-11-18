@@ -8,13 +8,7 @@
 
 #include "driver.h"
 #include "vidhrdw/generic.h"
-#include "vidhrdw/cgenie.h"
-
-/* from src/mame.c */
-extern int bitmap_dirty;
-
-/* from src/mess/machine/cgenie.c */
-extern int cgenie_tv_mode;
+#include "includes/cgenie.h"
 
 int cgenie_font_offset[4] = {0, 0, 0, 0};
 char cgenie_frame_message[64];
@@ -22,7 +16,7 @@ int cgenie_frame_time;
 
 static CRTC6845 crt;
 static int graphics = 0;
-static struct osd_bitmap *dlybitmap = NULL;
+static struct mame_bitmap *dlybitmap = NULL;
 static UINT8 *cleanbuffer = NULL;
 static UINT8 *colorbuffer = NULL;
 static int update_all = 0;
@@ -42,17 +36,17 @@ int cgenie_vh_start(void)
 	if( generic_vh_start() != 0 )
         return 1;
 
-    dlybitmap = osd_alloc_bitmap(Machine->drv->screen_width,Machine->drv->screen_height,Machine->scrbitmap->depth);
+    dlybitmap = bitmap_alloc_depth(Machine->drv->screen_width,Machine->drv->screen_height,Machine->scrbitmap->depth);
 	if( !dlybitmap )
 		return 1;
 
-    cleanbuffer = malloc(64 * 32 * 8);
+    cleanbuffer = (UINT8*)malloc(64 * 32 * 8);
 	if( !cleanbuffer )
 		return 1;
 	memset(cleanbuffer, 0, 64 * 32 * 8);
 
 
-	colorbuffer = malloc(64 * 32 * 8);
+	colorbuffer = (UINT8*)malloc(64 * 32 * 8);
 	if( !colorbuffer )
 		return 1;
 	memset(colorbuffer, 0, 64 * 32 * 8);
@@ -105,7 +99,7 @@ static void cgenie_offset_xy(void)
 	if( off_y > 128 )
 		off_y = 128;
 
-	bitmap_dirty = 1;
+	schedule_full_refresh();
 
 // if( errorlog ) fprintf(errorlog, "cgenie offset x:%d  y:%d\n", off_x, off_y);
 }
@@ -129,7 +123,7 @@ WRITE_HANDLER ( cgenie_register_w )
 		case 1:
 			if( crt.horizontal_displayed == data )
 				break;
-			bitmap_dirty = 1;
+			schedule_full_refresh();
 			crt.horizontal_displayed = data;
 			break;
 		case 2:
@@ -156,7 +150,7 @@ WRITE_HANDLER ( cgenie_register_w )
 		case 6:
 			if( crt.vertical_displayed == data )
 				break;
-			bitmap_dirty = 1;
+			schedule_full_refresh();
 			crt.vertical_displayed = data;
 			break;
 		case 7:
@@ -314,7 +308,7 @@ void cgenie_invalidate_range(int l, int h)
 }
 
 
-static void cgenie_refresh_monitor(struct osd_bitmap * bitmap, int full_refresh)
+static void cgenie_refresh_monitor(struct mame_bitmap * bitmap, int full_refresh)
 {
 	int i, address, offset, cursor, size, code, x, y;
     struct rectangle r;
@@ -405,11 +399,10 @@ static void cgenie_refresh_monitor(struct osd_bitmap * bitmap, int full_refresh)
 			}
 		}
 	}
-	palette_recalc();
 	update_all = 0;
 }
 
-static void cgenie_refresh_tv_set(struct osd_bitmap * bitmap, int full_refresh)
+static void cgenie_refresh_tv_set(struct mame_bitmap * bitmap, int full_refresh)
 {
 	int i, address, offset, cursor, size, code, x, y;
     struct rectangle r;
@@ -516,15 +509,12 @@ static void cgenie_refresh_tv_set(struct osd_bitmap * bitmap, int full_refresh)
 }
 
 /***************************************************************************
-  Draw the game screen in the given osd_bitmap.
+  Draw the game screen in the given mame_bitmap.
   Do NOT call osd_update_display() from this function,
   it will be called by the main emulation engine.
 ***************************************************************************/
-void cgenie_vh_screenrefresh(struct osd_bitmap * bitmap, int full_refresh)
+void cgenie_vh_screenrefresh(struct mame_bitmap * bitmap, int full_refresh)
 {
-	if( palette_recalc() )
-        full_refresh = 1;
-
     if( cgenie_tv_mode )
 		cgenie_refresh_tv_set(bitmap,full_refresh);
 	else
@@ -535,6 +525,6 @@ void cgenie_vh_screenrefresh(struct osd_bitmap * bitmap, int full_refresh)
 		ui_text(bitmap, cgenie_frame_message, 2, Machine->visible_area.max_y - 9);
 		/* if the message timed out, clear it on the next frame */
 		if( --cgenie_frame_time == 0 )
-			bitmap_dirty = 1;
+			schedule_full_refresh();
     }
 }

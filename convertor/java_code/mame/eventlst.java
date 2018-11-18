@@ -95,7 +95,7 @@ public class eventlst
 	{
 	
 	        if (!CyclesPerFrame)
-	                CyclesPerFrame = cpu_getfperiod();	//totalcycles();	//_(int)(Machine.drv.cpu[0].cpu_clock / Machine.drv.frames_per_second);
+	                CyclesPerFrame = (int)(Machine.drv.cpu[0].cpu_clock / Machine.drv.frames_per_second);	//totalcycles();	//_(int)(Machine.drv.cpu[0].cpu_clock / Machine.drv.frames_per_second);
 	
 	        if (NumEvents < TotalEvents)
 	        {

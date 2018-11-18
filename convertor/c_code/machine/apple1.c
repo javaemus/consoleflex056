@@ -11,8 +11,8 @@
 
 #include <stdarg.h>
 #include "driver.h"
-#include "cpu/m6502/m6502.h"
 #include "machine/6821pia.h"
+#include "cpu/m6502/m6502.h"
 #include "inptport.h"
 #include "includes/apple1.h"
 
@@ -87,7 +87,7 @@ int apple1_interrupt(void)
 		apple1_vh_dsp_clr();
 		pia_reset();
 		m6502_reset(NULL);
-		m6502_set_pc(0xff00);
+		activecpu_set_pc(0xff00);
 	}
 	else if (readinputport(3) & 0x0040)	/* clear screen */
 	{

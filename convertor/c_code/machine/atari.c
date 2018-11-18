@@ -70,26 +70,26 @@ void a800_setbank(int n)
 	switch (n)
 	{
 		case 1:
-			cpu_setbankhandler_r(1, MRA_BANK1);
-			cpu_setbankhandler_w(1, MWA_ROM);
+			memory_set_bankhandler_r(1, 0, MRA_BANK1);
+			memory_set_bankhandler_w(1, 0, MWA_ROM);
 			cpu_setbank(1, &mem[0x10000]);
 			break;
 		case 2:
-			cpu_setbankhandler_r(1, MRA_BANK1);
-			cpu_setbankhandler_w(1, MWA_ROM);
+			memory_set_bankhandler_r(1, 0, MRA_BANK1);
+			memory_set_bankhandler_w(1, 0, MWA_ROM);
 			cpu_setbank(1, &mem[0x12000]);
 			break;
 		default:
 			if( atari <= ATARI_400 )
 			{
 				/* Atari 400 has no RAM here, so install the NOP handler */
-				cpu_setbankhandler_r(1, MRA_NOP);
-				cpu_setbankhandler_w(1, MWA_NOP);
+				memory_set_bankhandler_r(1, 0, MRA_NOP);
+				memory_set_bankhandler_w(1, 0, MWA_NOP);
 			}
 			else
 			{
-				cpu_setbankhandler_r(1, MRA_RAM);
-				cpu_setbankhandler_w(1, MWA_RAM);
+				memory_set_bankhandler_r(1, 0, MRA_RAM);
+				memory_set_bankhandler_w(1, 0, MWA_RAM);
 			}
 			cpu_setbank(1, &mem[0x0a000]);
 			break;
@@ -126,7 +126,7 @@ int a800_floppy_init(int id)
 {
 	if( device_filename(IO_FLOPPY,id) )
 		open_floppy(id);
-	return drv[id].image ? INIT_OK : INIT_FAILED;
+	return INIT_PASS;
 }
 
 void a800_floppy_exit(int id)
@@ -145,7 +145,7 @@ int a800_rom_init(int id)
 
 	/* load an optional monitor.rom */
 	filename = "monitor.rom";
-	file = osd_fopen(Machine->gamedrv->name, filename, OSD_FILETYPE_IMAGE_R, 0);
+	file = osd_fopen(Machine->gamedrv->name, filename, OSD_FILETYPE_IMAGE, 0);
 	if (file)
 	{
 		logerror("%s loading optional image '%s' to C000-CFFF\n", Machine->gamedrv->name, filename);
@@ -160,7 +160,7 @@ int a800_rom_init(int id)
 	/* load an optional (dual) cartridge (e.g. basic.rom) */
 	if( device_filename(IO_CARTSLOT,id) && strlen(device_filename(IO_CARTSLOT,id) ) )
 	{
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 		if( file )
 		{
 			if( id > 0 )
@@ -187,7 +187,7 @@ int a800_rom_init(int id)
 			logerror("%s cartridge '%s' not found\n", Machine->gamedrv->name, device_filename(IO_CARTSLOT,id) );
 		}
 	}
-	return INIT_OK;
+	return INIT_PASS;
 }
 
 void a800_rom_exit(int id)
@@ -202,11 +202,6 @@ void a800_rom_exit(int id)
 		a800_cart_loaded = 0;
 		a800_setbank(0);
     }
-}
-
-int a800_id_rom(int id)
-{
-	return 1;
 }
 
 /**************************************************************
@@ -250,7 +245,7 @@ int a800xl_load_rom(int id)
 	/* load an optional (dual) cartidge (e.g. basic.rom) */
 	if( device_filename(IO_CARTSLOT,id) && strlen(device_filename(IO_CARTSLOT,id)) )
 	{
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 		if( file )
 		{
 			size = osd_fread(file, &mem[0x14000], 0x2000);
@@ -267,7 +262,7 @@ int a800xl_load_rom(int id)
 		}
 	}
 
-	return INIT_OK;
+	return INIT_PASS;
 }
 
 int a800xl_id_rom(int id)
@@ -298,20 +293,24 @@ int a5200_rom_init(int id)
 	/* load an optional (dual) cartidge */
 	if( device_filename(IO_CARTSLOT,id) && strlen(device_filename(IO_CARTSLOT,id) ) )
 	{
-		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0);
+		file = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0);
 		if (file)
 		{
 			size = osd_fread(file, &mem[0x4000], 0x8000);
 			osd_fclose(file);
-			/* move it into upper memory */
-			if (size < 0x8000)
+			if (size<0x8000) memmove(mem+0x4000+0x8000-size, mem+0x4000, size);
+			// mirroring of smaller cartridges
+			if (size <= 0x1000) memcpy(mem+0xa000, mem+0xb000, 0x1000);
+			if (size <= 0x2000) memcpy(mem+0x8000, mem+0xa000, 0x2000);
+			if (size <= 0x4000)
 			{
-				memcpy(&mem[0x8000], &mem[0x6000], 0x1000);
-				memcpy(&mem[0xa000], &mem[0x6000], 0x1000);
-				memcpy(&mem[0x9000], &mem[0x7000], 0x1000);
-				memcpy(&mem[0xb000], &mem[0x7000], 0x1000);
-				memcpy(&mem[0x6000], &mem[0x4000], 0x1000);
-				memcpy(&mem[0x7000], &mem[0x5000], 0x1000);
+			    const char *info;
+			    memcpy(&mem[0x4000], &mem[0x8000], 0x4000);
+			    info=device_extrainfo(IO_CARTSLOT, id);
+			    if (info!=NULL && strcmp(info, "A13MIRRORING")==0) {
+				memcpy(&mem[0x8000], &mem[0xa000], 0x2000);
+				memcpy(&mem[0x6000], &mem[0x4000], 0x2000);
+			    }
 			}
 			logerror("%s loaded cartridge '%s' size %dK\n",
 				Machine->gamedrv->name, device_filename(IO_CARTSLOT,id) , size/1024);
@@ -321,7 +320,7 @@ int a5200_rom_init(int id)
 			logerror("%s %s not found\n", Machine->gamedrv->name, device_filename(IO_CARTSLOT,id) );
 		}
 	}
-	return INIT_OK;
+	return INIT_PASS;
 }
 
 void a5200_rom_exit(int id)
@@ -329,11 +328,6 @@ void a5200_rom_exit(int id)
 	UINT8 *mem = memory_region(REGION_CPU1);
     /* zap the cartridge memory (again) */
 	memset(&mem[0x4000], 0x00, 0x8000);
-}
-
-int a5200_id_rom(int id)
-{
-	return 1;
 }
 
 void pokey_reset(void)
@@ -427,19 +421,19 @@ static void open_floppy(int id)
 			return;
 		/* try to open the image read/write */
 		drv[id].mode = 1;
-		file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW);
+		file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW);
 		if (!file)
 		{
 			/* if this fails, try to open it read only */
 			drv[id].mode = 0;
-			file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_READ);
+			file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_READ);
 		}
 		/* still failed, so create a new image */
 		if (!file)
 		{
 			/* if this fails, try to open it read only */
 			drv[id].mode = 1;
-			file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE_RW, OSD_FOPEN_RW_CREATE);
+			file = image_fopen(IO_FLOPPY, id, OSD_FILETYPE_IMAGE, OSD_FOPEN_RW_CREATE);
 			if( file )
 			{
 				int sector;
@@ -1163,21 +1157,21 @@ void a800xl_mmu(UINT8 old_mmu, UINT8 new_mmu)
 		if( new_mmu & 0x01 )
 		{
 			logerror("%s MMU BIOS ROM\n", Machine->gamedrv->name);
-			cpu_setbankhandler_r(3, MRA_BANK3);
-			cpu_setbankhandler_w(3, MWA_ROM);
+			memory_set_bankhandler_r(3, 0, MRA_BANK3);
+			memory_set_bankhandler_w(3, 0, MWA_ROM);
 			cpu_setbank(3, memory_region(REGION_CPU1)+0x14000);  /* 8K lo BIOS */
-			cpu_setbankhandler_r(4, MRA_BANK4);
-			cpu_setbankhandler_w(4, MWA_ROM);
+			memory_set_bankhandler_r(4, 0, MRA_BANK4);
+			memory_set_bankhandler_w(4, 0, MWA_ROM);
 			cpu_setbank(4, memory_region(REGION_CPU1)+0x15800);  /* 4K FP ROM + 8K hi BIOS */
 		}
 		else
 		{
 			logerror("%s MMU BIOS RAM\n", Machine->gamedrv->name);
-			cpu_setbankhandler_r(3, MRA_RAM);
-			cpu_setbankhandler_w(3, MWA_RAM);
+			memory_set_bankhandler_r(3, 0, MRA_RAM);
+			memory_set_bankhandler_w(3, 0, MWA_RAM);
 			cpu_setbank(3, memory_region(REGION_CPU1)+0x0c000);  /* 8K RAM */
-			cpu_setbankhandler_r(4, MRA_RAM);
-			cpu_setbankhandler_w(4, MWA_RAM);
+			memory_set_bankhandler_r(4, 0, MRA_RAM);
+			memory_set_bankhandler_w(4, 0, MWA_RAM);
 			cpu_setbank(4, memory_region(REGION_CPU1)+0x0d800);  /* 4K RAM + 8K RAM */
 		}
 	}
@@ -1187,15 +1181,15 @@ void a800xl_mmu(UINT8 old_mmu, UINT8 new_mmu)
 		if( new_mmu & 0x02 )
 		{
 			logerror("%s MMU BASIC RAM\n", Machine->gamedrv->name);
-			cpu_setbankhandler_r(1, MRA_RAM);
-			cpu_setbankhandler_w(1, MWA_RAM);
+			memory_set_bankhandler_r(1, 0, MRA_RAM);
+			memory_set_bankhandler_w(1, 0, MWA_RAM);
 			cpu_setbank(1, memory_region(REGION_CPU1)+0x0a000);  /* 8K RAM */
 		}
 		else
 		{
 			logerror("%s MMU BASIC ROM\n", Machine->gamedrv->name);
-			cpu_setbankhandler_r(1, MRA_BANK2);
-			cpu_setbankhandler_w(1, MWA_ROM);
+			memory_set_bankhandler_r(1, 0, MRA_BANK2);
+			memory_set_bankhandler_w(1, 0, MWA_ROM);
 			cpu_setbank(1, memory_region(REGION_CPU1)+0x10000);  /* 8K BASIC */
 		}
 	}
@@ -1205,15 +1199,15 @@ void a800xl_mmu(UINT8 old_mmu, UINT8 new_mmu)
 		if( new_mmu & 0x80 )
 		{
 			logerror("%s MMU SELFTEST RAM\n", Machine->gamedrv->name);
-			cpu_setbankhandler_r(2, MRA_RAM);
-			cpu_setbankhandler_w(2, MWA_RAM);
+			memory_set_bankhandler_r(2, 0, MRA_RAM);
+			memory_set_bankhandler_w(2, 0, MWA_RAM);
 			cpu_setbank(2, memory_region(REGION_CPU1)+0x05000);  /* 0x0800 bytes */
 		}
 		else
 		{
 			logerror("%s MMU SELFTEST ROM\n", Machine->gamedrv->name);
-			cpu_setbankhandler_r(2, MRA_BANK1);
-			cpu_setbankhandler_w(2, MWA_ROM);
+			memory_set_bankhandler_r(2, 0, MRA_BANK1);
+			memory_set_bankhandler_w(2, 0, MWA_ROM);
 			cpu_setbank(2, memory_region(REGION_CPU1)+0x15000);  /* 0x0800 bytes */
 		}
 	}

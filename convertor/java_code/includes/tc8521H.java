@@ -14,11 +14,12 @@ public class tc8521H
 	
 	struct tc8521_interface
 	{
-	        /* tc8521 causes an interrupt */
-	      void (*interrupt_1hz_callback)(int);
-	      void (*interrupt_16hz_callback)(int);
+		/* output of alarm */
+		void (*alarm_output_callback)(int);
 	};
 	
 	void tc8521_init(struct tc8521_interface *);
 	
+	void	tc8521_load_stream(void *file);
+	void	tc8521_save_stream(void *file);
 }

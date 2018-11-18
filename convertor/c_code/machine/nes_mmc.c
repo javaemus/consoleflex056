@@ -27,6 +27,8 @@
 #include "includes/nes.h"
 #include "nes_mmc.h"
 
+#define M6502_INT_NONE	0
+
 #define LOG_MMC
 #define LOG_FDS
 
@@ -40,12 +42,12 @@ UINT8 IRQ_mode_jaleco;
 
 int MMC1_extended;	/* 0 = normal MMC1 cart, 1 = 512k MMC1, 2 = 1024k MMC1 */
 
-void (*mmc_write_low)(int offset, int data);
-int (*mmc_read_low)(int offset);
-void (*mmc_write_mid)(int offset, int data);
-int (*mmc_read_mid)(int offset);
-void (*mmc_write)(int offset, int data);
-void (*ppu_latch)(int offset);
+mem_write_handler mmc_write_low;
+mem_read_handler mmc_read_low;
+mem_write_handler mmc_write_mid;
+mem_read_handler mmc_read_mid;
+mem_write_handler mmc_write;
+void (*ppu_latch)(offs_t offset);
 int (*mmc_irq)(int scanline);
 
 static int vrom_bank[16];
@@ -79,9 +81,9 @@ static int mapper41_chr, mapper41_reg2;
 
 static int mapper_warning;
 
-void nes_low_mapper_w (int offset, int data)
+WRITE_HANDLER( nes_low_mapper_w )
 {
-	if (*mmc_write_low) (*mmc_write_low)(offset, data);
+	if (mmc_write_low) (*mmc_write_low)(offset, data);
 	else
 	{
 		logerror("Unimplemented LOW mapper write, offset: %04x, data: %02x\n", offset, data);
@@ -96,9 +98,9 @@ void nes_low_mapper_w (int offset, int data)
 }
 
 /* Handle mapper reads from $4100-$5fff */
-int nes_low_mapper_r (int offset)
+READ_HANDLER( nes_low_mapper_r )
 {
-	if (*mmc_read_low)
+	if (mmc_read_low)
 		return (*mmc_read_low)(offset);
 	else
 		logerror("low mapper area read, addr: %04x\n", offset + 0x4100);
@@ -108,7 +110,7 @@ int nes_low_mapper_r (int offset)
 
 WRITE_HANDLER ( nes_mid_mapper_w )
 {
-	if (*mmc_write_mid) (*mmc_write_mid)(offset, data);
+	if (mmc_write_mid) (*mmc_write_mid)(offset, data);
 	else if (nes.mid_ram_enable)
 		battery_ram[offset] = data;
 //	else
@@ -124,7 +126,7 @@ WRITE_HANDLER ( nes_mid_mapper_w )
 	}
 }
 
-int nes_mid_mapper_r (int offset)
+READ_HANDLER ( nes_mid_mapper_r )
 {
 	if ((nes.mid_ram_enable) || (nes.mapper == 5))
 		return battery_ram[offset];
@@ -134,7 +136,7 @@ int nes_mid_mapper_r (int offset)
 
 WRITE_HANDLER ( nes_mapper_w )
 {
-	if (*mmc_write) (*mmc_write)(offset, data);
+	if (mmc_write) (*mmc_write)(offset, data);
 	else
 	{
 		logerror("Unimplemented mapper write, offset: %04x, data: %02x\n", offset, data);
@@ -307,7 +309,7 @@ static void chr2_6 (int bank)
 		nes_vram[i] = bank * 128 + 64*(i-6);
 }
 
-static void mapper1_w (int offset, int data)
+static WRITE_HANDLER( mapper1_w )
 {
 	int i;
 	int reg;
@@ -564,12 +566,12 @@ static void mapper1_w (int offset, int data)
 	}
 }
 
-static void mapper2_w (int offset, int data)
+static WRITE_HANDLER( mapper2_w )
 {
 	prg16_89ab (data);
 }
 
-static void mapper3_w (int offset, int data)
+static WRITE_HANDLER( mapper3_w )
 {
 	chr8 (data);
 }
@@ -606,7 +608,7 @@ static void mapper4_set_chr (void)
 	nes_vram [chr_page ^ 7] = MMC3_chr[5];
 }
 
-int mapper4_irq (int scanline)
+static int mapper4_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -617,7 +619,7 @@ int mapper4_irq (int scanline)
 			if (IRQ_count == 0)
 			{
 				IRQ_count = IRQ_count_latch;
-				ret = M6502_INT_IRQ;
+				ret = M6502_IRQ_LINE;
 			}
 			IRQ_count --;
 		}
@@ -626,7 +628,7 @@ int mapper4_irq (int scanline)
 	return ret;
 }
 
-static void mapper4_w (int offset, int data)
+static WRITE_HANDLER( mapper4_w )
 {
 	static UINT8 last_bank = 0xff;
 
@@ -729,7 +731,7 @@ static void mapper4_w (int offset, int data)
 	}
 }
 
-static void mapper118_w (int offset, int data)
+static WRITE_HANDLER( mapper118_w )
 {
 	static UINT8 last_bank = 0xff;
 
@@ -831,7 +833,7 @@ static void mapper118_w (int offset, int data)
 	}
 }
 
-int mapper5_irq (int scanline)
+static int mapper5_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -845,7 +847,7 @@ int mapper5_irq (int scanline)
 	if (scanline == IRQ_count)
 	{
 		if (IRQ_enable)
-			ret = M6502_INT_IRQ;
+			ret = M6502_IRQ_LINE;
 
 		IRQ_status = 0xff;
 	}
@@ -853,7 +855,7 @@ int mapper5_irq (int scanline)
 	return ret;
 }
 
-int mapper5_l_r (int offset)
+static READ_HANDLER( mapper5_l_r )
 {
 	int retVal;
 
@@ -900,7 +902,7 @@ static void mapper5_sync_vrom (int mode)
 		nes_vram[i] = vrom_bank[0 + (mode * 8)] * 64;
 }
 
-void mapper5_l_w (int offset, int data)
+static WRITE_HANDLER( mapper5_l_w )
 {
 //	static int vrom_next[4];
 	static int vrom_page_a;
@@ -1354,12 +1356,12 @@ void mapper5_l_w (int offset, int data)
 	}
 }
 
-void mapper5_w (int offset, int data)
+static WRITE_HANDLER( mapper5_w )
 {
 	logerror("MMC5 uncaught high mapper w, %04x: %02x\n", offset, data);
 }
 
-void mapper7_w (int offset, int data)
+static WRITE_HANDLER( mapper7_w )
 {
 	if (data & 0x10)
 		ppu_mirror_high ();
@@ -1369,7 +1371,7 @@ void mapper7_w (int offset, int data)
 	prg32 (data);
 }
 
-static void mapper8_w (int offset, int data)
+static WRITE_HANDLER( mapper8_w )
 {
 #ifdef LOG_MMC
 	logerror("* Mapper 8 switch, vrom: %02x, rom: %02x\n", data & 0x07, (data >> 3));
@@ -1400,7 +1402,7 @@ void mapper9_latch (int offset)
 	}
 }
 
-static void mapper9_w (int offset, int data)
+static WRITE_HANDLER( mapper9_w )
 {
 	switch (offset & 0x7000)
 	{
@@ -1438,7 +1440,7 @@ static void mapper9_w (int offset, int data)
 }
 #endif
 
-void mapper10_latch (int offset)
+static void mapper10_latch (offs_t offset)
 {
 	if ((offset & 0x3ff0) == 0x0fd0)
 	{
@@ -1466,7 +1468,7 @@ void mapper10_latch (int offset)
 	}
 }
 
-void mapper10_w (int offset, int data)
+static WRITE_HANDLER( mapper10_w )
 {
 	switch (offset & 0x7000)
 	{
@@ -1510,7 +1512,7 @@ void mapper10_w (int offset, int data)
 	}
 }
 
-static void mapper11_w (int offset, int data)
+static WRITE_HANDLER( mapper11_w )
 {
 #ifdef LOG_MMC
 	logerror("* Mapper 11 switch, data: %02x\n", data);
@@ -1522,7 +1524,7 @@ static void mapper11_w (int offset, int data)
 	prg32 (data & 0x0f);
 }
 
-static void mapper15_w (int offset, int data)
+static WRITE_HANDLER( mapper15_w )
 {
 	int bank = (data & (nes.prg_chunks - 1)) * 0x4000;
 	int base = data & 0x80 ? 0x12000 : 0x10000;
@@ -1563,7 +1565,7 @@ static void mapper15_w (int offset, int data)
 	}
 }
 
-int bandai_irq (int scanline)
+static int bandai_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -1574,7 +1576,7 @@ int bandai_irq (int scanline)
 	{
 		if (IRQ_count <= 114)
 		{
-			ret = M6502_INT_IRQ;
+			ret = M6502_IRQ_LINE;
 		}
 		IRQ_count -= 114;
 	}
@@ -1582,7 +1584,7 @@ int bandai_irq (int scanline)
 	return ret;
 }
 
-static void mapper16_w (int offset, int data)
+static WRITE_HANDLER( mapper16_w )
 {
 	logerror ("mapper16 (mid and high) w, offset: %04x, data: %02x\n", offset, data);
 
@@ -1622,7 +1624,7 @@ static void mapper16_w (int offset, int data)
 	}
 }
 
-static void mapper17_l_w (int offset, int data)
+static WRITE_HANDLER( mapper17_l_w )
 {
 	switch (offset)
 	{
@@ -1673,7 +1675,7 @@ static void mapper17_l_w (int offset, int data)
 	}
 }
 
-int jaleco_irq (int scanline)
+static int jaleco_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -1689,23 +1691,23 @@ int jaleco_irq (int scanline)
 			{
 				if ((IRQ_count & 0x0f) == 0x00)
 					/* rollover every 0x10 */
-					ret = M6502_INT_IRQ;
+					ret = M6502_IRQ_LINE;
 			}
 			else if (IRQ_mode_jaleco & 0x04)
 			{
 				if ((IRQ_count & 0x0ff) == 0x00)
 					/* rollover every 0x100 */
-					ret = M6502_INT_IRQ;
+					ret = M6502_IRQ_LINE;
 			}
 			else if (IRQ_mode_jaleco & 0x02)
 			{
 				if ((IRQ_count & 0x0fff) == 0x000)
 					/* rollover every 0x1000 */
-					ret = M6502_INT_IRQ;
+					ret = M6502_IRQ_LINE;
 			}
 			else if (IRQ_count == 0)
 				/* rollover at 0x10000 */
-				ret = M6502_INT_IRQ;
+				ret = M6502_IRQ_LINE;
 		}
 	}
 	else
@@ -1718,7 +1720,7 @@ int jaleco_irq (int scanline)
 }
 
 
-static void mapper18_w (int offset, int data)
+static WRITE_HANDLER( mapper18_w )
 {
 //	static int irq;
 	static int bank_8000 = 0;
@@ -1920,7 +1922,7 @@ static void mapper18_w (int offset, int data)
 	}
 }
 
-int namcot_irq (int scanline)
+static int namcot_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -1928,13 +1930,13 @@ int namcot_irq (int scanline)
 	/* Increment & check the IRQ scanline counter */
 	if (IRQ_enable && (IRQ_count == 0x7fff))
 	{
-		ret = M6502_INT_IRQ;
+		ret = M6502_IRQ_LINE;
 	}
 
 	return ret;
 }
 
-static void mapper19_l_w (int offset, int data)
+static WRITE_HANDLER( mapper19_l_w )
 {
 	switch (offset & 0x1800)
 	{
@@ -1950,7 +1952,7 @@ static void mapper19_l_w (int offset, int data)
 	}
 }
 
-static void mapper19_w (int offset, int data)
+static WRITE_HANDLER( mapper19_w )
 {
 	switch (offset & 0x7800)
 	{
@@ -2004,19 +2006,19 @@ static void mapper19_w (int offset, int data)
 	}
 }
 
-int fds_irq (int scanline)
+static int fds_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
 	if (IRQ_enable_latch)
-		ret = M6502_INT_IRQ;
+		ret = M6502_IRQ_LINE;
 
 	/* Increment & check the IRQ scanline counter */
 	if (IRQ_enable)
 	{
 		if (IRQ_count <= 114)
 		{
-			ret = M6502_INT_IRQ;
+			ret = M6502_IRQ_LINE;
 			IRQ_enable = 0;
 			nes_fds.status0 |= 0x01;
 		}
@@ -2029,7 +2031,7 @@ int fds_irq (int scanline)
 
 READ_HANDLER ( fds_r )
 {
-	data_t ret = 0x00;
+	int ret = 0x00;
 	static int last_side = 0;
 	static int count = 0;
 
@@ -2121,7 +2123,7 @@ WRITE_HANDLER ( fds_w )
 
 }
 
-int konami_irq (int scanline)
+static int konami_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -2130,13 +2132,13 @@ int konami_irq (int scanline)
 	{
 		IRQ_count = IRQ_count_latch;
 		IRQ_enable = IRQ_enable_latch;
-		ret = M6502_INT_IRQ;
+		ret = M6502_IRQ_LINE;
 	}
 
 	return ret;
 }
 
-static void konami_vrc2a_w (int offset, int data)
+static WRITE_HANDLER( konami_vrc2a_w )
 {
 	if (offset < 0x3000)
 	{
@@ -2238,7 +2240,7 @@ static void konami_vrc2a_w (int offset, int data)
 	}
 }
 
-static void konami_vrc2b_w (int offset, int data)
+static WRITE_HANDLER( konami_vrc2b_w )
 {
 	UINT16 select;
 
@@ -2396,7 +2398,7 @@ static void konami_vrc2b_w (int offset, int data)
 	}
 }
 
-static void konami_vrc4_w (int offset, int data)
+static WRITE_HANDLER( konami_vrc4_w )
 {
 	switch (offset & 0x7007)
 	{
@@ -2561,7 +2563,7 @@ static void konami_vrc4_w (int offset, int data)
 	}
 }
 
-static void konami_vrc6a_w (int offset, int data)
+static WRITE_HANDLER( konami_vrc6a_w )
 {
 //	logerror("konami_vrc6_w offset: %04x, data: %02x, scanline: %d\n", offset, data, current_scanline);
 
@@ -2640,7 +2642,7 @@ static void konami_vrc6a_w (int offset, int data)
 }
 
 
-static void konami_vrc6b_w (int offset, int data)
+static WRITE_HANDLER( konami_vrc6b_w )
 {
 //	logerror("konami_vrc6_w offset: %04x, data: %02x, scanline: %d\n", offset, data, current_scanline);
 
@@ -2718,7 +2720,7 @@ static void konami_vrc6b_w (int offset, int data)
 	}
 }
 
-static void mapper32_w (int offset, int data)
+static WRITE_HANDLER( mapper32_w )
 {
 	static int bankSel;
 
@@ -2754,7 +2756,7 @@ static void mapper32_w (int offset, int data)
 	}
 }
 
-static void mapper33_w (int offset, int data)
+static WRITE_HANDLER( mapper33_w )
 {
 
 //	logerror("mapper33_w offset: %04x, data: %02x, scanline: %d\n", offset, data, current_scanline);
@@ -2803,7 +2805,7 @@ static void mapper33_w (int offset, int data)
 	}
 }
 
-static void mapper34_m_w (int offset, int data)
+static WRITE_HANDLER( mapper34_m_w )
 {
 	logerror("mapper34_m_w, offset: %04x, data: %02x\n", offset, data);
 
@@ -2825,7 +2827,7 @@ static void mapper34_m_w (int offset, int data)
 }
 
 
-static void mapper34_w (int offset, int data)
+static WRITE_HANDLER( mapper34_w )
 {
 	/* This portion of the mapper is nearly identical to Mapper 7, except no one-screen mirroring */
 	/* Deadly Towers is really a Mapper 34 game - the demo screens look wrong using mapper 7. */
@@ -2834,7 +2836,7 @@ static void mapper34_w (int offset, int data)
 	prg32 (data);
 }
 
-int mapper40_irq (int scanline)
+static int mapper40_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -2843,14 +2845,14 @@ int mapper40_irq (int scanline)
 	{
 		if (--IRQ_count == 0)
 		{
-			ret = M6502_INT_IRQ;
+			ret = M6502_IRQ_LINE;
 		}
 	}
 
 	return ret;
 }
 
-static void mapper40_w (int offset, int data)
+static WRITE_HANDLER( mapper40_w )
 {
 	logerror("mapper40_w, offset: %04x, data: %02x\n", offset, data);
 
@@ -2870,7 +2872,7 @@ static void mapper40_w (int offset, int data)
 	}
 }
 
-static void mapper41_m_w (int offset, int data)
+static WRITE_HANDLER( mapper41_m_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper41_m_w, offset: %04x, data: %02x\n", offset, data);
@@ -2886,7 +2888,7 @@ static void mapper41_m_w (int offset, int data)
 	prg32 (offset & 0x07);
 }
 
-static void mapper41_w (int offset, int data)
+static WRITE_HANDLER( mapper41_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper41_w, offset: %04x, data: %02x\n", offset, data);
@@ -2900,12 +2902,12 @@ static void mapper41_w (int offset, int data)
 	}
 }
 
-static void mapper64_m_w (int offset, int data)
+static WRITE_HANDLER( mapper64_m_w )
 {
 	logerror("mapper64_m_w, offset: %04x, data: %02x\n", offset, data);
 }
 
-static void mapper64_w (int offset, int data)
+static WRITE_HANDLER( mapper64_w )
 {
 	static int cmd = 0;
 	static int chr = 0;
@@ -3067,7 +3069,7 @@ static void mapper64_w (int offset, int data)
 	}
 }
 
-int irem_irq (int scanline)
+static int irem_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -3075,7 +3077,7 @@ int irem_irq (int scanline)
 	if (IRQ_enable)
 	{
 		if (--IRQ_count == 0)
-			ret = M6502_INT_IRQ;
+			ret = M6502_IRQ_LINE;
 	}
 
 	return ret;
@@ -3083,7 +3085,7 @@ int irem_irq (int scanline)
 
 
 
-static void mapper65_w (int offset, int data)
+static WRITE_HANDLER( mapper65_w )
 {
 	switch (offset & 0x7007)
 	{
@@ -3164,7 +3166,7 @@ static void mapper65_w (int offset, int data)
 	}
 }
 
-static void mapper66_w (int offset, int data)
+static WRITE_HANDLER( mapper66_w )
 {
 #ifdef LOG_MMC
 	logerror("* Mapper 66 switch, offset %04x, data: %02x\n", offset, data);
@@ -3174,7 +3176,7 @@ static void mapper66_w (int offset, int data)
 	chr8 (data & 0x03);
 }
 
-int sunsoft_irq (int scanline)
+static int sunsoft_irq (int scanline)
 {
 	int ret = M6502_INT_NONE;
 
@@ -3185,7 +3187,7 @@ int sunsoft_irq (int scanline)
 	{
 		if (IRQ_count <= 114)
 		{
-			ret = M6502_INT_IRQ;
+			ret = M6502_IRQ_LINE;
 		}
 		IRQ_count -= 114;
 	}
@@ -3194,7 +3196,7 @@ int sunsoft_irq (int scanline)
 }
 
 
-static void mapper67_w (int offset, int data)
+static WRITE_HANDLER( mapper67_w )
 {
 //	logerror("mapper67_w, offset %04x, data: %02x\n", offset, data);
 	switch (offset & 0x7801)
@@ -3279,7 +3281,7 @@ static void mapper68_mirror (int m68_mirror, int m0, int m1)
 	}
 }
 
-static void mapper68_w (int offset, int data)
+static WRITE_HANDLER( mapper68_w )
 {
 	static int m68_mirror;
 	static int m0, m1;
@@ -3324,7 +3326,7 @@ static void mapper68_w (int offset, int data)
 	}
 }
 
-static void mapper69_w (int offset, int data)
+static WRITE_HANDLER( mapper69_w )
 {
 	static int cmd = 0;
 
@@ -3391,7 +3393,7 @@ static void mapper69_w (int offset, int data)
 	}
 }
 
-static void mapper70_w (int offset, int data)
+static WRITE_HANDLER( mapper70_w )
 {
 	logerror("mapper70_w offset %04x, data: %02x\n", offset, data);
 
@@ -3411,14 +3413,14 @@ static void mapper70_w (int offset, int data)
 #endif
 }
 
-static void mapper71_m_w (int offset, int data)
+static WRITE_HANDLER( mapper71_m_w )
 {
 	logerror("mapper71_m_w offset: %04x, data: %02x\n", offset, data);
 
 	prg16_89ab (data);
 }
 
-static void mapper71_w (int offset, int data)
+static WRITE_HANDLER( mapper71_w )
 {
 	logerror("mapper71_w offset: %04x, data: %02x\n", offset, data);
 
@@ -3426,7 +3428,7 @@ static void mapper71_w (int offset, int data)
 		prg16_89ab (data);
 }
 
-static void mapper72_w (int offset, int data)
+static WRITE_HANDLER( mapper72_w )
 {
 	logerror("mapper72_w, offset %04x, data: %02x\n", offset, data);
 	/* This routine is busted */
@@ -3437,7 +3439,7 @@ static void mapper72_w (int offset, int data)
 //	chr8 (data & 0x0f);
 }
 
-static void mapper73_w (int offset, int data)
+static WRITE_HANDLER( mapper73_w )
 {
 	switch (offset & 0x7000)
 	{
@@ -3468,7 +3470,7 @@ static void mapper73_w (int offset, int data)
 }
 
 
-static void mapper75_w (int offset, int data)
+static WRITE_HANDLER( mapper75_w )
 {
 	logerror("mapper75_w, offset: %04x, data: %02x\n", offset, data);
 	switch (offset & 0x7000)
@@ -3498,7 +3500,7 @@ static void mapper75_w (int offset, int data)
 	}
 }
 
-static void mapper77_w (int offset, int data)
+static WRITE_HANDLER( mapper77_w )
 {
 
 /* Mapper is busted */
@@ -3519,7 +3521,7 @@ static void mapper77_w (int offset, int data)
 	}
 }
 
-static void mapper78_w (int offset, int data)
+static WRITE_HANDLER( mapper78_w )
 {
 	logerror("mapper78_w, offset: %04x, data: %02x\n", offset, data);
 	/* Switch 8k VROM bank */
@@ -3529,7 +3531,7 @@ static void mapper78_w (int offset, int data)
 	prg16_89ab (data & 0x0f);
 }
 
-static void mapper79_l_w (int offset, int data)
+static WRITE_HANDLER( mapper79_l_w )
 {
 	logerror("mapper79_l_w: %04x:%02x\n", offset, data);
 
@@ -3543,12 +3545,12 @@ static void mapper79_l_w (int offset, int data)
 	}
 }
 
-static void mapper79_w (int offset, int data)
+static WRITE_HANDLER( mapper79_w )
 {
 	logerror("mapper79_w, offset: %04x, data: %02x\n", offset, data);
 }
 
-static void mapper80_m_w (int offset, int data)
+static WRITE_HANDLER( mapper80_m_w )
 {
 	logerror("mapper80_m_w, offset: %04x, data: %02x\n", offset, data);
 
@@ -3620,7 +3622,7 @@ static void mapper80_m_w (int offset, int data)
 	}
 }
 
-static void mapper82_m_w (int offset, int data)
+static WRITE_HANDLER( mapper82_m_w )
 {
 	static int vrom_switch;
 
@@ -3682,7 +3684,7 @@ static void mapper82_m_w (int offset, int data)
 	}
 }
 
-static void konami_vrc7_w (int offset, int data)
+static WRITE_HANDLER( konami_vrc7_w )
 {
 //	logerror("konami_vrc7_w offset: %04x, data: %02x, scanline: %d\n", offset, data, current_scanline);
 
@@ -3764,7 +3766,7 @@ static void konami_vrc7_w (int offset, int data)
 	}
 }
 
-static void mapper86_w (int offset, int data)
+static WRITE_HANDLER( mapper86_w )
 {
 	logerror("mapper86_w, offset: %04x, data: %02x\n", offset, data);
 	switch (offset)
@@ -3780,7 +3782,7 @@ static void mapper86_w (int offset, int data)
 	}
 }
 
-static void mapper87_m_w (int offset, int data)
+static WRITE_HANDLER( mapper87_m_w )
 {
 	logerror("mapper87_m_w %04x:%02x\n", offset, data);
 
@@ -3788,7 +3790,7 @@ static void mapper87_m_w (int offset, int data)
 	chr8 (data >> 1);
 }
 
-static void mapper91_m_w (int offset, int data)
+static WRITE_HANDLER( mapper91_m_w )
 {
 	logerror ("mapper91_m_w, offset: %04x, data: %02x\n", offset, data);
 
@@ -3816,7 +3818,7 @@ static void mapper91_m_w (int offset, int data)
 	}
 }
 
-static void mapper93_m_w (int offset, int data)
+static WRITE_HANDLER( mapper93_m_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper93_m_w %04x:%02x\n", offset, data);
@@ -3825,7 +3827,7 @@ static void mapper93_m_w (int offset, int data)
 	prg16_89ab (data);
 }
 
-static void mapper93_w (int offset, int data)
+static WRITE_HANDLER( mapper93_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper93_w %04x:%02x\n", offset, data);
@@ -3834,7 +3836,7 @@ static void mapper93_w (int offset, int data)
 	/* was written to the mid-area mapper */
 }
 
-static void mapper94_w (int offset, int data)
+static WRITE_HANDLER( mapper94_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper94_w %04x:%02x\n", offset, data);
@@ -3843,7 +3845,7 @@ static void mapper94_w (int offset, int data)
 	prg16_89ab (data >> 2);
 }
 
-static void mapper95_w (int offset, int data)
+static WRITE_HANDLER( mapper95_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper95_w %04x:%02x\n", offset, data);
@@ -3864,7 +3866,7 @@ static void mapper95_w (int offset, int data)
 	}
 }
 
-static void mapper101_m_w (int offset, int data)
+static WRITE_HANDLER( mapper101_m_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper101_m_w %04x:%02x\n", offset, data);
@@ -3873,7 +3875,7 @@ static void mapper101_m_w (int offset, int data)
 	chr8 (data);
 }
 
-static void mapper101_w (int offset, int data)
+static WRITE_HANDLER( mapper101_w )
 {
 #ifdef LOG_MMC
 	logerror("mapper101_w %04x:%02x\n", offset, data);
@@ -3882,7 +3884,7 @@ static void mapper101_w (int offset, int data)
 	/* ??? */
 }
 
-static void mapper225_w (int offset, int data)
+static WRITE_HANDLER( mapper225_w )
 {
 	int hi_bank;
 	int size_16;
@@ -3914,7 +3916,7 @@ static void mapper225_w (int offset, int data)
 		ppu_mirror_v();
 }
 
-static void mapper226_w (int offset, int data)
+static WRITE_HANDLER( mapper226_w )
 {
 	int hi_bank;
 	int size_16;
@@ -3956,7 +3958,7 @@ static void mapper226_w (int offset, int data)
 		prg32 (bank);
 }
 
-static void mapper227_w (int offset, int data)
+static WRITE_HANDLER( mapper227_w )
 {
 	int hi_bank;
 	int size_32;
@@ -3995,7 +3997,7 @@ static void mapper227_w (int offset, int data)
 		ppu_mirror_v();
 }
 
-static void mapper228_w (int offset, int data)
+static WRITE_HANDLER( mapper228_w )
 {
 	/* The address lines double as data */
 	/* --mPPppppPP-cccc */
@@ -4050,7 +4052,7 @@ static void mapper228_w (int offset, int data)
 	chr8 (chr);
 }
 
-static void mapper229_w (int offset, int data)
+static WRITE_HANDLER( mapper229_w )
 {
 #ifdef LOG_MMC
 	logerror ("mapper229_w, offset: %04x, data: %02x\n", offset, data);
@@ -4074,7 +4076,7 @@ static void mapper229_w (int offset, int data)
 	}
 }
 
-static void mapper231_w (int offset, int data)
+static WRITE_HANDLER( mapper231_w )
 {
 	int bank;
 

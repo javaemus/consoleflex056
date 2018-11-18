@@ -46,12 +46,12 @@ public class p2000m
 		}
 	}
 	
-	public static VhUpdatePtr p2000m_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void p2000m_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 	{
 		int offs, sx, sy, code, loop;
 	
 		if (full_refresh != 0)
-			memset (dirtybuffer, 1, videoram_size[0]);
+			memset (dirtybuffer, 1, videoram_size);
 	
 		for (offs = 0; offs < 80 * 24; offs++)
 		{
@@ -85,5 +85,5 @@ public class p2000m
 				dirtybuffer[offs] = 0;
 			}
 		}
-	} };
+	}
 }

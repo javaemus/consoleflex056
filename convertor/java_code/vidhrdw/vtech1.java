@@ -32,13 +32,14 @@ package vidhrdw;
 public class vtech1
 {
 	
+	#ifdef OLD_VIDEO
 	/* from machine/vz.c */
-	extern int vtech1_latch;
+	//extern int vtech1_latch;
 	
 	char vtech1_frame_message[64+1];
 	int vtech1_frame_time = 0;
 	
-	public static VhUpdatePtr vtech1_vh_screenrefresh = new VhUpdatePtr() { public void handler(osd_bitmap bitmap,int full_refresh) 
+	void vtech1_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh)
 	{
 	    int offs;
 	
@@ -52,8 +53,10 @@ public class vtech1
 	
 	    if (full_refresh != 0)
 		{
+			/* graphics */
 			if ((vtech1_latch & 0x08) != 0)
 			{
+				/* green/orange */
 				if ((vtech1_latch & 0x10) != 0)
 					fillbitmap(Machine.scrbitmap, Machine.pens[5], &Machine.visible_area);
 				else
@@ -61,16 +64,19 @@ public class vtech1
 			}
 	        else
 			{
-				fillbitmap(Machine.scrbitmap, Machine.pens[16], &Machine.visible_area);
+				fillbitmap(Machine.scrbitmap, Machine.pens[0], &Machine.visible_area);
+	//			fillbitmap(Machine.scrbitmap, Machine.pens[16], &Machine.visible_area); // only 13 entries
 			}
-	        memset(dirtybuffer, 0xff, videoram_size[0]);
+	        memset(dirtybuffer, 0xff, videoram_size);
 	    }
-	
+		/* graphics */
 		if ((vtech1_latch & 0x08) != 0)
 	    {
 	        /* graphics mode */
+	
+			/* green/orange */
 			int color = (vtech1_latch & 0x10) ? 1 : 0;
-	        for( offs = 0; offs < videoram_size[0]; offs++ )
+	        for( offs = 0; offs < videoram_size; offs++ )
 	        {
 	            if( dirtybuffer[offs] )
 	            {
@@ -95,6 +101,7 @@ public class vtech1
 					sy = 20 + (offs / 32) * 12;
 					sx = 16 + (offs % 32) * 8;
 	                code = videoram.read(offs);
+					/* graphics */
 					if ((vtech1_latch & 0x10) != 0)
 						color = (code & 0x80) ? ((code >> 4) & 7) : 9;
 	                else
@@ -105,6 +112,41 @@ public class vtech1
 	            }
 	        }
 	    }
+	}
+	
+	#else
+	
+	
+	/* bit 3 of cassette/speaker/vdp control latch defines if the mode is text or
+	graphics */
+	
+	static void vtech1_charproc(UINT8 c)
+	{
+		/* bit 7 defines if semigraphics/text used */
+		/* bit 6 defines if chars should be inverted */
+	
+		m6847_inv_w(0,      (c & 0x40));
+		m6847_as_w(0,		(c & 0x80));
+		/* it appears this is fixed */
+		m6847_intext_w(0,	0);
+	}
+	
+	public static VhStartPtr vtech1_vh_start = new VhStartPtr() { public int handler() 
+	{
+		struct m6847_init_params p;
+	
+		m6847_vh_normalparams(&p);
+		p.version = M6847_VERSION_ORIGINAL;
+		p.ram = memory_region(REGION_CPU1) + 0x7000;
+		p.ramsize = 0x10000;
+		p.charproc = vtech1_charproc;
+	
+		if (m6847_vh_start(&p))
+			return 1;
+	
+		return (0);
 	} };
+	
+	#endif
 	
 }

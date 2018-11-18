@@ -108,7 +108,7 @@ void	apple1_vh_dsp_clr (void)
 	}
 }
 
-void	apple1_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
+void	apple1_vh_screenrefresh (struct mame_bitmap *bitmap, int full_refresh)
 {
 	int offs;
 	int code;
@@ -125,7 +125,7 @@ void	apple1_vh_screenrefresh (struct osd_bitmap *bitmap, int full_refresh)
 			if (offs == dsp_pntr) code = 1;
 			else code = videoram[offs];
 			sy = (offs / 40) * 8;
-			sx = (offs % 40) * 6;
+			sx = (offs % 40) * 7;
 
 			drawgfx (bitmap, Machine->gfx[0], code, 1,
 			  0, 0, sx,sy, &Machine->visible_area, TRANSPARENCY_NONE, 0);

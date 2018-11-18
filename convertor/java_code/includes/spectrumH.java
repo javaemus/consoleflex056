@@ -1,7 +1,24 @@
-extern int  spectrum_rom_load(int id);
-extern void spectrum_rom_exit(int id);
+extern int  spectrum_snap_load(int id);
+extern void spectrum_snap_exit(int id);
 
-extern int  spectrum_rom_id(int id);
+extern 
+typedef enum
+{
+	TIMEX_CART_NONE,
+	TIMEX_CART_DOCK,
+	TIMEX_CART_EXROM,
+	TIMEX_CART_HOME
+}
+TIMEX_CART_TYPE;
+
+extern TIMEX_CART_TYPE timex_cart_type;
+extern UINT8 timex_cart_chunks;
+extern UINT8 * timex_cart_data;
+extern int  spectrum_cart_load(int id);
+extern void spectrum_cart_exit(int id);
+
+extern int  timex_cart_load(int id);
+extern void timex_cart_exit(int id);
 extern 
 extern extern 
 extern int  spec_quick_init (int id);
@@ -25,10 +42,14 @@ extern UBytePtr ts2068_ram;
 
 extern extern 
 
-extern extern extern extern 
-extern extern extern 
-extern extern 
+extern extern extern void spectrum_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
 extern 
+extern extern extern void spectrum_128_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+
+extern extern void ts2068_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+
+extern void tc2048_vh_screenrefresh(struct mame_bitmap *bitmap, int full_refresh);
+
 extern WRITE_HANDLER ( spectrum_characterram_w );
 extern READ_HANDLER  ( spectrum_characterram_r );
 extern WRITE_HANDLER ( spectrum_colorram_w );
