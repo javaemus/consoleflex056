@@ -25,3 +25,9 @@ hs_err_pid*
 /emulator/build/
 /emulator/dist/
 /emulator/nbproject/private/*
+/emulator/src/old/*
+/emulator/src/WIP/*
+/emulator/src/WIP2/*
+/convertor/nbproject/private/
+/convertor/build/
+/convertor/dist/
