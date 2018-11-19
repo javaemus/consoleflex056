@@ -31,3 +31,5 @@ hs_err_pid*
 /convertor/nbproject/private/
 /convertor/build/
 /convertor/dist/
+/emulator/software/*
+/emulator/arcadeflex.cfg
