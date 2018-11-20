@@ -4,8 +4,9 @@
  */
 package mame;
 
-//mess specific file should use the proper import for arcadeflex
+
 import java.util.ArrayList;
+//mess specific files should use the proper import for arcadeflex
 import static mess_spec.common.*;
 
 public class commonH {
@@ -122,27 +123,32 @@ public class commonH {
     public static int BADCRC(int crc) {
         return ~crc;
     }
-    /*TODO*///
-/*TODO*///
-/*TODO*///
-/*TODO*////***************************************************************************
-/*TODO*///
-/*TODO*///	Core macros for the ROM loading system
-/*TODO*///
-/*TODO*///***************************************************************************/
-/*TODO*///
+
+    /**
+     * *************************************************************************
+     *
+     * Core macros for the ROM loading system
+     *
+     **************************************************************************
+     */
+
     /* ----- length compaction macros ----- */
     public static final int INVALID_LENGTH = 0x7ff;
-    /*TODO*///#define COMPACT_LENGTH(x)									\
-/*TODO*///	((((x) & 0xffffff00) == 0) ? (0x000 | ((x) >> 0)) :		\
-/*TODO*///	 (((x) & 0xfffff00f) == 0) ? (0x100 | ((x) >> 4)) :		\
-/*TODO*///	 (((x) & 0xffff00ff) == 0) ? (0x200 | ((x) >> 8)) :		\
-/*TODO*///	 (((x) & 0xfff00fff) == 0) ? (0x300 | ((x) >> 12)) : 	\
-/*TODO*///	 (((x) & 0xff00ffff) == 0) ? (0x400 | ((x) >> 16)) : 	\
-/*TODO*///	 (((x) & 0xf00fffff) == 0) ? (0x500 | ((x) >> 20)) : 	\
-/*TODO*///	 (((x) & 0x00ffffff) == 0) ? (0x600 | ((x) >> 24)) : 	\
-/*TODO*///	 INVALID_LENGTH)
-/*TODO*///#define UNCOMPACT_LENGTH(x)	(((x) == INVALID_LENGTH) ? 0 : (((x) & 0xff) << (((x) & 0x700) >> 6)))
+
+    public static final int COMPACT_LENGTH(int x) {
+        return ((((x) & 0xffffff00) == 0) ? (0x000 | ((x) >> 0))
+                : (((x) & 0xfffff00f) == 0) ? (0x100 | ((x) >> 4))
+                        : (((x) & 0xffff00ff) == 0) ? (0x200 | ((x) >> 8))
+                                : (((x) & 0xfff00fff) == 0) ? (0x300 | ((x) >> 12))
+                                        : (((x) & 0xff00ffff) == 0) ? (0x400 | ((x) >> 16))
+                                                : (((x) & 0xf00fffff) == 0) ? (0x500 | ((x) >> 20))
+                                                        : (((x) & 0x00ffffff) == 0) ? (0x600 | ((x) >> 24))
+                                                                : INVALID_LENGTH);
+    }
+
+    public static final int UNCOMPACT_LENGTH(int x) {
+        return (((x) == INVALID_LENGTH) ? 0 : (((x) & 0xff) << (((x) & 0x700) >> 6)));
+    }
 
     /* ----- per-entry constants ----- */
     public static final int ROMENTRYTYPE_REGION = 1;/* this entry marks the start of a region */
@@ -160,18 +166,53 @@ public class commonH {
     public static final String ROMENTRY_FILL = "5";
     public static final String ROMENTRY_COPY = "6";
 
-    /*TODO*////* ----- per-entry macros ----- */
-/*TODO*///#define ROMENTRY_GETTYPE(r)			((FPTR)(r)->_name)
-/*TODO*///#define ROMENTRY_ISSPECIAL(r)		(ROMENTRY_GETTYPE(r) < ROMENTRYTYPE_COUNT)
-/*TODO*///#define ROMENTRY_ISFILE(r)			(!ROMENTRY_ISSPECIAL(r))
-/*TODO*///#define ROMENTRY_ISREGION(r)		((r)->_name == ROMENTRY_REGION)
-/*TODO*///#define ROMENTRY_ISEND(r)			((r)->_name == ROMENTRY_END)
-/*TODO*///#define ROMENTRY_ISRELOAD(r)		((r)->_name == ROMENTRY_RELOAD)
-/*TODO*///#define ROMENTRY_ISCONTINUE(r)		((r)->_name == ROMENTRY_CONTINUE)
-/*TODO*///#define ROMENTRY_ISFILL(r)			((r)->_name == ROMENTRY_FILL)
-/*TODO*///#define ROMENTRY_ISCOPY(r)			((r)->_name == ROMENTRY_COPY)
-/*TODO*///#define ROMENTRY_ISREGIONEND(r)		(ROMENTRY_ISREGION(r) || ROMENTRY_ISEND(r))
-/*TODO*///
+    /* ----- per-entry macros ----- */
+    public static int ROMENTRY_GETTYPE(RomModule[] romp, int romp_ptr) {
+        //((FPTR)(r)->_name)
+        int result;
+        try {
+            result = Integer.parseInt(romp[romp_ptr]._name);//possible values 1-6
+        } catch (Exception e) {
+            result = 15; //random value just not to be something between 1-6
+        }
+        return result;
+    }
+
+    public static boolean ROMENTRY_ISSPECIAL(RomModule[] romp, int romp_ptr) {
+        return (ROMENTRY_GETTYPE(romp, romp_ptr) < ROMENTRYTYPE_COUNT);
+    }
+
+    public static boolean ROMENTRY_ISFILE(RomModule[] romp, int romp_ptr) {
+        return (!ROMENTRY_ISSPECIAL(romp, romp_ptr));
+    }
+
+    public static boolean ROMENTRY_ISREGION(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name.matches(ROMENTRY_REGION);
+    }
+
+    public static boolean ROMENTRY_ISEND(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name.matches(ROMENTRY_END);
+    }
+
+    public static boolean ROMENTRY_ISRELOAD(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name.matches(ROMENTRY_RELOAD);
+    }
+
+    public static boolean ROMENTRY_ISCONTINUE(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name.matches(ROMENTRY_CONTINUE);
+    }
+
+    public static boolean ROMENTRY_ISFILL(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name.matches(ROMENTRY_FILL);
+    }
+
+    public static boolean ROMENTRY_ISCOPY(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name.matches(ROMENTRY_COPY);
+    }
+
+    public static boolean ROMENTRY_ISREGIONEND(RomModule[] romp, int romp_ptr) {
+        return (ROMENTRY_ISREGION(romp, romp_ptr) || ROMENTRY_ISEND(romp, romp_ptr));
+    }
 
     /* ----- per-region constants ----- */
     public static final int ROMREGION_WIDTHMASK = 0x00000003;/* native width of region, as power of 2 */
@@ -208,20 +249,34 @@ public class commonH {
  /*TODO*///#define		ROMREGION_ERASEVAL(x)	((((x) & 0xff) << 8) | ROMREGION_ERASE)
 /*TODO*///#define		ROMREGION_ERASE00		ROMREGION_ERASEVAL(0)
 /*TODO*///#define		ROMREGION_ERASEFF		ROMREGION_ERASEVAL(0xff)
-/*TODO*///
-/*TODO*////* ----- per-region macros ----- */
-/*TODO*///#define ROMREGION_GETTYPE(r)		((r)->_crc)
-/*TODO*///#define ROMREGION_GETLENGTH(r)		((r)->_length)
-/*TODO*///#define ROMREGION_GETFLAGS(r)		((r)->_offset)
-/*TODO*///#define ROMREGION_GETWIDTH(r)		(8 << (ROMREGION_GETFLAGS(r) & ROMREGION_WIDTHMASK))
+
+    /* ----- per-region macros ----- */
+    public static int ROMREGION_GETTYPE(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._crc;
+    }
+
+    public static int ROMREGION_GETLENGTH(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._length;
+    }
+
+    public static int ROMREGION_GETFLAGS(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._offset;
+    }
+
+    /*TODO*///#define ROMREGION_GETWIDTH(r)		(8 << (ROMREGION_GETFLAGS(r) & ROMREGION_WIDTHMASK))
 /*TODO*///#define ROMREGION_ISLITTLEENDIAN(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_ENDIANMASK) == ROMREGION_LE)
 /*TODO*///#define ROMREGION_ISBIGENDIAN(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_ENDIANMASK) == ROMREGION_BE)
 /*TODO*///#define ROMREGION_ISINVERTED(r)		((ROMREGION_GETFLAGS(r) & ROMREGION_INVERTMASK) == ROMREGION_INVERT)
 /*TODO*///#define ROMREGION_ISDISPOSE(r)		((ROMREGION_GETFLAGS(r) & ROMREGION_DISPOSEMASK) == ROMREGION_DISPOSE)
-/*TODO*///#define ROMREGION_ISSOUNDONLY(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_SOUNDONLYMASK) == ROMREGION_SOUNDONLY)
-/*TODO*///#define ROMREGION_ISLOADUPPER(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_LOADUPPERMASK) == ROMREGION_LOADUPPER)
-/*TODO*///#define ROMREGION_ISERASE(r)		((ROMREGION_GETFLAGS(r) & ROMREGION_ERASEMASK) == ROMREGION_ERASE)
-/*TODO*///#define ROMREGION_GETERASEVAL(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_ERASEVALMASK) >> 8)
+    public static boolean ROMREGION_ISSOUNDONLY(RomModule[] romp, int romp_ptr) {
+        return ((ROMREGION_GETFLAGS(romp, romp_ptr) & ROMREGION_SOUNDONLYMASK) == ROMREGION_SOUNDONLY);
+    }
+
+    /*TODO*///#define ROMREGION_ISLOADUPPER(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_LOADUPPERMASK) == ROMREGION_LOADUPPER)
+    public static boolean ROMREGION_ISERASE(RomModule[] romp, int romp_ptr) {
+        return ((ROMREGION_GETFLAGS(romp, romp_ptr) & ROMREGION_ERASEMASK) == ROMREGION_ERASE);
+    }
+    /*TODO*///#define ROMREGION_GETERASEVAL(r)	((ROMREGION_GETFLAGS(r) & ROMREGION_ERASEVALMASK) >> 8)
 
     /* ----- per-ROM constants ----- */
     public static final int ROM_LENGTHMASK = 0x000007ff;/* the compacted length of the ROM */
@@ -261,30 +316,67 @@ public class commonH {
 
     public static final int ROM_INHERITEDFLAGS = (ROM_GROUPMASK | ROM_SKIPMASK | ROM_REVERSEMASK | ROM_BITWIDTHMASK | ROM_BITSHIFTMASK);
 
-    /*TODO*////* ----- per-ROM macros ----- */
-/*TODO*///#define ROM_GETNAME(r)				((r)->_name)
-/*TODO*///#define ROM_SAFEGETNAME(r)			(ROMENTRY_ISFILL(r) ? "fill" : ROMENTRY_ISCOPY(r) ? "copy" : ROM_GETNAME(r))
-/*TODO*///#define ROM_GETOFFSET(r)			((r)->_offset)
-/*TODO*///#define ROM_GETCRC(r)				((r)->_crc)
-/*TODO*///#define ROM_GETLENGTH(r)			(UNCOMPACT_LENGTH((r)->_length & ROM_LENGTHMASK))
-/*TODO*///#define ROM_GETFLAGS(r)				((r)->_length & ~ROM_LENGTHMASK)
-/*TODO*///#define ROM_ISOPTIONAL(r)			((ROM_GETFLAGS(r) & ROM_OPTIONALMASK) == ROM_OPTIONAL)
-/*TODO*///#define ROM_GETGROUPSIZE(r)			(((ROM_GETFLAGS(r) & ROM_GROUPMASK) >> 12) + 1)
-/*TODO*///#define ROM_GETSKIPCOUNT(r)			((ROM_GETFLAGS(r) & ROM_SKIPMASK) >> 16)
-/*TODO*///#define ROM_ISREVERSED(r)			((ROM_GETFLAGS(r) & ROM_REVERSEMASK) == ROM_REVERSE)
-/*TODO*///#define ROM_GETBITWIDTH(r)			(((ROM_GETFLAGS(r) & ROM_BITWIDTHMASK) >> 21) + 8 * ((ROM_GETFLAGS(r) & ROM_BITWIDTHMASK) == 0))
-/*TODO*///#define ROM_GETBITSHIFT(r)			((ROM_GETFLAGS(r) & ROM_BITSHIFTMASK) >> 24)
-/*TODO*///#define ROM_INHERITSFLAGS(r)		((ROM_GETFLAGS(r) & ROM_INHERITFLAGSMASK) == ROM_INHERITFLAGS)
-/*TODO*///#define ROM_NOGOODDUMP(r)			(ROM_GETCRC(r) == 0)
-/*TODO*///
-/*TODO*///
-/*TODO*///
-/*TODO*////***************************************************************************
-/*TODO*///
-/*TODO*///	Derived macros for the ROM loading system
-/*TODO*///
-/*TODO*///***************************************************************************/
-/*TODO*///
+    /* ----- per-ROM macros ----- */
+    public static String ROM_GETNAME(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._name;
+    }
+
+    /*TODO*///#define ROM_SAFEGETNAME(r)			(ROMENTRY_ISFILL(r) ? "fill" : ROMENTRY_ISCOPY(r) ? "copy" : ROM_GETNAME(r))
+    public static int ROM_GETOFFSET(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._offset;
+    }
+
+    public static int ROM_GETCRC(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._crc;
+    }
+
+    public static int ROM_GETLENGTH(RomModule[] romp, int romp_ptr) {
+        return (UNCOMPACT_LENGTH(romp[romp_ptr]._length & ROM_LENGTHMASK));
+    }
+
+    public static int ROM_GETFLAGS(RomModule[] romp, int romp_ptr) {
+        return romp[romp_ptr]._length & ~ROM_LENGTHMASK;
+    }
+
+    public static boolean ROM_ISOPTIONAL(RomModule[] romp, int romp_ptr) {
+        return ((ROM_GETFLAGS(romp, romp_ptr) & ROM_OPTIONALMASK) == ROM_OPTIONAL);
+    }
+
+    public static int ROM_GETGROUPSIZE(RomModule[] romp, int romp_ptr) {
+        return (((ROM_GETFLAGS(romp, romp_ptr) & ROM_GROUPMASK) >> 12) + 1);
+    }
+
+    public static int ROM_GETSKIPCOUNT(RomModule[] romp, int romp_ptr) {
+        return ((ROM_GETFLAGS(romp, romp_ptr) & ROM_SKIPMASK) >> 16);
+    }
+
+    public static boolean ROM_ISREVERSED(RomModule[] romp, int romp_ptr) {
+        return ((ROM_GETFLAGS(romp, romp_ptr) & ROM_REVERSEMASK) == ROM_REVERSE);
+    }
+
+    public static int ROM_GETBITWIDTH(RomModule[] romp, int romp_ptr) {
+        return (((ROM_GETFLAGS(romp, romp_ptr) & ROM_BITWIDTHMASK) >> 21) + 8 * (((ROM_GETFLAGS(romp, romp_ptr) & ROM_BITWIDTHMASK) == 0) ? 1 : 0));
+    }
+
+    public static int ROM_GETBITSHIFT(RomModule[] romp, int romp_ptr) {
+        return ((ROM_GETFLAGS(romp, romp_ptr) & ROM_BITSHIFTMASK) >> 24);
+    }
+
+    public static boolean ROM_INHERITSFLAGS(RomModule[] romp, int romp_ptr) {
+        return ((ROM_GETFLAGS(romp, romp_ptr) & ROM_INHERITFLAGSMASK) == ROM_INHERITFLAGS);
+    }
+
+    public static boolean ROM_NOGOODDUMP(RomModule[] romp, int romp_ptr) {
+        return (ROM_GETCRC(romp, romp_ptr) == 0);
+    }
+
+    /**
+     * *************************************************************************
+     *
+     * Derived macros for the ROM loading system
+     *
+     **************************************************************************
+     */
     public static RomModule[] rommodule_macro = null;
     public static ArrayList<RomModule> arload = new ArrayList<>();
 
@@ -300,18 +392,26 @@ public class commonH {
         arload.add(new RomModule(ROMENTRY_REGION, flags, length, type));
     }
 
-/*TODO*///#define ROM_REGION16_LE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_16BIT | ROMREGION_LE)
+    /*TODO*///#define ROM_REGION16_LE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_16BIT | ROMREGION_LE)
 /*TODO*///#define ROM_REGION16_BE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_16BIT | ROMREGION_BE)
 /*TODO*///#define ROM_REGION32_LE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_32BIT | ROMREGION_LE)
 /*TODO*///#define ROM_REGION32_BE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_32BIT | ROMREGION_BE)
 /*TODO*///
-/*TODO*////* ----- core ROM loading macros ----- */
-/*TODO*///#define ROMX_LOAD(name,offset,length,crc,flags)		{ name, offset, (flags) | COMPACT_LENGTH(length), crc },
-/*TODO*///#define ROM_LOAD(name,offset,length,crc)			ROMX_LOAD(name, offset, length, crc, 0)
-/*TODO*///#define ROM_LOAD_OPTIONAL(name,offset,length,crc)	ROMX_LOAD(name, offset, length, crc, ROM_OPTIONAL)
+    /* ----- core ROM loading macros ----- */
+    public static void ROMX_LOAD(String name, int offset, int length, int crc, int flags) {
+        arload.add(new RomModule(name, offset, (flags) | COMPACT_LENGTH(length), crc));
+    }
+
+    public static void ROM_LOAD(String name, int offset, int length, int crc) {
+        ROMX_LOAD(name, offset, length, crc, 0);
+    }
+
+    /*TODO*///#define ROM_LOAD_OPTIONAL(name,offset,length,crc)	ROMX_LOAD(name, offset, length, crc, ROM_OPTIONAL)
 /*TODO*///#define ROM_CONTINUE(offset,length)					ROMX_LOAD(ROMENTRY_CONTINUE, offset, length, 0, ROM_INHERITFLAGS)
-/*TODO*///#define ROM_RELOAD(offset,length)					ROMX_LOAD(ROMENTRY_RELOAD, offset, length, 0, ROM_INHERITFLAGS)
-/*TODO*///#define ROM_FILL(offset,length,value)				ROM_LOAD(ROMENTRY_FILL, offset, length, value)
+    public static void ROM_RELOAD(int offset, int length) {
+        ROMX_LOAD(ROMENTRY_RELOAD, offset, length, 0, ROM_INHERITFLAGS);
+    }
+    /*TODO*///#define ROM_FILL(offset,length,value)				ROM_LOAD(ROMENTRY_FILL, offset, length, value)
 /*TODO*///#define ROM_COPY(rgn,srcoffset,offset,length)		ROMX_LOAD(ROMENTRY_COPY, offset, length, srcoffset, (rgn) << 24)
 /*TODO*///
 /*TODO*////* ----- nibble loading macros ----- */
@@ -328,7 +428,6 @@ public class commonH {
 /*TODO*///#define ROM_LOAD32_WORD(name,offset,length,crc)		ROMX_LOAD(name, offset, length, crc, ROM_GROUPWORD | ROM_SKIP(2))
 /*TODO*///#define ROM_LOAD32_WORD_SWAP(name,offset,length,crc)ROMX_LOAD(name, offset, length, crc, ROM_GROUPWORD | ROM_REVERSE | ROM_SKIP(2))
 /*TODO*///
-
     public static final int COIN_COUNTERS = 4;/* total # of coin counters */
 
     public static int flip_screen() {
@@ -394,11 +493,5 @@ public class commonH {
 /*TODO*///		 ((((val) >> ( B1)) & 1) <<  1) | \
 /*TODO*///		 ((((val) >> ( B0)) & 1) <<  0))
 /*TODO*///
-/*TODO*///
-/*TODO*///#ifdef __cplusplus
-/*TODO*///}
-/*TODO*///#endif
-/*TODO*///
-/*TODO*///#endif
-/*TODO*///    
+/*TODO*///   
 }
