@@ -5,6 +5,7 @@
 package mame;
 
 //mess specific file should use the proper import for arcadeflex
+import java.util.ArrayList;
 import static mess_spec.common.*;
 
 public class commonH {
@@ -151,15 +152,15 @@ public class commonH {
     public static final int ROMENTRYTYPE_FILL = 5;/* this entry fills an area with a constant value */
     public static final int ROMENTRYTYPE_COPY = 6;/* this entry copies data from another region/offset */
     public static final int ROMENTRYTYPE_COUNT = 7;
-    /*TODO*///
-/*TODO*///#define ROMENTRY_REGION				((const char *)ROMENTRYTYPE_REGION)
-/*TODO*///#define ROMENTRY_END				((const char *)ROMENTRYTYPE_END)
-/*TODO*///#define ROMENTRY_RELOAD				((const char *)ROMENTRYTYPE_RELOAD)
-/*TODO*///#define ROMENTRY_CONTINUE			((const char *)ROMENTRYTYPE_CONTINUE)
-/*TODO*///#define ROMENTRY_FILL				((const char *)ROMENTRYTYPE_FILL)
-/*TODO*///#define ROMENTRY_COPY				((const char *)ROMENTRYTYPE_COPY)
-/*TODO*///
-/*TODO*////* ----- per-entry macros ----- */
+
+    public static final String ROMENTRY_REGION = "1";
+    public static final String ROMENTRY_END = "2";
+    public static final String ROMENTRY_RELOAD = "3";
+    public static final String ROMENTRY_CONTINUE = "4";
+    public static final String ROMENTRY_FILL = "5";
+    public static final String ROMENTRY_COPY = "6";
+
+    /*TODO*////* ----- per-entry macros ----- */
 /*TODO*///#define ROMENTRY_GETTYPE(r)			((FPTR)(r)->_name)
 /*TODO*///#define ROMENTRY_ISSPECIAL(r)		(ROMENTRY_GETTYPE(r) < ROMENTRYTYPE_COUNT)
 /*TODO*///#define ROMENTRY_ISFILE(r)			(!ROMENTRY_ISSPECIAL(r))
@@ -260,7 +261,7 @@ public class commonH {
 
     public static final int ROM_INHERITEDFLAGS = (ROM_GROUPMASK | ROM_SKIPMASK | ROM_REVERSEMASK | ROM_BITWIDTHMASK | ROM_BITSHIFTMASK);
 
-/*TODO*////* ----- per-ROM macros ----- */
+    /*TODO*////* ----- per-ROM macros ----- */
 /*TODO*///#define ROM_GETNAME(r)				((r)->_name)
 /*TODO*///#define ROM_SAFEGETNAME(r)			(ROMENTRY_ISFILL(r) ? "fill" : ROMENTRY_ISCOPY(r) ? "copy" : ROM_GETNAME(r))
 /*TODO*///#define ROM_GETOFFSET(r)			((r)->_offset)
@@ -284,12 +285,21 @@ public class commonH {
 /*TODO*///
 /*TODO*///***************************************************************************/
 /*TODO*///
-/*TODO*////* ----- start/stop macros ----- */
-/*TODO*///#define ROM_START(name)								static const struct RomModule rom_##name[] = {
-/*TODO*///#define ROM_END										{ ROMENTRY_END, 0, 0, 0 } };
-/*TODO*///
-/*TODO*////* ----- ROM region macros ----- */
-/*TODO*///#define ROM_REGION(length,type,flags)				{ ROMENTRY_REGION, flags, length, type },
+    public static RomModule[] rommodule_macro = null;
+    public static ArrayList<RomModule> arload = new ArrayList<>();
+
+    /* ----- start/stop macros ----- */
+    public static void ROM_END() {
+        arload.add(new RomModule(ROMENTRY_END, 0, 0, 0));
+        rommodule_macro = arload.toArray(new RomModule[arload.size()]);
+        arload.clear();
+    }
+
+    /* ----- ROM region macros ----- */
+    public static void ROM_REGION(int length, int type, int flags) {
+        arload.add(new RomModule(ROMENTRY_REGION, flags, length, type));
+    }
+
 /*TODO*///#define ROM_REGION16_LE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_16BIT | ROMREGION_LE)
 /*TODO*///#define ROM_REGION16_BE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_16BIT | ROMREGION_BE)
 /*TODO*///#define ROM_REGION32_LE(length,type,flags)			ROM_REGION(length, type, (flags) | ROMREGION_32BIT | ROMREGION_LE)
