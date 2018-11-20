@@ -1,3 +1,7 @@
+20/11/2018
+==========
+Intial work on commonH,common still nothing that major there
+
 19/11/2018
 ==========
 Coleco driver ported to 0.56 
