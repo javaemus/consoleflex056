@@ -4,7 +4,7 @@
 package old.mame;
 
 import static old.arcadeflex.libc_old.IntPtr;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static common.subArrays.*;
 import static old.arcadeflex.video.osd_mark_dirty;
 import static old.mame.drawgfxH.*;

@@ -20,7 +20,7 @@ import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import java.util.Scanner;
 
 /**

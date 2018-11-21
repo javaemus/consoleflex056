@@ -16,7 +16,7 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
  */
 package WIP.arcadeflex;
 
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.mame.sndintrfH.*;
 import static WIP.mame.osdependH.*;
 

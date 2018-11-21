@@ -7,7 +7,7 @@ package WIP2.vidhrdw;
 
 import static WIP.arcadeflex.fucPtr.*;
 import static old.arcadeflex.osdepend.logerror;
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.mame.common.*;
 import static old.mame.drawgfx.copybitmap;
 import static old.mame.drawgfxH.TRANSPARENCY_NONE;

@@ -9,7 +9,7 @@ import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static common.subArrays.*;
 import static common.libc.cstring.*;
 import static old.arcadeflex.osdepend.logerror;
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static old.arcadeflex.video.osd_allocate_colors;
 import static old.arcadeflex.video.osd_modify_pen;
 import static WIP.mame.artworkC.*;
@@ -394,7 +394,8 @@ public class palette {
             palette_transparent_pen = shrinked_pens[rgbpenindex(red, green, blue)];
 
             if (color == -1) {
-                return;	/* by default, palette_transparent_color is -1 */
+                return;
+                /* by default, palette_transparent_color is -1 */
             }
 
             for (i = 0; i < Machine.drv.total_colors; i++) {
@@ -426,7 +427,8 @@ public class palette {
             osd_modify_pen(palette_transparent_pen, red, green, blue);
 
             if (color == -1) {
-                return;	/* by default, palette_transparent_color is -1 */
+                return;
+                /* by default, palette_transparent_color is -1 */
             }
         }
 
@@ -451,7 +453,8 @@ public class palette {
             osd_modify_pen(palette_transparent_pen, red, green, blue);
 
             if (color == -1) {
-                return;	/* by default, palette_transparent_color is -1 */
+                return;
+                /* by default, palette_transparent_color is -1 */
             }
         }
 
@@ -511,10 +514,10 @@ public class palette {
         while (usage_mask != 0) {
             if ((usage_mask & 1) != 0) {
                 if ((color_flags & PALETTE_COLOR_VISIBLE) != 0) {
-                    pen_visiblecount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset]+1);
+                    pen_visiblecount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset] + 1);
                 }
                 if ((color_flags & PALETTE_COLOR_CACHED) != 0) {
-                    pen_cachedcount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset]+1);
+                    pen_cachedcount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset] + 1);
                 }
             }
             table_offset++;
@@ -546,10 +549,10 @@ public class palette {
         while (usage_mask != 0) {
             if ((usage_mask & 1) != 0) {
                 if ((color_flags & PALETTE_COLOR_VISIBLE) != 0) {
-                    pen_visiblecount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset]-1);
+                    pen_visiblecount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset] - 1);
                 }
                 if ((color_flags & PALETTE_COLOR_CACHED) != 0) {
-                    pen_cachedcount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset]-1);
+                    pen_cachedcount.write(Machine.game_colortable[table_offset], Machine.game_colortable[table_offset] - 1);
                 }
             }
             table_offset++;
@@ -581,10 +584,10 @@ public class palette {
             int pen = pen_data.read(num_pens);
             if (flag[pen] == 0) {
                 if ((color_flags & PALETTE_COLOR_VISIBLE) != 0) {
-                    pen_visiblecount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen]+1);
+                    pen_visiblecount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen] + 1);
                 }
                 if ((color_flags & PALETTE_COLOR_CACHED) != 0) {
-                    pen_cachedcount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen]+1);
+                    pen_cachedcount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen] + 1);
                 }
                 flag[pen] = 1;
             }
@@ -614,10 +617,10 @@ public class palette {
             int pen = pen_data.read(num_pens);
             if (flag[pen] == 0) {
                 if ((color_flags & PALETTE_COLOR_VISIBLE) != 0) {
-                    pen_visiblecount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen]-1);
+                    pen_visiblecount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen] - 1);
                 }
                 if ((color_flags & PALETTE_COLOR_CACHED) != 0) {
-                    pen_cachedcount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen]-1);
+                    pen_cachedcount.write(Machine.game_colortable[table_offset + pen], Machine.game_colortable[table_offset + pen] - 1);
                 }
                 flag[pen] = 1;
             }
@@ -1144,7 +1147,7 @@ public class palette {
     /**
      * ****************************************************************************
      * Commonly used palette RAM handling functions
-     *****************************************************************************
+     * ****************************************************************************
      */
     public static UBytePtr paletteram = new UBytePtr();
     public static UBytePtr paletteram_2 = new UBytePtr();
@@ -1580,7 +1583,7 @@ public class palette {
     public static WriteHandlerPtr paletteram_xRRRRRGGGGGBBBBB_word_w = new WriteHandlerPtr() {
         public void handler(int offset, int data) {
             throw new UnsupportedOperationException("Unsupported");
-/*            int oldword = paletteram.READ_WORD(offset);
+            /*            int oldword = paletteram.READ_WORD(offset);
             int newword = COMBINE_WORD(oldword, data);
 
 
@@ -1588,6 +1591,7 @@ public class palette {
             changecolor_xRRRRRGGGGGBBBBB(offset / 2, newword);*/
         }
     };
+
     public static void changecolor_xGGGGGRRRRRBBBBB(int color, int data) {
         int r, g, b;
 
@@ -1691,9 +1695,10 @@ public class palette {
             changecolor_RRRRGGGGBBBBIIII(offset / 2, newword);
         }
     };*/
-    public static WriteHandlerPtr paletteram_xxxxRRRRGGGGBBBB_swap_w = new WriteHandlerPtr() {public void handler(int offset, int data)
-	{
-		paletteram.write(offset,data);
-		changecolor_xxxxRRRRGGGGBBBB(offset / 2,paletteram.read(offset | 1)| (paletteram.read(offset & ~1)<< 8));
-	} };
+    public static WriteHandlerPtr paletteram_xxxxRRRRGGGGBBBB_swap_w = new WriteHandlerPtr() {
+        public void handler(int offset, int data) {
+            paletteram.write(offset, data);
+            changecolor_xxxxRRRRGGGGBBBB(offset / 2, paletteram.read(offset | 1) | (paletteram.read(offset & ~1) << 8));
+        }
+    };
 }

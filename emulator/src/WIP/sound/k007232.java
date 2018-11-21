@@ -12,7 +12,7 @@ import static WIP.mame.sndintrf.*;
 import static WIP.mame.mame.*;
 import static old.sound.streams.*;
 import static WIP.arcadeflex.fucPtr.*;
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static old.mame.common.*;
 import static common.ptr.*;
 import static common.libc.cstdio.*;

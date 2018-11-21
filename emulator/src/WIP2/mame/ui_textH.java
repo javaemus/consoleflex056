@@ -7,7 +7,7 @@
  */
 package WIP2.mame;
 
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 
 public class ui_textH {
 

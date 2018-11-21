@@ -24,7 +24,7 @@
  */ 
 package WIP2.mess.systems;
 
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.arcadeflex.fucPtr.*;
 import static old.mame.cpuintrf.*;
 import static old.mame.cpuintrfH.*;

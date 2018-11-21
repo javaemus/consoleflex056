@@ -8,7 +8,7 @@ import static WIP2.mess.messH.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static old.arcadeflex.libc_old.*;
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.charArrayToInt;
 import static WIP.arcadeflex.libc_v2.charArrayToLong;
 import static old.arcadeflex.osdepend.logerror;

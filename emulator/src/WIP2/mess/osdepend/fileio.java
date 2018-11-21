@@ -4,7 +4,7 @@
  */
 package WIP2.mess.osdepend;
 
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.mame.osdependH.*;
 import WIP2.arcadeflex.javaspecific.CRC;
 import java.io.ByteArrayOutputStream;

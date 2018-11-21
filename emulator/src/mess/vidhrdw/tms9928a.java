@@ -8,7 +8,7 @@ import static common.libc.expressions.*;
 import WIP.mame.osdependH.mame_bitmap;
 import static old.arcadeflex.osdepend.logerror;
 import static common.libc.cstring.*;
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.mame.common.bitmap_alloc;
 import static WIP.mame.mame.Machine;
 import static WIP2.mess.vidhrdw.tms9928aH.TMS99x8A;

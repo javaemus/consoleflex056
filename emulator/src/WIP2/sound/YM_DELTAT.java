@@ -4,7 +4,7 @@
  */
 package WIP2.sound;
 
-import WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static common.subArrays.*;
 public class YM_DELTAT {
 

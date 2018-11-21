@@ -4,7 +4,7 @@
  */
 package WIP2.mess.includes;
 
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 
 public class nesH {
 

@@ -5,7 +5,7 @@
 package WIP2.mess.vidhrdw;
 
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import WIP.mame.osdependH.mame_bitmap;
 import static old.arcadeflex.osdepend.logerror;
 import static common.libc.cstring.*;

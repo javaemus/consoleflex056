@@ -4,7 +4,7 @@
 package WIP.mame;
 
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static common.libc.cstring.*;
 import java.util.Arrays;
 import static WIP.mame.mame.Machine;

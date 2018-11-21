@@ -14,7 +14,7 @@ import old.mame.drawgfxH.rectangle;
 import static old.mame.driverH.*;
 import static WIP2.mame.commonH.*;
 import static WIP2.mess.messH.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.cpu.m6502.m6502H.N2A03_DEFAULTCLOCK;
 import static WIP.mame.sndintrfH.SOUND_NES;
 import static old.mame.drawgfxH.*;

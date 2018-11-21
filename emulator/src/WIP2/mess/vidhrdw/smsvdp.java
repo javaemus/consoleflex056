@@ -5,7 +5,6 @@
 package WIP2.mess.vidhrdw;
 
 import static WIP.arcadeflex.fucPtr.*;
-import WIP.arcadeflex.libc_v2.UBytePtr;
 import static common.ptr.*;
 import static WIP.mame.common.*;
 import static WIP.mame.mame.Machine;
@@ -22,7 +21,6 @@ import static old.mame.drawgfxH.TRANSPARENCY_NONE;
 import static old.mame.cpuintrf.*;
 import static old.mame.drawgfx.*;
 import static old.mame.palette.*;
-import static WIP2.cpu.z80.z80.*;
 
 public class smsvdp
 {

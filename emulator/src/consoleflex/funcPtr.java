@@ -1,6 +1,6 @@
 package consoleflex;
 
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 
 /**
  *

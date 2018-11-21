@@ -13,7 +13,7 @@
  * using automatic conversion tool v0.01
  */ 
 package WIP2.mess.vidhrdw;
-
+import static common.ptr.*;
 import static WIP.arcadeflex.fucPtr.*;
 import static WIP.arcadeflex.libc_v2.*;
 import static WIP2.mame.commonH.*;

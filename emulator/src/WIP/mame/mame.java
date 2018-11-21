@@ -19,6 +19,7 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
  */
 package WIP.mame;
 
+import static common.ptr.*;
 import static WIP2.mame.mameH.*;
 import static WIP.mame.artworkC.*;
 import static WIP.mame.tilemapC.*;
@@ -38,7 +39,6 @@ import static old.arcadeflex.libc_old.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.arcadeflex.osdepend.osd_exit;
 import static old.arcadeflex.osdepend.osd_init;
-import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static old.arcadeflex.video.osd_clearbitmap;
 import static old.arcadeflex.video.osd_skip_this_frame;
 import static old.arcadeflex.video_old.*;

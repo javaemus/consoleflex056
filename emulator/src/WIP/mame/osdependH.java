@@ -19,7 +19,7 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
  */
 package WIP.mame;
 
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 
 public class osdependH {
 

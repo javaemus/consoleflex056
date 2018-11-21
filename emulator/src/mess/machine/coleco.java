@@ -4,7 +4,7 @@
 package mess.machine;
 
 import static WIP.arcadeflex.fucPtr.*;
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.mame.osdependH.OSD_FILETYPE_IMAGE;
 import static WIP2.mame.commonH.REGION_CPU1;
 import static WIP2.mess.machine.dsk.*;

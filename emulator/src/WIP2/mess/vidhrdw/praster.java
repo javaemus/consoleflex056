@@ -14,7 +14,7 @@ import static WIP.mame.osdependH.*;
 import static WIP.mame.mame.Machine;
 import static old.mame.drawgfxH.*;
 import static old.mame.drawgfx.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static old.arcadeflex.video.*;
 import static WIP.arcadeflex.fucPtr.*;
 import static old.mame.palette.*;

@@ -4,7 +4,7 @@
 package WIP.mame;
 
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.mame.memory.OP_RAM;
 import static WIP.mame.memory.OP_ROM;
 import static WIP.mame.memory.cpu_bankbase;

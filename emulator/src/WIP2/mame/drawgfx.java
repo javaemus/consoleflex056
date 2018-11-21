@@ -4,7 +4,7 @@
  */
 package WIP2.mame;
 
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import WIP.mame.osdependH.mame_bitmap;
 import static WIP.mame.tilemapC.priority_bitmap;
 import old.mame.drawgfxH.GfxElement;

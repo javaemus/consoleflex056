@@ -11,7 +11,7 @@
  * using automatic conversion tool v0.01
  */ 
 package WIP2.mess.vidhrdw;
-
+import static common.ptr.*;
 import static WIP2.mess.vidhrdw.crtc6845.*;
 import static WIP2.mess.vidhrdw.m6845H.*;
 import static WIP2.mess.vidhrdw.m6845.*;

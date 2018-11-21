@@ -4,7 +4,7 @@
 package old.mame;
 
 
-import static WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.mame.osdependH.mame_bitmap;
 import static common.subArrays.*;
 public class drawgfxH {

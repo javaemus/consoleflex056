@@ -4,7 +4,7 @@
  */
 package WIP2.mame;
 
-import WIP.arcadeflex.libc_v2.UBytePtr;
+import static common.ptr.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.memory.memorycontextswap;
 import static WIP.mame.osdependH.OSD_FILETYPE_HIGHSCORE;

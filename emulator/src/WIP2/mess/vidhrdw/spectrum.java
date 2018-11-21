@@ -19,7 +19,7 @@
  */ 
 package WIP2.mess.vidhrdw;
 
-import WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import WIP.arcadeflex.fucPtr.*;
 import static common.libc.cstring.*;
 import static old.arcadeflex.osdepend.logerror;

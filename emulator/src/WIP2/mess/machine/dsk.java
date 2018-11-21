@@ -16,7 +16,7 @@
  */ 
 package WIP2.mess.machine;
 
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.mame.osdependH.*;
 import static consoleflex.funcPtr.*;
 import static WIP2.mess.includes.flopdrvH.*;

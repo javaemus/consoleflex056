@@ -5,7 +5,7 @@ package WIP.mame;
 
 import WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static common.libc.cstring.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;
 import static WIP.mame.tilemapH.*;

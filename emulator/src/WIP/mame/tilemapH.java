@@ -4,7 +4,7 @@
 package WIP.mame;
 
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;
 import static WIP.mame.tilemapC.tile_info;

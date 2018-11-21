@@ -3,13 +3,12 @@ package old.arcadeflex;
 import WIP.arcadeflex.settings;
 import java.awt.*;
 import java.awt.event.*;
-
+import static common.ptr.*;
 import static old.arcadeflex.blit.back_buffer;
 import static old.arcadeflex.blit.palette_16bit_lookup;
 import static common.libc.cstring.*;
 import static old.arcadeflex.libc_old.printf;
 import static old.arcadeflex.osdepend.logerror;
-import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static old.arcadeflex.video_old.*;
 import static old.mame.driverH.*;
 import static old.mame.inptportH.*;

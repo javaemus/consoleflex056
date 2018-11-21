@@ -124,6 +124,7 @@ import static WIP2.mess.includes.flopdrvH.*;
 import static WIP2.mess.machine.flopdrv.*;
 import static WIP2.mess.machine.dsk.*;
 import static WIP2.mess.mess.device_input;
+import common.ptr.UBytePtr;
 
 /*TODO*/////import static mess.machine.wd17xx.h.*;
 

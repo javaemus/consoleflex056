@@ -23,7 +23,7 @@ rom/ram selection
  */ 
 package WIP2.mess.machine;
 
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 import static WIP.mame.osdependH.*;
 import static WIP.mame.memory.*;
 import static WIP.mame.memoryH.*;

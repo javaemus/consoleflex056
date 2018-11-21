@@ -11,6 +11,7 @@
 -More cstring cleanups
 -Even more cstring cleanups
 -Moved UShortPtr to common/ptr
+-Moved UBytePtr to common/ptr
 
 20/11/2018
 ==========

@@ -3,7 +3,7 @@ package old.arcadeflex;
 import WIP.arcadeflex.settings;
 import java.awt.*;
 import java.awt.event.*;
-
+import static common.ptr.*;
 import static old.arcadeflex.blit.*;
 import static old.arcadeflex.libc_old.*;
 import static old.arcadeflex.sound.update_audio;

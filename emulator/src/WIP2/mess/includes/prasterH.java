@@ -1,7 +1,7 @@
 package WIP2.mess.includes;
 
 import static WIP.mame.osdependH.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 
 
 public class prasterH {

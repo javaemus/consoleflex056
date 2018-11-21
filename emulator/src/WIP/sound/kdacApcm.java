@@ -7,7 +7,7 @@
 package WIP.sound;
 
 import static WIP.sound.k007232.*;
-import WIP.arcadeflex.libc_v2.*;
+import static common.ptr.*;
 
 public class kdacApcm {
 
