@@ -3,7 +3,7 @@
  */
 package WIP2.mess;
 
-import static WIP.arcadeflex.libc_v2.sprintf;
+import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.mame.options;
 import WIP.mame.osdependH.mame_bitmap;

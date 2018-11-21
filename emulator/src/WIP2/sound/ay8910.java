@@ -5,7 +5,7 @@
 package WIP2.sound;
 
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.sndintrf.*;
 import static WIP.mame.sndintrfH.*;

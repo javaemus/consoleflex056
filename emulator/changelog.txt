@@ -4,6 +4,7 @@
 -Created common/subArrays class and moved them there
 -Shortptr is now in common/ptr class
 -Moved random generator to common/libc/stdlib
+-Moved sprintf to common/libc/stdio class
 
 20/11/2018
 ==========

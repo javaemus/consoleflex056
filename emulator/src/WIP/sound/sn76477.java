@@ -9,7 +9,7 @@ import static old.mame.timer.*;
 import static old.mame.timerH.*;
 import static WIP.arcadeflex.libc.sizeof.*;
 import static WIP.arcadeflex.libc.memset.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static common.ptr.*;
 

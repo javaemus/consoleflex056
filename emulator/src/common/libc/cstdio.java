@@ -1,4 +1,4 @@
-package WIP2.arcadeflex.libc;
+package common.libc;
 
 /**
  *

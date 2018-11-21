@@ -8,7 +8,7 @@ import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.charArrayToInt;
 import static WIP.arcadeflex.libc_v2.charArrayToLong;
 import static WIP.arcadeflex.libc_v2.memcmp;
-import static WIP.arcadeflex.libc_v2.sprintf;
+import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.sndintrf.*;
 import static WIP.mame.sndintrfH.*;

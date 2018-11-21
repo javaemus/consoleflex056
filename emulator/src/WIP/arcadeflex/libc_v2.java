@@ -28,16 +28,6 @@ public class libc_v2 {
         }
     }
 
-    /**
-     * function equals to c sprintf syntax
-     *
-     * @param str
-     * @param arguments
-     * @return
-     */
-    public static String sprintf(String str, Object... arguments) {
-        return String.format(str, arguments);
-    }
 
     /**
      * function equals to c memcmp function

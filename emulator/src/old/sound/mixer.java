@@ -7,7 +7,7 @@ package old.sound;
 import WIP.arcadeflex.libc_v2.BytePtr;
 import static common.ptr.*;
 
-import static old.arcadeflex.libc_old.sprintf;
+import static common.libc.cstdio.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.arcadeflex.sound.*;
 import static old.mame.driverH.SOUND_SUPPORTS_STEREO;

@@ -4,7 +4,7 @@
  */
 package WIP2.mame;
 
-import static WIP2.arcadeflex.libc.cstdio.sprintf;
+import static common.libc.cstdio.*;
 import WIP2.arcadeflex.javaspecific.cheatFileParser;
 import static WIP2.mame.hiscore.computer_readmem_byte;
 import static WIP2.mame.hiscore.computer_writemem_byte;

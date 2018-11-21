@@ -8,7 +8,7 @@ package WIP2.sound;
 import static WIP.mame.sndintrf.*;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static common.ptr.*;
-import static old.arcadeflex.libc_old.sprintf;
+import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.sndintrfH.MachineSound;
 import static WIP.mame.sndintrfH.SOUND_SN76496;

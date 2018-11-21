@@ -9,7 +9,7 @@ import WIP.mame.sndintrf.snd_interface;
 import static WIP.arcadeflex.fucPtr.ReadHandlerPtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static common.ptr.*;
-import static WIP.arcadeflex.libc_v2.sprintf;
+import static common.libc.cstdio.*;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.cpu.m6502.m6502H.*;

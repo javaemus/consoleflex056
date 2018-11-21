@@ -30,7 +30,7 @@ import static WIP2.mess.mess.displayimageinfo;
 import WIP2.mess.messH;
 import static WIP2.mess.system.drivers;
 import static WIP2.mess.tapectrl.tapecontrol;
-import static old.arcadeflex.libc_old.sprintf;
+import static common.libc.cstdio.*;
 import static old.arcadeflex.sound.*;
 import static old.arcadeflex.video.*;
 import static old.mame.cpuintrf.*;

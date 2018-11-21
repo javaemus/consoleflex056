@@ -7,7 +7,7 @@ package WIP2.sound;
 import static WIP.mame.sndintrfH.*;
 import static WIP2.sound.speakerH.*;
 import static old.sound.streams.*;
-import static WIP2.arcadeflex.libc.cstdio.*;
+import static common.libc.cstdio.*;
 import static WIP.mame.sndintrf.*;
 import static common.ptr.*;
 import static WIP.mame.mame.Machine;

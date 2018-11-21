@@ -54,12 +54,7 @@ public class libc_old {
         System.out.printf(str, arguments);
     }
 
-    /*
-     *  function equals to c sprintf syntax
-     */
-    public static String sprintf(String str, Object... arguments) {
-        return String.format(str, arguments);
-    }
+
 
     public static void sprintf(char[] array, String sstr, Object[] obj) {
         String str = String.format(sstr, obj) + '\0';

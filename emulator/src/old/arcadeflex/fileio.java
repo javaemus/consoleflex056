@@ -9,7 +9,7 @@ import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
+import static common.libc.cstdio.*;
 import static old.arcadeflex.libc_old.*;
 import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.mame.mame.mame_highscore_enabled;

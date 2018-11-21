@@ -18,7 +18,7 @@ import java.util.zip.ZipInputStream;
 import static old.arcadeflex.libc_old.*;
 import old.arcadeflex.osdepend;
 import static old.arcadeflex.osdepend.logerror;
-
+import static common.libc.cstdio.*;
 public class fileio {
 
     /*TODO*///#include "mamalleg.h"

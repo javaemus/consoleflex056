@@ -21,6 +21,7 @@ import static WIP.mame.mame.*;
 import static WIP2.mame.mameH.MAX_MEMORY_REGIONS;
 import static WIP.mame.osdependH.*;
 import static common.libc.cstdlib.*;
+import static common.libc.cstdio.*;
 
 public class common {
     

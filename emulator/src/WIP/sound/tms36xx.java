@@ -22,7 +22,7 @@ package WIP.sound;
 import static WIP.mame.sndintrf.*;
 import static WIP.arcadeflex.libc.memset.memset;
 import static common.ptr.*;
-import static old.arcadeflex.libc_old.sprintf;
+import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.mame.sndintrfH.MachineSound;
