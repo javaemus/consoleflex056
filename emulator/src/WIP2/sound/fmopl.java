@@ -10,6 +10,7 @@ import static WIP.arcadeflex.libc_v2.*;
 import static WIP2.sound.fmoplH.*;
 import static WIP2.sound.ymdeltat.*;
 import static common.subArrays.*;
+import static common.ptr.*;
 
 public class fmopl {
 

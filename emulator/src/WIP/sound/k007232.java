@@ -14,6 +14,7 @@ import static old.sound.streams.*;
 import static WIP.arcadeflex.fucPtr.*;
 import static WIP.arcadeflex.libc_v2.*;
 import static old.mame.common.*;
+import static common.ptr.*;
 
 public class k007232 extends snd_interface {
 

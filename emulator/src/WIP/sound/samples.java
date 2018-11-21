@@ -21,7 +21,7 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
 package WIP.sound;
 
 import static WIP.arcadeflex.libc_v2.BytePtr;
-import static WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static old.arcadeflex.libc_old.sprintf;
 import static old.arcadeflex.osdepend.logerror;
 import static old.mame.common.readsamples;

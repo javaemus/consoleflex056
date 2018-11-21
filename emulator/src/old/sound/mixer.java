@@ -5,7 +5,7 @@
 package old.sound;
 
 import WIP.arcadeflex.libc_v2.BytePtr;
-import WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 
 import static old.arcadeflex.libc_old.sprintf;
 import static old.arcadeflex.osdepend.logerror;

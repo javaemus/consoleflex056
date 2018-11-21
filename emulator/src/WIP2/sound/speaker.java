@@ -9,7 +9,7 @@ import static WIP2.sound.speakerH.*;
 import static old.sound.streams.*;
 import static WIP2.arcadeflex.libc.cstdio.*;
 import static WIP.mame.sndintrf.*;
-import WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static WIP.mame.mame.Machine;
 
 public class speaker extends snd_interface {

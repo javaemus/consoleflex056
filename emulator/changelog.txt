@@ -2,7 +2,7 @@
 ==========
 -More work on commonH
 -Created common/subArrays class and moved them there
-
+-Shortptr is now in common/ptr class
 
 20/11/2018
 ==========

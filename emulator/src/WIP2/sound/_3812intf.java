@@ -17,6 +17,7 @@ import static WIP2.sound._3812intfH.*;
 import static WIP2.sound.fmopl.*;
 import static WIP2.sound.fmoplH.*;
 import static old.sound.streams.*;
+import static common.ptr.*;
 
 public class _3812intf extends snd_interface {
 

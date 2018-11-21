@@ -8,7 +8,7 @@ import WIP.mame.sndintrf.snd_interface;
 
 import static WIP.arcadeflex.fucPtr.ReadHandlerPtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
-import static WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.sprintf;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.arcadeflex.libc_v2.UBytePtr;

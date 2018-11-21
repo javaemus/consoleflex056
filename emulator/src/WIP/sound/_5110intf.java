@@ -22,7 +22,7 @@ package WIP.sound;
 
 import static WIP.arcadeflex.fucPtr.ReadHandlerPtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
-import static WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.sndintrf.snd_interface;

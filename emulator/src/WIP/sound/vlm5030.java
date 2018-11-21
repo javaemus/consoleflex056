@@ -7,7 +7,7 @@ package WIP.sound;
 import WIP.mame.sndintrf.snd_interface;
 import static old.arcadeflex.libc_old.rand;
 import static WIP.arcadeflex.libc.memset.*;
-import static WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static WIP.mame.mame.Machine;

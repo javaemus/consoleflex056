@@ -6,7 +6,7 @@
 package WIP.sound;
 
 import static WIP2.arcadeflex.libc.cstring.*;
-
+import static common.ptr.*;
 import static old.arcadeflex.libc_old.sizeof;
 import static WIP.arcadeflex.libc_v2.*;
 import static old.arcadeflex.osdepend.logerror;

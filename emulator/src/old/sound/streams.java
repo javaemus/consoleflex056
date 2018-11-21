@@ -4,7 +4,7 @@
 package old.sound;
 
 
-import static WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.sndintrf.sound_scalebufferpos;
 import static old.sound.mixer.*;

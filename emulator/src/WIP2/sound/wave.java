@@ -4,7 +4,7 @@
  */
 package WIP2.sound;
 
-import WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.charArrayToInt;
 import static WIP.arcadeflex.libc_v2.charArrayToLong;
 import static WIP.arcadeflex.libc_v2.memcmp;

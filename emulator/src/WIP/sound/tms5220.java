@@ -11,7 +11,7 @@ import static old.arcadeflex.libc_old.sizeof;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.sound._5220intfH.IrqPtr;
 import static WIP.sound.tms5220r.*;
-
+import static common.ptr.*;
 public class tms5220 {
 
     /* Pull in the ROM tables */

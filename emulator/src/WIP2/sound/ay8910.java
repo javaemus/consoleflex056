@@ -14,6 +14,7 @@ import static old.arcadeflex.osdepend.*;
 import static old.mame.cpuintrf.*;
 import static old.sound.mixer.*;
 import static old.sound.streams.*;
+import static common.ptr.*;
 
 public class ay8910 extends snd_interface {
 

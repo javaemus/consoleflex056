@@ -21,7 +21,7 @@ package WIP.sound;
 
 import static WIP.mame.sndintrf.*;
 import static WIP.arcadeflex.libc.memset.memset;
-import static WIP.arcadeflex.libc_v2.ShortPtr;
+import static common.ptr.*;
 import static old.arcadeflex.libc_old.sprintf;
 import static WIP.mame.mame.Machine;
 import static old.arcadeflex.osdepend.logerror;

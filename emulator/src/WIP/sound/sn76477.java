@@ -11,6 +11,7 @@ import static WIP.arcadeflex.libc.sizeof.*;
 import static WIP.arcadeflex.libc.memset.*;
 import static WIP.arcadeflex.libc_v2.*;
 import static WIP.mame.mame.Machine;
+import static common.ptr.*;
 
 public class sn76477 extends snd_interface {
 
