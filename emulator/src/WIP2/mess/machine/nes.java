@@ -34,6 +34,7 @@ import static WIP.cpu.m6502.m6502H.*;
 import static old.arcadeflex.video.*;
 import static WIP.mame.drawgfx.*;
 import static common.subArrays.*;
+import static common.libc.expressions.*;
 
 public class nes {
 

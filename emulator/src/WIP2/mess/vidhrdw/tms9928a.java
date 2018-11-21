@@ -19,6 +19,7 @@ import static old.mame.drawgfx.*;
 import static old.mame.drawgfxH.TRANSPARENCY_NONE;
 import static old.mame.palette.palette_recalc;
 import static old.mame.palette.palette_set_color;
+import static common.libc.expressions.*;
 
 public class tms9928a {
 

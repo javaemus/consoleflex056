@@ -44,17 +44,6 @@ public class libc_v2 {
     }
 
     /**
-     * Returns the sizeof an char array
-     */
-    public static int sizeof(char[] array) {
-        return array.length;
-    }
-
-    public static int sizeof(int[] array) {
-        return array.length;
-    }
-
-    /**
      * memset
      */
     public static void memset(UBytePtr buf, int offset, int value, int size) {
@@ -67,28 +56,6 @@ public class libc_v2 {
         for (int i = 0; i < size; i++) {
             buf.write(i, (short) value);
         }
-    }
-
-    /**
-     * function equals to c bool
-     */
-    public static int BOOL(int value) {
-        return value != 0 ? 1 : 0;
-    }
-
-    public static int BOOL(boolean value) {
-        return value ? 1 : 0;
-    }
-
-    /**
-     * function equals to c NOT
-     */
-    public static int NOT(int value) {
-        return value == 0 ? 1 : 0;
-    }
-
-    public static int NOT(boolean value) {
-        return !value ? 1 : 0;
     }
 
     /**

@@ -4,10 +4,11 @@
 package mess.vidhrdw;
 
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import static common.libc.expressions.*;
 import WIP.mame.osdependH.mame_bitmap;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.arcadeflex.libc.memcpy.*;
+import WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.mame.common.bitmap_alloc;
 import static WIP.mame.mame.Machine;
 import static WIP2.arcadeflex.libc.cstring.*;

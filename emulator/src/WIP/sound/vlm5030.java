@@ -16,7 +16,7 @@ import static WIP.mame.sndintrfH.SOUND_VLM5030;
 import static old.sound.streams.*;
 import static WIP.sound.vlm5030H.VLM5030interface;
 import static old.arcadeflex.osdepend.*;
-import static WIP.arcadeflex.libc.sizeof.*;
+import static common.libc.expressions.*;
 import static old.mame.common.*;
 import static old.sound.mixer.mixer_allocate_channel;
 

@@ -1,6 +1,6 @@
 package WIP.arcadeflex;
 
-import static WIP.arcadeflex.libc_v2.NOT;
+import static common.libc.expressions.*;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;

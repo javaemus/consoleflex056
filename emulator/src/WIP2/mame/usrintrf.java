@@ -37,6 +37,7 @@ import static old.mame.cpuintrf.*;
 import static old.mame.drawgfx.*;
 import static old.mame.drawgfxH.*;
 import static old.mame.driverH.*;
+import static common.libc.expressions.*;
 
 public class usrintrf {
 

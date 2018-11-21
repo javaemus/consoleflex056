@@ -16,7 +16,8 @@ import static WIP.mame.drawgfx.*;
 import static WIP.arcadeflex.libc.memset.memset;
 import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_8;
 import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_flipx_8;
-import static common.subArrays.*;
+import static common.libc.expressions.*;
+
 public class drawgfx {
 
     /*TODO*///#ifndef DECLARE

@@ -41,7 +41,7 @@ import static old.mame.driverH.*;
 import static WIP.arcadeflex.libc.memcpy.*;
 import static consoleflex.funcPtr.*;
 import static old.mame.drawgfxH.*;
-
+import static common.libc.expressions.*;
 import static WIP2.mess.eventlst.*;
 import static WIP2.mess.eventlstH.*;
 import static old.mame.timer.*;

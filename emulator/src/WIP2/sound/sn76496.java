@@ -6,14 +6,12 @@
 package WIP2.sound;
 
 import static WIP.mame.sndintrf.*;
-import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
+import static WIP.arcadeflex.fucPtr.*;
 import static common.ptr.*;
 import static common.libc.cstdio.*;
-import static WIP.mame.mame.Machine;
-import static WIP.mame.sndintrfH.MachineSound;
-import static WIP.mame.sndintrfH.SOUND_SN76496;
-import static WIP2.sound.sn76496H.MAX_76496;
-import static WIP2.sound.sn76496H.SN76496interface;
+import static WIP.mame.mame.*;
+import static WIP.mame.sndintrfH.*;
+import static WIP2.sound.sn76496H.*;
 import static old.sound.streams.*;
 
 public class sn76496 extends snd_interface {
