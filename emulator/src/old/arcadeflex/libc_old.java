@@ -17,12 +17,10 @@
 package old.arcadeflex;
 
 import java.io.*;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static WIP.arcadeflex.libc_v2.UBytePtr;
-import static WIP.arcadeflex.libc_v2.UShortPtr;
 import java.util.Scanner;
 
 /**

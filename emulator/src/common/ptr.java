@@ -60,6 +60,69 @@ public class ptr {
         }
     }
 
+    /*
+     *     Unsigned Short Ptr emulation
+     *
+     */
+    public static class UShortPtr {
+
+        public int bsize = 2;
+        public char[] memory;
+        public int offset;
+
+        public UShortPtr() {
+        }
+
+        public UShortPtr(int size) {
+            memory = new char[size];
+            offset = 0;
+        }
+
+        public UShortPtr(char[] m) {
+            set(m, 0);
+        }
+
+        public UShortPtr(char[] m, int b) {
+            set(m, b);
+        }
+
+        public UShortPtr(UShortPtr cp, int b) {
+            set(cp.memory, cp.offset + b);
+        }
+
+        public UShortPtr(UShortPtr cp) {
+            set(cp.memory, cp.offset);
+        }
+
+        public UShortPtr(UBytePtr cp) {
+            set(cp.memory, cp.offset);
+        }
+
+        public UShortPtr(UBytePtr cp, int b) {
+            set(cp.memory, cp.offset + b);
+        }
+
+        public void set(char[] m, int b) {
+            memory = m;
+            offset = b;
+        }
+
+        public void set(char[] m) {
+            memory = m;
+            offset = 0;
+        }
+
+        public char read(int index) {
+            return (char) (memory[offset + 1 + index * 2] << 8 | memory[offset + index * 2]);
+        }
+
+        public void write(int index, char value) {
+            memory[offset + index * 2] = (char) (value & 0xFF);
+            memory[offset + index * 2 + 1] = (char) ((value >> 8) & 0xFF);
+        }
+
+    }
+
     /**
      * ShortPtr emulation
      */

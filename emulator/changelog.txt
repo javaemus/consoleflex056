@@ -10,6 +10,7 @@
 -More cleanups to cstring library
 -More cstring cleanups
 -Even more cstring cleanups
+-Moved UShortPtr to common/ptr
 
 20/11/2018
 ==========

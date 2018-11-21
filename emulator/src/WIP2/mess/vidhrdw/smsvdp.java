@@ -6,7 +6,7 @@ package WIP2.mess.vidhrdw;
 
 import static WIP.arcadeflex.fucPtr.*;
 import WIP.arcadeflex.libc_v2.UBytePtr;
-import WIP.arcadeflex.libc_v2.UShortPtr;
+import static common.ptr.*;
 import static WIP.mame.common.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;
