@@ -99,7 +99,7 @@ import static WIP2.arcadeflex.libc.cstring.memset;
 
 import WIP.arcadeflex.libc_v2.*;
 import static old.arcadeflex.osdepend.logerror;
-import static WIP.arcadeflex.libc.memcpy.*;
+import static common.libc.cstring.*;
 import static WIP.mame.memoryH.*;
 import static WIP.mame.memory.*;
 

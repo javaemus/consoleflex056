@@ -21,7 +21,7 @@ package WIP2.mess.vidhrdw;
 
 import WIP.arcadeflex.libc_v2.*;
 import WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc.memcpy.memcpy;
+import static common.libc.cstring.*;
 import static WIP2.arcadeflex.libc.cstring.memset;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.mame.osdependH.*;

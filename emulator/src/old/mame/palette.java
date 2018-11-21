@@ -7,7 +7,7 @@ package old.mame;
 import static WIP.arcadeflex.fucPtr.ReadHandlerPtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static common.subArrays.*;
-import static WIP.arcadeflex.libc.memset.*;
+import static common.libc.cstring.*;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static old.arcadeflex.video.osd_allocate_colors;

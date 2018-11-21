@@ -6,25 +6,15 @@ package WIP2.mess.vidhrdw;
 
 import static WIP.arcadeflex.fucPtr.*;
 import WIP.arcadeflex.libc_v2.UBytePtr;
-import WIP.arcadeflex.libc_v2.UShortPtr;
-import static WIP.mame.common.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;
 import static WIP2.arcadeflex.libc.cstring.memset;
 import static WIP2.vidhrdw.generic.tmpbitmap;
 import static old.arcadeflex.video.osd_free_bitmap;
-import static WIP2.mess.vidhrdw.smsvdpH.*;
-import static old.mame.cpuintrfH.ASSERT_LINE;
 import static old.arcadeflex.video.osd_skip_this_frame;
-import static old.cpu.z80.z80H.Z80_IGNORE_INT;
-import static old.mame.cpuintrfH.CLEAR_LINE;
-import static old.mame.drawgfxH.TRANSPARENCY_NONE;
-import static old.mame.cpuintrf.*;
 import static old.mame.drawgfx.*;
-import static old.mame.palette.*;
-import static WIP2.cpu.z80.z80.*;
 import static old.arcadeflex.libc_old.sizeof;
-import static WIP.arcadeflex.libc.memcpy.*;
+import static common.libc.cstring.*;
 import static common.subArrays.*;
 import static WIP2.mess.machine.nes._nes;
 import static WIP2.vidhrdw.generic.*;
@@ -33,7 +23,6 @@ import static old.mame.inptport.readinputport;
 import static WIP2.mess.machine.nes.*;
 import static WIP2.mess.includes.nesH.*;
 import static old.arcadeflex.osdepend.logerror;
-import static common.subArrays.*;
 
 public class nes {
 

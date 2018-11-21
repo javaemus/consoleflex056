@@ -4,8 +4,7 @@
 package WIP.mame;
 
 import WIP.arcadeflex.fucPtr.WriteHandlerPtr;
-import static WIP.arcadeflex.libc.memset.memset;
-import static WIP.arcadeflex.libc.memcpy.memcpy;
+import static common.libc.cstring.*;
 import static WIP.arcadeflex.libc_v2.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;

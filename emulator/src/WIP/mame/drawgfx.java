@@ -9,7 +9,7 @@ import static WIP.mame.osdependH.*;
 import static old.mame.drawgfxH.*;
 import static old.mame.driverH.ORIENTATION_SWAP_XY;
 import static old.mame.drawgfx.*;
-import static WIP.arcadeflex.libc.memset.*;
+import static common.libc.cstring.*;
 import java.util.Arrays;
 
 public class drawgfx {

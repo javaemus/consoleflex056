@@ -18,7 +18,7 @@ import static WIP2.arcadeflex.libc.cstring.*;
 import static WIP.mame.osdependH.*;
 import static WIP2.mame.commonH.*;
 import static old.mame.common.*;
-import static WIP.arcadeflex.libc.memcpy.*;
+import static common.libc.cstring.*;
 import static WIP.mame.memoryH.cpu_setbank;
 import static old.arcadeflex.libc_old.SEEK_SET;
 import static old.arcadeflex.libc_old.printf;

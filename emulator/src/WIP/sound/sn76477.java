@@ -8,7 +8,7 @@ import static old.sound.streams.*;
 import static old.mame.timer.*;
 import static old.mame.timerH.*;
 import static common.libc.expressions.*;
-import static WIP.arcadeflex.libc.memset.*;
+import static common.libc.cstring.*;
 import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static common.ptr.*;

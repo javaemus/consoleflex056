@@ -38,7 +38,7 @@ import static WIP2.mess.messH.*;
 import static WIP.mame.memoryH.*;
 import static WIP.mame.memory.*;
 import static old.mame.driverH.*;
-import static WIP.arcadeflex.libc.memcpy.*;
+import static common.libc.cstring.*;
 import static consoleflex.funcPtr.*;
 import static old.mame.drawgfxH.*;
 import static common.libc.expressions.*;

@@ -13,7 +13,7 @@ import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.mame_bitmap;
 import static WIP2.mame.usrintrf.usrintf_showmessage;
 import static WIP.mame.drawgfx.*;
-import static WIP.arcadeflex.libc.memset.memset;
+import static common.libc.cstring.*;
 import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_8;
 import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_flipx_8;
 import static common.libc.expressions.*;

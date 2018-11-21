@@ -20,7 +20,7 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
 package WIP.sound;
 
 import static WIP.mame.sndintrf.*;
-import static WIP.arcadeflex.libc.memset.memset;
+import static common.libc.cstring.*;
 import static common.ptr.*;
 import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;

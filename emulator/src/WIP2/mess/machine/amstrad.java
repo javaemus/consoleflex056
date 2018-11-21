@@ -53,7 +53,7 @@ import static WIP2.mess.vidhrdw.m6845.*;
 
 import static WIP2.mess.machine._8255ppiH.*;
 import static WIP2.mess.machine._8255ppi.*;
-
+import static common.libc.cstring.*;
 public class amstrad
 {
 	//
@@ -290,7 +290,7 @@ public class amstrad
 				MemorySize = 64*1024;
 			}
 	
-			WIP.arcadeflex.libc.memcpy.memcpy(Amstrad_Memory, new UBytePtr(pSnapshot, 0x0100), MemorySize);
+			memcpy(Amstrad_Memory, new UBytePtr(pSnapshot, 0x0100), MemorySize);
                         
 	
 		}

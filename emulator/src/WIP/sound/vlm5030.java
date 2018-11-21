@@ -6,7 +6,7 @@ package WIP.sound;
 
 import WIP.mame.sndintrf.snd_interface;
 import static common.libc.cstdlib.*;
-import static WIP.arcadeflex.libc.memset.*;
+import static common.libc.cstring.*;
 import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;

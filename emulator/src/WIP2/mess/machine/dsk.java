@@ -27,7 +27,7 @@ import static WIP2.mess.osdepend.fileio.*;
 import static old.arcadeflex.fileio.osd_fwrite;
 import static WIP2.arcadeflex.libc.cstring.memset;
 import static WIP2.mess.machine.flopdrv.*;
-import static WIP.arcadeflex.libc.memcpy.*;
+import static common.libc.cstring.*;
 
 import static WIP2.mess.machine.flopdrv.*;
 

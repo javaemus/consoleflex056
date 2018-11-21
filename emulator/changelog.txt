@@ -7,6 +7,7 @@
 -Moved sprintf to common/libc/stdio class
 -Moved BytePtr to common/ptr class
 -Added expressions (bool,not,sizeof ) to common/libc/expressions
+-More cleanups to cstring library
 
 20/11/2018
 ==========
