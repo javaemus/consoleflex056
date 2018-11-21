@@ -9,6 +9,7 @@ import static WIP2.arcadeflex.libc.cstring.*;
 import static common.ptr.*;
 import static old.arcadeflex.libc_old.sizeof;
 import static WIP.arcadeflex.libc_v2.*;
+import static common.libc.cstring.*;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.sound.tms5110H.*;
 import static WIP.sound.tms5110r.*;

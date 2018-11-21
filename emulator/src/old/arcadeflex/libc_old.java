@@ -292,16 +292,6 @@ public class libc_old {
         return 0;
     }
 
-    public static int memcmp(char[] dist, int dstoffs, String src, int size) {
-        char[] srcc = src.toCharArray();
-        for (int i = 0; i < size; i++) {
-            if (dist[(dstoffs + i)] != srcc[i]) {
-                return -1;
-
-            }
-        }
-        return 0;
-    }
 
     public static void memcpy(char[] dst, char[] src, int size) {
         for (int i = 0; i < Math.min(size, src.length); i++) {

@@ -4,7 +4,6 @@
  */
 package WIP2.vidhrdw;
 
-import static WIP2.arcadeflex.libc.cstring.*;
 
 import static WIP.arcadeflex.fucPtr.*;
 import static old.arcadeflex.osdepend.logerror;
@@ -14,6 +13,7 @@ import static old.mame.drawgfx.copybitmap;
 import static old.mame.drawgfxH.TRANSPARENCY_NONE;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.mame_bitmap;
+import static common.libc.cstring.memset;
 
 public class generic {
 

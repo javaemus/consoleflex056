@@ -95,7 +95,7 @@ import static WIP2.mame.commonH.*;
 
 import static WIP2.mess.messH.*;
 import static WIP2.mess.machine.spectrum.*;
-import static WIP2.arcadeflex.libc.cstring.memset;
+import static common.libc.cstring.*;
 
 import WIP.arcadeflex.libc_v2.*;
 import static old.arcadeflex.osdepend.logerror;

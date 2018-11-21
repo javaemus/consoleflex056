@@ -12,10 +12,11 @@ import static WIP.mame.sndintrf.*;
 import static WIP.mame.mame.*;
 import static old.sound.streams.*;
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.arcadeflex.libc_v2.*;
+import WIP.arcadeflex.libc_v2.UBytePtr;
 import static old.mame.common.*;
 import static common.ptr.*;
 import static common.libc.cstdio.*;
+import static common.libc.cstring.*;
 
 public class k007232 extends snd_interface {
 

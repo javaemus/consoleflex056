@@ -8,7 +8,7 @@ import static WIP.arcadeflex.fucPtr.*;
 import WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;
-import static WIP2.arcadeflex.libc.cstring.memset;
+import static common.libc.cstring.*;
 import static WIP2.vidhrdw.generic.tmpbitmap;
 import static old.arcadeflex.video.osd_free_bitmap;
 import static old.arcadeflex.video.osd_skip_this_frame;

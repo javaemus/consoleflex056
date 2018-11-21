@@ -27,6 +27,7 @@ import static old.mame.driverH.CPU_I8039;
 import static WIP.cpu.i8039.i8039H.*;
 import static WIP.mame.memory.cpu_setOPbase16;
 import static old.arcadeflex.osdepend.logerror;
+import static common.libc.cstring.*;
 
 public class i8039 extends cpu_interface {
 

@@ -7,7 +7,7 @@ package WIP2.sound;
 import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.charArrayToInt;
 import static WIP.arcadeflex.libc_v2.charArrayToLong;
-import static WIP.arcadeflex.libc_v2.memcmp;
+import static common.libc.cstring.*;
 import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.sndintrf.*;

@@ -22,13 +22,9 @@ import static consoleflex.funcPtr.*;
 import static WIP2.mess.includes.flopdrvH.*;
 import static WIP2.mess.mess.*;
 import static WIP2.mess.messH.*;
-import static WIP.mame.osdependH.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static old.arcadeflex.fileio.osd_fwrite;
-import static WIP2.arcadeflex.libc.cstring.memset;
-import static WIP2.mess.machine.flopdrv.*;
 import static common.libc.cstring.*;
-
 import static WIP2.mess.machine.flopdrv.*;
 
 public class dsk {

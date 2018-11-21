@@ -23,26 +23,7 @@ public class cstring {
      * @param value
      * @param size 
      */
-    public static void memset(char[] dst, int value, int size) {
-        for (int mem = 0; mem < size; mem++) {
-            dst[mem] = (char) value;
-        }
-    }
-    public static void memset(int[] dst, int value, int size) {
-        for (int mem = 0; mem < size; mem++) {
-            dst[mem] = value;
-        }
-    }
-    public static void memset(UBytePtr ptr,int offset, int value, int length) {
-        for (int i = 0; i < length; i++) {
-            ptr.write(i+offset, value);
-        }
-    }
-    public static void memset(UBytePtr ptr,int value, int length) {
-        for (int i = 0; i < length; i++) {
-            ptr.write(i, value);
-        }
-    }
+
     /**
      * Locate last occurrence of character in string Returns a pointer to the last occurrence of character in the C string str.
      * @param str

@@ -4,7 +4,6 @@
  */
 package WIP.arcadeflex;
 
-import java.util.Random;
 import static common.ptr.*;
 
 /**
@@ -32,31 +31,8 @@ public class libc_v2 {
     /**
      * function equals to c memcmp function
      */
-    public static int memcmp(char[] dist, int dstoffs, String src, int size) {
-        char[] srcc = src.toCharArray();
-        for (int i = 0; i < size; i++) {
-            if (dist[(dstoffs + i)] != srcc[i]) {
-                return -1;
+   
 
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * memset
-     */
-    public static void memset(UBytePtr buf, int offset, int value, int size) {
-        for (int i = 0; i < size; i++) {
-            buf.write(i + offset, value);
-        }
-    }
-
-    public static void memset(ShortPtr buf, int value, int size) {
-        for (int i = 0; i < size; i++) {
-            buf.write(i, (short) value);
-        }
-    }
 
     /**
      * ***********************************

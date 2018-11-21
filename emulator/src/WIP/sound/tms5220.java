@@ -4,9 +4,7 @@
  */
 package WIP.sound;
 
-import static WIP2.arcadeflex.libc.cstring.*;
-
-import static WIP.arcadeflex.libc_v2.*;
+import static common.libc.cstring.*;
 import static old.arcadeflex.libc_old.sizeof;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.sound._5220intfH.IrqPtr;

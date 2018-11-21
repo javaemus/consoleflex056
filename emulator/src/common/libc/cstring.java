@@ -1,8 +1,7 @@
 package common.libc;
 
 import WIP.arcadeflex.libc_v2.UBytePtr;
-
-
+import static common.ptr.*;
 
 /**
  *
@@ -57,6 +56,12 @@ public class cstring {
         }
     }
 
+    public static void memset(ShortPtr buf, int value, int size) {
+        for (int i = 0; i < size; i++) {
+            buf.write(i, (short) value);
+        }
+    }
+
     /**
      * memcpy
      */
@@ -89,7 +94,7 @@ public class cstring {
             dst.write(i + dstoffs, src[i]);
         }
     }
-    
+
     public static void memcpy(UBytePtr dst, int dstoffs, char[] src, int size) {
         for (int i = 0; i < Math.min(size, src.length); i++) {
             dst.write(i + dstoffs, src[i]);
@@ -114,6 +119,17 @@ public class cstring {
     public static int memcmp(char[] dst, char[] src, int size) {
         for (int i = 0; i < size; i++) {
             if (dst[i] != src[i]) {
+                return -1;
+
+            }
+        }
+        return 0;
+    }
+
+    public static int memcmp(char[] dist, int dstoffs, String src, int size) {
+        char[] srcc = src.toCharArray();
+        for (int i = 0; i < size; i++) {
+            if (dist[(dstoffs + i)] != srcc[i]) {
                 return -1;
 
             }
