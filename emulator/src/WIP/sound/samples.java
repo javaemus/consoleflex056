@@ -20,7 +20,6 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
  */
 package WIP.sound;
 
-import static WIP.arcadeflex.libc_v2.BytePtr;
 import static common.ptr.*;
 import static common.libc.cstdio.*;
 import static old.arcadeflex.osdepend.logerror;

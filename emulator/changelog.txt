@@ -5,6 +5,7 @@
 -Shortptr is now in common/ptr class
 -Moved random generator to common/libc/stdlib
 -Moved sprintf to common/libc/stdio class
+-Moved BytePtr to common/ptr class
 
 20/11/2018
 ==========

@@ -4,7 +4,6 @@
  */
 package old.sound;
 
-import WIP.arcadeflex.libc_v2.BytePtr;
 import static common.ptr.*;
 
 import static common.libc.cstdio.*;

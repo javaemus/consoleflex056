@@ -309,54 +309,7 @@ public class libc_v2 {
     /**
      * Byte Pointer emulation
      */
-    public static class BytePtr {
-
-        public int bsize = 1;
-        public byte[] memory;
-        public int offset;
-
-        public BytePtr() {
-        }
-
-        public BytePtr(int size) {
-            memory = new byte[size];
-            offset = 0;
-        }
-
-        public BytePtr(byte[] m) {
-            set(m, 0);
-        }
-
-        public BytePtr(BytePtr cp, int b) {
-            set(cp.memory, cp.offset + b);
-        }
-
-        public BytePtr(UBytePtr cp) {
-            memory = new byte[cp.memory.length];
-            for (int i = 0; i < cp.memory.length; i++) {
-                memory[i] = (byte) cp.memory[i];
-            }
-            offset = cp.offset;
-        }
-
-        public void set(byte[] m) {
-            memory = m;
-            offset = 0;
-        }
-
-        public void set(byte[] m, int offs) {
-            memory = m;
-            offset = offs;
-        }
-
-        public byte read() {
-            return (memory[offset]);
-        }
-
-        public byte read(int index) {
-            return (memory[offset + index]);
-        }
-    }
+    
 
     public static class UByteArray {
 
