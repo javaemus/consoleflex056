@@ -5,7 +5,7 @@
 package WIP.sound;
 
 import WIP.mame.sndintrf.snd_interface;
-import static old.arcadeflex.libc_old.rand;
+import static common.libc.cstdlib.*;
 import static WIP.arcadeflex.libc.memset.*;
 import static common.ptr.*;
 import static WIP.arcadeflex.libc_v2.UBytePtr;

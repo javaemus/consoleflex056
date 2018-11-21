@@ -3,6 +3,7 @@
 -More work on commonH
 -Created common/subArrays class and moved them there
 -Shortptr is now in common/ptr class
+-Moved random generator to common/libc/stdlib
 
 20/11/2018
 ==========

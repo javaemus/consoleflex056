@@ -12,16 +12,9 @@ import static common.ptr.*;
  */
 public class libc_v2 {
 
-    private static Random rand = new Random();
+
     public static int argc;
     public static String[] argv;
-
-    /*
-     *   return next random number
-     */
-    public static int rand() {
-        return rand.nextInt();
-    }
 
     /*
      *  Convert command-line parameters

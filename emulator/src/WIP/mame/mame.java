@@ -30,7 +30,7 @@ import static common.subArrays.*;
 import static WIP.mame.memory.memory_init;
 import static WIP.mame.memory.memory_shutdown;
 import static WIP.mame.common.*;
-
+import static common.libc.cstdlib.*;
 import static WIP2.mess.system.drivers;
 import static old.arcadeflex.fileio.osd_fclose;
 import static old.arcadeflex.fileio.osd_fopen;

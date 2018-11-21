@@ -35,7 +35,7 @@ public class libc_old {
     public static final int SEEK_CUR = 1;
     public static final int SEEK_END = 2;
 
-    private static Random rand = new Random();
+
     public static final int UCLOCKS_PER_SEC = 1000000000;
 
     public static char[] CreateArray(int size, char[] array) {
@@ -72,13 +72,6 @@ public class libc_old {
      */
     public static int atoi(String str) {
         return Integer.parseInt(str);
-    }
-
-    /*
-     *   return next random number
-     */
-    public static int rand() {
-        return rand.nextInt();
     }
 
     /*

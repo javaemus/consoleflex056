@@ -12,6 +12,7 @@ import static WIP.arcadeflex.libc_v2.*;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.sound.tms5110H.*;
 import static WIP.sound.tms5110r.*;
+import static common.libc.cstdlib.rand;
 
 public class tms5110 {
 
