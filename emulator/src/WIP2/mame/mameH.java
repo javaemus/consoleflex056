@@ -12,7 +12,7 @@ import static old.mame.driverH.MachineDriver;
 import static old.mame.inptportH.InputPort;
 import static WIP.mame.osdependH.mame_bitmap;
 import static WIP.arcadeflex.libc_v2.*;
-
+import static common.subArrays.*;
 public class mameH {
 
     public static final int MAX_GFX_ELEMENTS = 32;

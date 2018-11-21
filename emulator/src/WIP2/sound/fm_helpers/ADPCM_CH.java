@@ -3,7 +3,7 @@ package WIP2.sound.fm_helpers;
  * ported to v0.37b7
  *
  */
-import WIP.arcadeflex.libc_v2.IntSubArray;
+import static common.subArrays.*;
 
 public class ADPCM_CH {
 

@@ -6,7 +6,7 @@ package WIP2.sound.fm_helpers;
 
 import WIP2.sound.fmoplH.*;
 
-import static WIP.arcadeflex.libc_v2.IntSubArray;
+import static common.subArrays.*;
 import WIP2.sound.YM_DELTAT;
 
 public class FM_OPL {

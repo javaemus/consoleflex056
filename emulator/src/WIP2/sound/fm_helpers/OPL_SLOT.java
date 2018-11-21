@@ -4,7 +4,7 @@
  */
 package WIP2.sound.fm_helpers;
 
-import static WIP.arcadeflex.libc_v2.IntSubArray;
+import static common.subArrays.*;
 
 public class OPL_SLOT {
 

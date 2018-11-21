@@ -5,6 +5,7 @@ package old.mame;
 
 import static old.arcadeflex.libc_old.IntPtr;
 import static WIP.arcadeflex.libc_v2.*;
+import static common.subArrays.*;
 import static old.arcadeflex.video.osd_mark_dirty;
 import static old.mame.drawgfxH.*;
 import static old.mame.driverH.*;
@@ -15,7 +16,7 @@ import static WIP.mame.drawgfx.*;
 import static WIP.arcadeflex.libc.memset.memset;
 import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_8;
 import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_flipx_8;
-
+import static common.subArrays.*;
 public class drawgfx {
 
     /*TODO*///#ifndef DECLARE

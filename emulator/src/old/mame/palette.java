@@ -6,8 +6,7 @@ package old.mame;
 
 import static WIP.arcadeflex.fucPtr.ReadHandlerPtr;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
-import static WIP.arcadeflex.libc_v2.IntSubArray;
-import static WIP.arcadeflex.libc_v2.UShortArray;
+import static common.subArrays.*;
 import static WIP.arcadeflex.libc.memset.*;
 import static old.arcadeflex.osdepend.logerror;
 import static WIP.arcadeflex.libc_v2.UBytePtr;

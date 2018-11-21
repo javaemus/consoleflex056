@@ -21,7 +21,7 @@ import static WIP.mame.version.build_version;
 import static WIP2.mame.usrintrf.set_ui_visarea;
 import static WIP2.mame.usrintrf.ui_text;
 import static old.arcadeflex.video.*;
-
+import static common.subArrays.*;
 public class video_old {
     static FILE errorlog = null;
     public static software_gfx screen; //for our screen creation

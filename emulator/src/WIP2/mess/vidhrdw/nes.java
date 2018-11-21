@@ -25,7 +25,7 @@ import static old.mame.palette.*;
 import static WIP2.cpu.z80.z80.*;
 import static old.arcadeflex.libc_old.sizeof;
 import static WIP.arcadeflex.libc.memcpy.*;
-import WIP.arcadeflex.libc_v2.UShortArray;
+import static common.subArrays.*;
 import static WIP2.mess.machine.nes._nes;
 import static WIP2.vidhrdw.generic.*;
 import static old.arcadeflex.video.osd_alloc_bitmap;
@@ -33,6 +33,7 @@ import static old.mame.inptport.readinputport;
 import static WIP2.mess.machine.nes.*;
 import static WIP2.mess.includes.nesH.*;
 import static old.arcadeflex.osdepend.logerror;
+import static common.subArrays.*;
 
 public class nes {
 

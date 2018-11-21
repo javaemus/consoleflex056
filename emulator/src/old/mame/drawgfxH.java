@@ -3,10 +3,10 @@
  */
 package old.mame;
 
-import static WIP.arcadeflex.libc_v2.UShortArray;
+
 import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.mame.osdependH.mame_bitmap;
-
+import static common.subArrays.*;
 public class drawgfxH {
     public static final int MAX_GFX_PLANES = 8;
     public static final int MAX_GFX_SIZE = 64;

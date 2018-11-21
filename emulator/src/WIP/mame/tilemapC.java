@@ -15,6 +15,7 @@ import static old.mame.driverH.*;
 import static old.arcadeflex.osdepend.*;
 import static old.arcadeflex.video.osd_free_bitmap;
 import old.mame.drawgfxH.rectangle;
+import static common.subArrays.*;
 import static old.mame.palette.palette_decrease_usage_count;
 import static old.mame.palette.palette_decrease_usage_countx;
 import static old.mame.palette.palette_increase_usage_count;

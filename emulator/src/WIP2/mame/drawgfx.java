@@ -10,7 +10,7 @@ import static WIP.mame.tilemapC.priority_bitmap;
 import old.mame.drawgfxH.GfxElement;
 import old.mame.drawgfxH.rectangle;
 import static old.mame.drawgfx.*;
-
+import static common.subArrays.*;
 public class drawgfx {
 
     /*TODO*////* LBO */

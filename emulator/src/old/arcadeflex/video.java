@@ -20,6 +20,7 @@ import static WIP.mame.osdependH.*;
 import static WIP.mame.version.build_version;
 import static WIP.arcadeflex.video.*;
 import static WIP2.mame.usrintrf.set_ui_visarea;
+import static common.subArrays.*;
 
 public class video {
 

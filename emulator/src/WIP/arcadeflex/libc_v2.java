@@ -65,6 +65,7 @@ public class libc_v2 {
     public static int sizeof(char[] array) {
         return array.length;
     }
+
     public static int sizeof(int[] array) {
         return array.length;
     }
@@ -202,13 +203,13 @@ public class libc_v2 {
             //System.out.println("libc_v2 offset: "+offset);
             //System.out.println("libc_v2 offset: "+index);
             //System.out.println("libc_v2 memory: "+memory.length);
-            
+
             try {
-            return (char) (memory[offset + index] & 0xFF); //return only the first 8bits
-            } catch (Exception e){
-                System.out.println("libc_v2 offset: "+offset);
-                System.out.println("libc_v2 index: "+index);
-                System.out.println("libc_v2 memory: "+memory.length);
+                return (char) (memory[offset + index] & 0xFF); //return only the first 8bits
+            } catch (Exception e) {
+                System.out.println("libc_v2 offset: " + offset);
+                System.out.println("libc_v2 index: " + index);
+                System.out.println("libc_v2 memory: " + memory.length);
                 e.printStackTrace(System.out);
             }
             return memory[0];
@@ -229,8 +230,8 @@ public class libc_v2 {
             //memory[offset + index+ 1] = (char)((value >> 8)&0xFF);
         }
 
-        public void write(int index, int value) {            
-               memory[offset + index] = (char) (value & 0xFF);//store 8 bits only             
+        public void write(int index, int value) {
+            memory[offset + index] = (char) (value & 0xFF);//store 8 bits only             
         }
 
         public void write(int value) {
@@ -244,6 +245,7 @@ public class libc_v2 {
         public void writedec(int value) {
             this.memory[(this.offset--)] = (char) (value & 0xFF);//store 8 bits only
         }
+
         public void or(int value) {
             int tempbase = this.offset;
             char[] tempmemory = this.memory;
@@ -459,6 +461,7 @@ public class libc_v2 {
             offset -= count * bsize;
         }
     }
+
     public static class UByteArray {
 
         public UByteArray(int size) {
@@ -481,20 +484,21 @@ public class libc_v2 {
         public UByteArray(UByteArray cp, int b) {
             set(cp.memory, cp.offset + b);
         }
+
         public UByteArray(UByteArray cp) {
             set(cp.memory, cp.offset);
         }
 
         public char read(int offs) {
-            return (char)(memory[offs + offset]&0xFF);
+            return (char) (memory[offs + offset] & 0xFF);
         }
 
         public char read() {
-            return (char)(memory[offset]&0xFF);
+            return (char) (memory[offset] & 0xFF);
         }
 
         public void write(int offs, int value) {
-            memory[offset + offs] = (char) (value&0xFF);
+            memory[offset + offs] = (char) (value & 0xFF);
         }
 
         public void set(char[] m, int b) {
@@ -504,112 +508,6 @@ public class libc_v2 {
 
         public char[] memory;
         public int offset;
-    }
-    public static class UShortArray {
-
-        public UShortArray(int size) {
-            memory = new char[size];
-            offset = 0;
-        }
-
-        public UShortArray(char[] m) {
-            set(m, 0);
-        }
-
-        public UShortArray(char[] m, int b) {
-            set(m, b);
-        }
-
-        public UShortArray(UBytePtr cp, int b) {
-            set(cp.memory, cp.offset + b);
-        }
-
-        public UShortArray(UShortArray cp, int b) {
-            set(cp.memory, cp.offset + b);
-        }
-        public UShortArray(UShortArray cp) {
-            set(cp.memory, cp.offset);
-        }
-
-        public char read(int offs) {
-            return memory[offs + offset];
-        }
-
-        public char read() {
-            return memory[offset];
-        }
-
-        public void write(int offs, int value) {
-            memory[offset + offs] = (char) value;
-        }
-
-        public void set(char[] m, int b) {
-            memory = m;
-            offset = b;
-        }
-
-        public char[] memory;
-        public int offset;
-    }
-
-    public static class IntSubArray {
-
-        public int[] buffer;
-        public int offset;
-
-        public IntSubArray(int size) {
-            this.buffer = new int[size];
-            this.offset = 0;
-        }
-
-        public IntSubArray(int[] buffer) {
-            this.buffer = buffer;
-            this.offset = 0;
-        }
-
-        public IntSubArray(IntSubArray subarray) {
-            this.buffer = subarray.buffer;
-            this.offset = subarray.offset;
-        }
-
-        public IntSubArray(IntSubArray subarray, int offset) {
-            this.buffer = subarray.buffer;
-            this.offset = subarray.offset + offset;
-        }
-
-        public IntSubArray(int[] buffer, int offset) {
-            this.buffer = buffer;
-            this.offset = offset;
-        }
-
-        public int read() {
-            return buffer[offset];
-        }
-
-        public int readinc() {
-            return buffer[offset++];
-        }
-
-        public int read(int index) {
-            return buffer[index + offset];
-        }
-
-        public void write(int value) {
-            buffer[offset] = value;
-        }
-
-        public void write(int index, int value) {
-            buffer[index + offset] = value;
-        }
-
-        public void writeinc(int value) {
-            buffer[offset++] = value;
-        }
-
-        public void writedec(int value) {
-            buffer[offset--] = value;
-        }
-
     }
 
     /**

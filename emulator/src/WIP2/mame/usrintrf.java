@@ -8,7 +8,7 @@
 //24/07/2018 (shadow) - Implemented ui_displaymenu (long texts selection not yet working) + other functions
 //23/07/2018 (shadow) - Intial work for use with mess
 package WIP2.mame;
-
+import static common.subArrays.*;
 import static WIP.arcadeflex.libc_v2.*;
 import static old.mame.inptport.*;
 import static old.mame.inptportH.*;
