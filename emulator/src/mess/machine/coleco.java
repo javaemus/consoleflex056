@@ -6,7 +6,6 @@ package mess.machine;
 import static WIP.arcadeflex.fucPtr.*;
 import WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.mame.osdependH.OSD_FILETYPE_IMAGE;
-import static WIP2.arcadeflex.libc.cstring.strlen;
 import static WIP2.mame.commonH.REGION_CPU1;
 import static WIP2.mess.machine.dsk.*;
 import static WIP2.mess.mess.device_filename;
@@ -16,6 +15,7 @@ import static consoleflex.funcPtr.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.mame.inptport.*;
 import static WIP2.mess.osdepend.fileio.*;
+import static common.libc.cstring.strlen;
 import static old.mame.common.*;
 
 public class coleco {

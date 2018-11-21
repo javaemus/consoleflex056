@@ -6,28 +6,11 @@ package WIP2.mess.machine;
 
 import static WIP.arcadeflex.libc_v2.*;
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.mame.mame.Machine;
-import static consoleflex.funcPtr.*;
-import static WIP2.mess.messH.*;
-import static WIP2.mess.mess.*;
-import static old.mame.inptport.*;
-import static WIP2.mess.vidhrdw.tms9928a.*;
-import static old.arcadeflex.osdepend.*;
-import static WIP2.mess.osdepend.fileio.*;
-import static WIP2.arcadeflex.libc.cstring.*;
-import static WIP.mame.osdependH.*;
-import static WIP2.mame.commonH.*;
-import static old.mame.common.*;
 import static common.libc.cstring.*;
 import static WIP.mame.memoryH.cpu_setbank;
-import static old.arcadeflex.libc_old.SEEK_SET;
-import static old.arcadeflex.libc_old.printf;
-import static old.arcadeflex.libc_old.strcmp;
-import static WIP2.mess.includes.nesH.*;
 
 import static WIP2.mess.machine.nes.*;
 import static WIP2.mess.vidhrdw.nes.*;
-import static WIP2.mess.includes.nesH.*;
 import static WIP2.vidhrdw.generic.videoram;
 
 public class nes_mmc {

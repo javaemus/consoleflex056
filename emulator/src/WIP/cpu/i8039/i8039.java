@@ -19,7 +19,6 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
  */
 package WIP.cpu.i8039;
 
-import static WIP2.arcadeflex.libc.cstring.*;
 
 import static old.mame.cpuintrfH.*;
 import static WIP.mame.memoryH.*;

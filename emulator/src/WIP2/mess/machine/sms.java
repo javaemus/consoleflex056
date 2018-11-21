@@ -7,15 +7,12 @@ package WIP2.mess.machine;
 
 import static WIP.arcadeflex.libc_v2.*;
 import static WIP.arcadeflex.fucPtr.*;
-import static WIP.mame.mame.Machine;
 import static consoleflex.funcPtr.*;
 import static WIP2.mess.messH.*;
 import static WIP2.mess.mess.*;
 import static old.mame.inptport.*;
-import static WIP2.mess.vidhrdw.tms9928a.*;
 import static old.arcadeflex.osdepend.*;
 import static WIP2.mess.osdepend.fileio.*;
-import static WIP2.arcadeflex.libc.cstring.*;
 import static WIP.mame.osdependH.*;
 import static WIP2.mame.commonH.*;
 import static old.mame.common.*;

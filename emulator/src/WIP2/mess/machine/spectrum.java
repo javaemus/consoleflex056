@@ -36,7 +36,6 @@ import static WIP.mame.osdependH.*;
 import static WIP.mame.memory.*;
 import static WIP.mame.memoryH.*;
 
-import static old.arcadeflex.osdepend.logerror;
 import static old.mame.cpuintrf.*;
 import static WIP2.mess.messH.*;
 import static WIP2.mess.mess.*;
@@ -45,7 +44,6 @@ import static WIP2.cpu.z80.z80H.*;
 
 import static old.arcadeflex.libc_old.*;
 
-import static WIP2.arcadeflex.libc.cstring.*;
 import consoleflex.funcPtr.*;
 import WIP2.cpu.z80.z80;
 
@@ -53,15 +51,12 @@ import static WIP2.mess.systems.spectrum.*;
 import static WIP2.mess.includes.spectrumH.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.mame.cpuintrfH.*;
-import static old.mame.cpuintrf.*;
 import static old.mame.inptport.*;
 import static WIP2.mess.eventlst.*;
-import static WIP2.mess.eventlstH.*;
 
 import static WIP2.mess.vidhrdw.border.*;
 
 import static WIP2.sound.ay8910.*;
-import static WIP2.sound.ay8910H.*;
 import WIP2.sound.waveH.wave_args;
 
 public class spectrum

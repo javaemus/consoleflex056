@@ -24,8 +24,6 @@ rom/ram selection
 package WIP2.mess.machine;
 
 import static WIP.arcadeflex.libc_v2.*;
-import static WIP.arcadeflex.fucPtr.*;
-import static WIP.mame.mame.Machine;
 import static WIP.mame.osdependH.*;
 import static WIP.mame.memory.*;
 import static WIP.mame.memoryH.*;
@@ -41,17 +39,13 @@ import static WIP2.cpu.z80.z80H.*;
 
 //import static old.arcadeflex.libc_old.*;
 
-import static WIP2.arcadeflex.libc.cstring.*;
 import consoleflex.funcPtr.*;
-import WIP2.cpu.z80.z80;
 
 import static WIP2.sound.ay8910.*;
-import static WIP2.sound.ay8910H.*;
 
 import static WIP2.mess.systems.amstrad.*;
 import static WIP2.mess.vidhrdw.m6845.*;
 
-import static WIP2.mess.machine._8255ppiH.*;
 import static WIP2.mess.machine._8255ppi.*;
 import static common.libc.cstring.*;
 public class amstrad

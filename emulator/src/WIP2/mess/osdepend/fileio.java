@@ -7,8 +7,6 @@ package WIP2.mess.osdepend;
 import WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.mame.osdependH.*;
 import WIP2.arcadeflex.javaspecific.CRC;
-import static WIP2.arcadeflex.libc.cstring.strchr;
-import static WIP2.arcadeflex.libc.cstring.strrchr;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +17,9 @@ import static old.arcadeflex.libc_old.*;
 import old.arcadeflex.osdepend;
 import static old.arcadeflex.osdepend.logerror;
 import static common.libc.cstdio.*;
+import static common.libc.cstring.strchr;
+import static common.libc.cstring.strrchr;
+
 public class fileio {
 
     /*TODO*///#include "mamalleg.h"
@@ -371,7 +372,7 @@ public class fileio {
                 break;
 
             case OSD_FILETYPE_IMAGE_R:
-                case OSD_FILETYPE_IMAGE:
+            case OSD_FILETYPE_IMAGE:
                 /* only for reading */
                 if (_write != 0) {
                     logerror("osd_fopen: type %02x write not supported\n", filetype);
@@ -489,7 +490,6 @@ public class fileio {
 /*TODO*///					}
 /*TODO*///				}
 /*TODO*///            }
-
 //the above code is custom to read file with extension (shadow)
                     extension = strrchr(file, '.');
                     if (extension != null && strchr(extension, '/') == null && strchr(extension, '\\') == null) {
@@ -525,7 +525,7 @@ public class fileio {
                         }
                         if (found == 0) {
                             /* try with a .zip extension */
-                            name = sprintf("%s/%s/%s.zip", dir_name, game,file.substring(0, Integer.parseInt(extension)));
+                            name = sprintf("%s/%s/%s.zip", dir_name, game, file.substring(0, Integer.parseInt(extension)));
                             logerror("Trying %s\n", name);
                             if (new File(name).exists())//if (cache_stat(name, &stat_buffer) == 0)
                             {
@@ -1133,8 +1133,9 @@ public class fileio {
         }
         return r;
     }
+
     public static int osd_fread(Object file, UBytePtr buffer, int offset, int length) {
-        return osd_fread(file, buffer.memory, buffer.offset + offset, length);     
+        return osd_fread(file, buffer.memory, buffer.offset + offset, length);
     }
 
     /*TODO*///int osd_fread_swap(void *file, void *buffer, int length)

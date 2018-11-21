@@ -7,21 +7,20 @@ import static common.libc.cstdio.*;
 import static WIP.mame.mame.Machine;
 import static WIP.mame.mame.options;
 import WIP.mame.osdependH.mame_bitmap;
-import static WIP2.arcadeflex.libc.cstring.strlen;
-import static WIP2.arcadeflex.libc.cstring.strrchr;
 import static WIP2.mame.usrintrf.ui_displaymessagewindow;
 import static WIP2.mame.usrintrf.ui_drawbox;
 import WIP2.mess.messH.GameDriver;
 import WIP2.mess.messH.IODevice;
 import static WIP2.mess.messH.*;
 import static WIP2.mess.osdepend.fileio.osd_fopen;
-import old.arcadeflex.libc_old.FILE;
 import static old.arcadeflex.libc_old.printf;
 import static old.arcadeflex.osdepend.logerror;
 import static old.mame.inptportH.*;
 import static old.mame.input.*;
 import static old.mame.inputH.*;
 import static WIP.mame.mame.*;
+import static common.libc.cstring.strlen;
+import static common.libc.cstring.strrchr;
 
 public class mess {
 

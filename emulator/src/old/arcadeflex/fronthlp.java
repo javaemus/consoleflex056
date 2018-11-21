@@ -17,7 +17,6 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
 package old.arcadeflex;
 
 import static WIP2.mess.messH.*;
-import static WIP2.arcadeflex.libc.cstring.*;
 import WIP.arcadeflex.settings;
 import static old.arcadeflex.libc_old.*;
 import static old.mame.common.printromlist;
@@ -31,7 +30,7 @@ import static WIP.mame.sndintrf.sound_name;
 import static WIP.mame.sndintrf.sound_num;
 import static WIP.mame.sndintrfH.MachineSound;
 import static WIP.mame.version.build_version;
-
+import static common.libc.cstring.*;
 
 /**
  *

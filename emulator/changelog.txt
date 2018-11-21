@@ -9,6 +9,7 @@
 -Added expressions (bool,not,sizeof ) to common/libc/expressions
 -More cleanups to cstring library
 -More cstring cleanups
+-Even more cstring cleanups
 
 20/11/2018
 ==========

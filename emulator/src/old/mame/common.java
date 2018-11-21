@@ -4,7 +4,6 @@
  */
 package old.mame;
 
-import static WIP2.arcadeflex.libc.cstring.*;
 import static WIP2.mess.messH.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
@@ -13,10 +12,7 @@ import static WIP.arcadeflex.libc_v2.UBytePtr;
 import static WIP.arcadeflex.libc_v2.charArrayToInt;
 import static WIP.arcadeflex.libc_v2.charArrayToLong;
 import static old.arcadeflex.osdepend.logerror;
-import static old.arcadeflex.video.*;
 import static WIP2.mame.commonH.*;
-import static old.mame.drawgfxH.rectangle;
-import static old.mame.driverH.*;
 import static WIP.mame.mame.*;
 import static WIP2.mame.mameH.MAX_MEMORY_REGIONS;
 import static WIP.mame.osdependH.*;

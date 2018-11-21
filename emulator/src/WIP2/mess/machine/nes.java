@@ -11,10 +11,8 @@ import static consoleflex.funcPtr.*;
 import static WIP2.mess.messH.*;
 import static WIP2.mess.mess.*;
 import static old.mame.inptport.*;
-import static WIP2.mess.vidhrdw.tms9928a.*;
 import static old.arcadeflex.osdepend.*;
 import static WIP2.mess.osdepend.fileio.*;
-import static WIP2.arcadeflex.libc.cstring.*;
 import static WIP.mame.osdependH.*;
 import static WIP2.mame.commonH.*;
 import static old.mame.common.*;
@@ -22,7 +20,6 @@ import static WIP.mame.memoryH.*;
 import static old.arcadeflex.libc_old.SEEK_SET;
 import static old.arcadeflex.libc_old.printf;
 import static common.libc.cstring.*;
-import static old.arcadeflex.libc_old.strcmp;
 import static WIP2.mess.includes.nesH.*;
 import static WIP2.mess.systems.nes.*;
 import static WIP.mame.memory.*;
@@ -32,7 +29,6 @@ import static WIP2.mess.vidhrdw.nes.*;
 import static WIP.cpu.m6502.m6502H.*;
 import static old.arcadeflex.video.*;
 import static WIP.mame.drawgfx.*;
-import static common.subArrays.*;
 import static common.libc.expressions.*;
 
 public class nes {
