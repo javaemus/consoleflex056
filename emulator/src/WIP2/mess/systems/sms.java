@@ -17,7 +17,7 @@ import static WIP.mame.sndintrfH.SOUND_YM2413;
 import static WIP2.mame.commonH.REGION_CPU1;
 import old.mame.drawgfxH.rectangle;
 import static old.mame.driverH.*;
-import static WIP2.mame.commonH.*;
+import static mame.commonH.*;
 import static WIP2.mess.messH.*;
 import static old.mame.inptport.*;
 import static WIP2.mess.vidhrdw.smsvdp.*;
@@ -237,7 +237,7 @@ public class sms {
 
     static RomLoadPtr rom_sms = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(SMS_ROM_MAXSIZE, REGION_CPU1);
+            ROM_REGION(SMS_ROM_MAXSIZE, REGION_CPU1,0);
             /*  ROM_LOAD ("bios.rom", 0x0000, 0x2000, 0x5AD6EDAC);*/
             ROM_END();
         }
@@ -245,7 +245,7 @@ public class sms {
 
     static RomLoadPtr rom_gamegear = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(SMS_ROM_MAXSIZE, REGION_CPU1);
+            ROM_REGION(SMS_ROM_MAXSIZE, REGION_CPU1,0);
             ROM_END();
         }
     };

@@ -1,3 +1,7 @@
+25/11/2018
+==========
+-Some work on new loader , it isn't finished still but should work for the systems we got already
+
 24/11/2018
 ==========
 -Added new RegionInfo class and ported memory_region functions to 0.59 format (doesn't seem to be broken)

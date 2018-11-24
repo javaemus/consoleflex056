@@ -4,7 +4,6 @@
  */
 package mame;
 
-
 import java.util.ArrayList;
 //mess specific files should use the proper import for arcadeflex
 import static mess_spec.common.*;
@@ -406,8 +405,11 @@ public class commonH {
         ROMX_LOAD(name, offset, length, crc, 0);
     }
 
-    /*TODO*///#define ROM_LOAD_OPTIONAL(name,offset,length,crc)	ROMX_LOAD(name, offset, length, crc, ROM_OPTIONAL)
-/*TODO*///#define ROM_CONTINUE(offset,length)					ROMX_LOAD(ROMENTRY_CONTINUE, offset, length, 0, ROM_INHERITFLAGS)
+    public static void ROM_LOAD_OPTIONAL(String name, int offset, int length, int crc) {
+        ROMX_LOAD(name, offset, length, crc, ROM_OPTIONAL);
+    }
+
+    /*TODO*///#define ROM_CONTINUE(offset,length)					ROMX_LOAD(ROMENTRY_CONTINUE, offset, length, 0, ROM_INHERITFLAGS)
     public static void ROM_RELOAD(int offset, int length) {
         ROMX_LOAD(ROMENTRY_RELOAD, offset, length, 0, ROM_INHERITFLAGS);
     }

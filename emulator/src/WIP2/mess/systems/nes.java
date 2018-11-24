@@ -12,7 +12,6 @@ import static WIP2.mame.commonH.REGION_CPU1;
 import old.mame.drawgfxH.GfxDecodeInfo;
 import old.mame.drawgfxH.rectangle;
 import static old.mame.driverH.*;
-import static WIP2.mame.commonH.*;
 import static WIP2.mess.messH.*;
 import static common.ptr.*;
 import static WIP.cpu.m6502.m6502H.N2A03_DEFAULTCLOCK;
@@ -24,6 +23,8 @@ import static WIP2.mess.includes.nesH.*;
 import static WIP2.mess.machine.nes.*;
 import static WIP2.mess.vidhrdw.nes.*;
 import static WIP2.mess.machine.nes_mmc.*;
+import static mame.commonH.*;
+
 
 public class nes {
 
@@ -314,43 +315,43 @@ public class nes {
 
     static RomLoadPtr rom_nes = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             /* Main RAM + program banks */
-            ROM_REGION(0x2000, REGION_GFX1);
+            ROM_REGION(0x2000, REGION_GFX1,0);
             /* VROM */
-            ROM_REGION(0x2000, REGION_GFX2);
+            ROM_REGION(0x2000, REGION_GFX2,0);
             /* VRAM */
-            ROM_REGION(0x10000, REGION_USER1);/* WRAM */
+            ROM_REGION(0x10000, REGION_USER1,0);/* WRAM */
             ROM_END();
         }
     };
 
     static RomLoadPtr rom_nespal = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             /* Main RAM + program banks */
-            ROM_REGION(0x2000, REGION_GFX1);
+            ROM_REGION(0x2000, REGION_GFX1,0);
             /* VROM */
-            ROM_REGION(0x2000, REGION_GFX2);
+            ROM_REGION(0x2000, REGION_GFX2,0);
             /* VRAM */
-            ROM_REGION(0x10000, REGION_USER1);/* WRAM */
+            ROM_REGION(0x10000, REGION_USER1,0);/* WRAM */
             ROM_END();
         }
     };
 
     static RomLoadPtr rom_famicom = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             /* Main RAM + program banks */
             ROM_LOAD_OPTIONAL("disksys.rom", 0xe000, 0x2000, 0x5e607dcf);
 
-            ROM_REGION(0x2000, REGION_GFX1);
+            ROM_REGION(0x2000, REGION_GFX1,0);
             /* VROM */
 
-            ROM_REGION(0x2000, REGION_GFX2);
+            ROM_REGION(0x2000, REGION_GFX2,0);
             /* VRAM */
 
-            ROM_REGION(0x10000, REGION_USER1);/* WRAM */
+            ROM_REGION(0x10000, REGION_USER1,0);/* WRAM */
             ROM_END();
         }
     };

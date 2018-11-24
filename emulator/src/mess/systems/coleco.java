@@ -14,7 +14,7 @@ import static WIP2.mame.commonH.REGION_CPU1;
 import old.mame.drawgfxH.rectangle;
 import static old.mame.inputH.*;
 import static old.mame.driverH.*;
-import static WIP2.mame.commonH.*;
+import static mame.commonH.*;
 import static mess.vidhrdw.tms9928aH.*;
 import static mess.vidhrdw.tms9928a.*;
 import static WIP2.mess.messH.*;

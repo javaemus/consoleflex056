@@ -32,9 +32,6 @@ import static old.mame.cpuintrfH.*;
 import static old.mame.inptport.*;
 import static old.mame.inptportH.*;
 import static old.mame.inputH.*;
-import static WIP2.mame.commonH.*;
-import static old.mame.common.*;
-import static WIP.arcadeflex.fucPtr.*;
 import static WIP2.mess.messH.*;
 import static WIP.mame.memoryH.*;
 import static WIP.mame.memory.*;
@@ -43,25 +40,20 @@ import static common.libc.cstring.*;
 import static consoleflex.funcPtr.*;
 import static old.mame.drawgfxH.*;
 import static common.libc.expressions.*;
-import static WIP2.mess.eventlst.*;
-import static WIP2.mess.eventlstH.*;
 import static old.mame.timer.*;
 import static old.mame.timerH.*;
-
+import static mame.commonH.*;
 import static WIP2.mess.machine.nec765.*;
 import static WIP2.mess.includes.nec765H.*;
 import static WIP2.mess.machine.flopdrv.*;
 import static WIP2.mess.includes.flopdrvH.*;
 import static WIP2.mess.machine.dsk.*;
 
-import static WIP.mame.sndintrf.*;
 import static WIP.mame.sndintrfH.*;
 import static WIP2.sound.ay8910.*;
 import static WIP2.sound.ay8910H.*;
-import static WIP2.sound.wave.*;
 import static WIP2.sound.waveH.*;
 
-import static WIP2.mess.vidhrdw.crtc6845.*;
 import static WIP2.mess.vidhrdw.m6845.*;
 import static WIP2.mess.vidhrdw.amstrad.*;
 import static WIP2.mess.includes.amstradH.*;
@@ -2895,7 +2887,7 @@ public class amstrad
 	are banked. */
 	static RomLoadPtr rom_cpc6128 = new RomLoadPtr(){ public void handler(){ 
 		/* this defines the total memory size - 64k ram, 16k OS, 16k BASIC, 16k DOS */
-		ROM_REGION(0x020000, REGION_CPU1);
+		ROM_REGION(0x020000, REGION_CPU1,0);
 		/* load the os to offset 0x01000 from memory base */
 		ROM_LOAD("cpc6128.rom", 0x10000, 0x8000, 0x9e827fe1);
 		ROM_LOAD("cpcados.rom", 0x18000, 0x4000, 0x1fe22ecd);
@@ -2909,7 +2901,7 @@ public class amstrad
 	
 	static RomLoadPtr rom_cpc464 = new RomLoadPtr(){ public void handler(){ 
 		/* this defines the total memory size - 64k ram, 16k OS, 16k BASIC, 16k DOS */
-		ROM_REGION(0x01c000, REGION_CPU1);
+		ROM_REGION(0x01c000, REGION_CPU1,0);
 		/* load the os to offset 0x01000 from memory base */
 		ROM_LOAD("cpc464.rom", 0x10000, 0x8000, 0x040852f25);
 		ROM_LOAD("cpcados.rom", 0x18000, 0x4000, 0x1fe22ecd);
@@ -2920,7 +2912,7 @@ public class amstrad
 	
 	static RomLoadPtr rom_cpc664 = new RomLoadPtr(){ public void handler(){ 
 		/* this defines the total memory size - 64k ram, 16k OS, 16k BASIC, 16k DOS */
-		ROM_REGION(0x01c000, REGION_CPU1);
+		ROM_REGION(0x01c000, REGION_CPU1,0);
 		/* load the os to offset 0x01000 from memory base */
 		ROM_LOAD("cpc664.rom", 0x10000, 0x8000, 0x09AB5A036);
 		ROM_LOAD("cpcados.rom", 0x18000, 0x4000, 0x1fe22ecd);
@@ -2931,7 +2923,7 @@ public class amstrad
 	
 	
 	static RomLoadPtr rom_kccomp = new RomLoadPtr(){ public void handler(){ 
-		ROM_REGION(0x01c000, REGION_CPU1);
+		ROM_REGION(0x01c000, REGION_CPU1,0);
 		ROM_LOAD("kccos.rom", 0x10000, 0x04000, 0x7f9ab3f7);
 		ROM_LOAD("kccbas.rom", 0x14000, 0x04000, 0xca6af63d);
 	

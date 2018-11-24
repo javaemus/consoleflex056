@@ -92,6 +92,7 @@ import static old.mame.inputH.*;
 import static old.mame.driverH.*;
 import static WIP2.mame.commonH.*;
 import static mess_spec.common.*;
+import static mame.commonH.*;
 import static WIP2.mess.messH.*;
 import static common.libc.cstring.*;
 
@@ -2306,7 +2307,7 @@ public class spectrum {
      */
     static RomLoadPtr rom_spectrum = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("spectrum.rom", 0x0000, 0x4000, 0xddee531f);
             //ROM_LOAD("spectrum.rom", 0x0000, 0x4000, 0xb96a36be);
             ROM_END();
@@ -2315,7 +2316,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specbusy = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("48-busy.rom", 0x0000, 0x4000, 0x1511cddb);
             ROM_END();
         }
@@ -2323,7 +2324,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specgrot = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("48-groot.rom", 0x0000, 0x4000, 0xabf18c45);
             ROM_END();
         }
@@ -2331,7 +2332,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specimc = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("48-imc.rom", 0x0000, 0x4000, 0xd1be99ee);
             ROM_END();
         }
@@ -2339,7 +2340,7 @@ public class spectrum {
 
     static RomLoadPtr rom_speclec = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("80-lec.rom", 0x0000, 0x4000, 0x5b5c92b1);
             ROM_END();
         }
@@ -2347,7 +2348,7 @@ public class spectrum {
 
     static RomLoadPtr rom_spec128 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x18000, REGION_CPU1);
+            ROM_REGION(0x18000, REGION_CPU1,0);
             ROM_LOAD("zx128_0.rom", 0x10000, 0x4000, 0xe76799d2);
             ROM_LOAD("zx128_1.rom", 0x14000, 0x4000, 0xb96a36be);
             ROM_END();
@@ -2356,7 +2357,7 @@ public class spectrum {
 
     static RomLoadPtr rom_spec128s = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x18000, REGION_CPU1);
+            ROM_REGION(0x18000, REGION_CPU1,0);
             ROM_LOAD("zx128s0.rom", 0x10000, 0x4000, 0x453d86b2);
             ROM_LOAD("zx128s1.rom", 0x14000, 0x4000, 0x6010e796);
             ROM_END();
@@ -2365,7 +2366,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specpls2 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x18000, REGION_CPU1);
+            ROM_REGION(0x18000, REGION_CPU1,0);
             ROM_LOAD("zxp2_0.rom", 0x10000, 0x4000, 0x5d2e8c66);
             ROM_LOAD("zxp2_1.rom", 0x14000, 0x4000, 0x98b1320b);
             ROM_END();
@@ -2374,7 +2375,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specpl2a = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x20000, REGION_CPU1);
+            ROM_REGION(0x20000, REGION_CPU1,0);
             ROM_LOAD("p2a41_0.rom", 0x10000, 0x4000, 0x30c9f490);
             ROM_LOAD("p2a41_1.rom", 0x14000, 0x4000, 0xa7916b3f);
             ROM_LOAD("p2a41_2.rom", 0x18000, 0x4000, 0xc9a0b748);
@@ -2385,7 +2386,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specpls3 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x20000, REGION_CPU1);
+            ROM_REGION(0x20000, REGION_CPU1,0);
             ROM_LOAD("pl3-0.rom", 0x10000, 0x4000, 0x17373da2);
             ROM_LOAD("pl3-1.rom", 0x14000, 0x4000, 0xf1d1d99e);
             ROM_LOAD("pl3-2.rom", 0x18000, 0x4000, 0x3dbf351d);
@@ -2396,7 +2397,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specpls4 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("plus4.rom", 0x0000, 0x4000, 0x7e0f47cb);
             ROM_END();
         }
@@ -2404,7 +2405,7 @@ public class spectrum {
 
     static RomLoadPtr rom_tk90x = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("tk90x.rom", 0x0000, 0x4000, 0x3e785f6f);
             ROM_END();
         }
@@ -2412,7 +2413,7 @@ public class spectrum {
 
     static RomLoadPtr rom_tk95 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("tk95.rom", 0x0000, 0x4000, 0x17368e07);
             ROM_END();
         }
@@ -2420,7 +2421,7 @@ public class spectrum {
 
     static RomLoadPtr rom_inves = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("inves.rom", 0x0000, 0x4000, 0x8ff7a4d1);
             ROM_END();
         }
@@ -2428,7 +2429,7 @@ public class spectrum {
 
     static RomLoadPtr rom_tc2048 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x10000, REGION_CPU1);
+            ROM_REGION(0x10000, REGION_CPU1,0);
             ROM_LOAD("tc2048.rom", 0x0000, 0x4000, 0xf1b5fa67);
             ROM_END();
         }
@@ -2436,7 +2437,7 @@ public class spectrum {
 
     static RomLoadPtr rom_ts2068 = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x16000, REGION_CPU1);
+            ROM_REGION(0x16000, REGION_CPU1,0);
             ROM_LOAD("ts2068_h.rom", 0x10000, 0x4000, 0xbf44ec3f);
             ROM_LOAD("ts2068_x.rom", 0x14000, 0x2000, 0xae16233a);
             ROM_END();
@@ -2445,7 +2446,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specp2fr = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x18000, REGION_CPU1);
+            ROM_REGION(0x18000, REGION_CPU1,0);
             ROM_LOAD("plus2fr0.rom", 0x10000, 0x4000, 0xc684c535);
             ROM_LOAD("plus2fr1.rom", 0x14000, 0x4000, 0xf5e509c5);
             ROM_END();
@@ -2454,7 +2455,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specp2sp = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x18000, REGION_CPU1);
+            ROM_REGION(0x18000, REGION_CPU1,0);
             ROM_LOAD("plus2sp0.rom", 0x10000, 0x4000, 0xe807d06e);
             ROM_LOAD("plus2sp1.rom", 0x14000, 0x4000, 0x41981d4b);
             ROM_END();
@@ -2463,7 +2464,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specp3sp = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x20000, REGION_CPU1);
+            ROM_REGION(0x20000, REGION_CPU1,0);
             ROM_LOAD("plus3sp0.rom", 0x10000, 0x4000, 0x1f86147a);
             ROM_LOAD("plus3sp1.rom", 0x14000, 0x4000, 0xa8ac4966);
             ROM_LOAD("plus3sp2.rom", 0x18000, 0x4000, 0xf6bb0296);
@@ -2474,7 +2475,7 @@ public class spectrum {
 
     static RomLoadPtr rom_specpl3e = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x20000, REGION_CPU1);
+            ROM_REGION(0x20000, REGION_CPU1,0);
             //ROM_LOAD("roma.bin",0x10000,0x8000, 0x7c20e2c9);
             ROM_LOAD("roma-en.rom", 0x10000, 0x8000, 0x2d533344);
             //ROM_LOAD("romb.bin",0x18000,0x8000, 0x4a700c7e);
@@ -2485,7 +2486,7 @@ public class spectrum {
 
     static RomLoadPtr rom_scorpio = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x020000, REGION_CPU1);
+            ROM_REGION(0x020000, REGION_CPU1,0);
             ROM_LOAD("scorp0.rom", 0x010000, 0x4000, 0x0eb40a09);
             ROM_LOAD("scorp1.rom", 0x014000, 0x4000, 0x9d513013);
             ROM_LOAD("scorp2.rom", 0x018000, 0x4000, 0xfd0d3ce1);
@@ -2497,7 +2498,7 @@ public class spectrum {
 
     static RomLoadPtr rom_pentagon = new RomLoadPtr() {
         public void handler() {
-            ROM_REGION(0x020000, REGION_CPU1);
+            ROM_REGION(0x020000, REGION_CPU1,0);
             ROM_LOAD("pentagon.rom", 0x010000, 0x8000, 0xaa1ce4bd);
             //ROM_CART_LOAD(0, "rom\0", 0x0000, 0x4000, ROM_NOCLEAR | ROM_NOMIRROR | ROM_OPTIONAL);
             ROM_END();

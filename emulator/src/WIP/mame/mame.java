@@ -43,7 +43,6 @@ import static old.arcadeflex.osdepend.osd_init;
 import static old.arcadeflex.video.osd_clearbitmap;
 import static old.arcadeflex.video.osd_skip_this_frame;
 import static old.arcadeflex.video_old.*;
-import static old.mame.common.*;
 import static WIP2.mame.commonH.REGIONFLAG_DISPOSE;
 import static old.mame.cpuintrf.cpu_init;
 import static old.mame.cpuintrf.cpu_run;
