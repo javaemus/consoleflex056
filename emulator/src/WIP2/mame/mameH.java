@@ -12,17 +12,25 @@ import static old.mame.driverH.MachineDriver;
 import static old.mame.inptportH.InputPort;
 import static WIP.mame.osdependH.mame_bitmap;
 import static WIP.arcadeflex.libc_v2.*;
+import common.ptr.UBytePtr;
 import static common.subArrays.*;
+
 public class mameH {
 
     public static final int MAX_GFX_ELEMENTS = 32;
     public static final int MAX_MEMORY_REGIONS = 32;
 
+    public static class RegionInfo {
+
+        public UBytePtr base;
+        public int length;
+        public int/*UINT32*/ type;
+        public int/*UINT32*/ flags;
+    }
+
     public static class RunningMachine {
 
-        public /*unsigned char * */ char[][] u8_memory_region = new char[MAX_MEMORY_REGIONS][];
-        public int memory_region_length[] = new int[MAX_MEMORY_REGIONS];
-        public int memory_region_type[] = new int[MAX_MEMORY_REGIONS];
+        public RegionInfo[] memory_region = new RegionInfo[MAX_MEMORY_REGIONS];
 
         public GfxElement gfx[] = new GfxElement[MAX_GFX_ELEMENTS];
         public mame_bitmap scrbitmap;
@@ -85,8 +93,8 @@ public class mameH {
         public int antialias;
         public int use_artwork;
         //MESS
-        public ImageFile[] image_files=new ImageFile[MAX_IMAGES];
-	public int image_count;
+        public ImageFile[] image_files = new ImageFile[MAX_IMAGES];
+        public int image_count;
     }
 
 }

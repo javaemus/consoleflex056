@@ -25,6 +25,7 @@
 package WIP2.mess.systems;
 
 import static common.ptr.*;
+import static mess_spec.common.*;
 import static WIP.arcadeflex.fucPtr.*;
 import static old.mame.cpuintrf.*;
 import static old.mame.cpuintrfH.*;

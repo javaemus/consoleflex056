@@ -30,6 +30,7 @@ import static WIP.cpu.m6502.m6502H.*;
 import static old.arcadeflex.video.*;
 import static WIP.mame.drawgfx.*;
 import static common.libc.expressions.*;
+import static mess_spec.common.*;
 
 public class nes {
 
@@ -1001,8 +1002,8 @@ public class nes {
             free_memory_region(REGION_GFX1);
 
             /* Allocate them again with the proper size */
-            if (new_memory_region(REGION_CPU1, 0x10000 + (_nes.prg_chunks[0] + 1) * 0x4000) != 0
-                    || new_memory_region(REGION_GFX1, (_nes.chr_chunks[0] + 1) * 0x2000) != 0) {
+            if (new_memory_region(REGION_CPU1, 0x10000 + (_nes.prg_chunks[0] + 1) * 0x4000,0) != 0
+                    || new_memory_region(REGION_GFX1, (_nes.chr_chunks[0] + 1) * 0x2000,0) != 0) {
                 printf("Memory allocation failed reading roms!\n");
                 logerror("BAD section hit during LOAD ROM.\n");
                 osd_fclose(romfile);

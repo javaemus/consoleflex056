@@ -16,9 +16,11 @@ import static WIP2.mame.commonH.*;
 import static WIP.mame.mame.*;
 import static WIP2.mame.mameH.MAX_MEMORY_REGIONS;
 import static WIP.mame.osdependH.*;
+import WIP2.mame.mameH.RegionInfo;
 import static common.libc.cstdlib.*;
 import static common.libc.cstdio.*;
 import static common.libc.cstring.*;
+import static mess_spec.common.*;
 
 public class common {
 
@@ -74,7 +76,7 @@ public class common {
         romp_ptr = 0;//romp = Machine.gamedrv.rom;
 
         for (region = 0; region < MAX_MEMORY_REGIONS; region++) {
-            Machine.u8_memory_region[region] = null;
+            Machine.memory_region[region] = new RegionInfo();
         }
 
         region = 0;
@@ -87,7 +89,7 @@ public class common {
             if (Machine.sample_rate == 0 && ((romp[romp_ptr].crc & REGIONFLAG_SOUNDONLY) != 0)) {
 
                 logerror("readroms():  Ignoring rom region %d\n", region);
-                Machine.memory_region_type[region] = romp[romp_ptr].crc;
+                Machine.memory_region[region].type = romp[romp_ptr].crc;
                 region++;
 
                 romp_ptr++;
@@ -103,16 +105,16 @@ public class common {
             }
 
             region_size = romp[romp_ptr].offset;
-            if ((Machine.u8_memory_region[region] = new char[region_size]) == null) {
+            if ((Machine.memory_region[region].base = new UBytePtr(region_size)) == null) {
                 printf("readroms():  Unable to allocate %d bytes of RAM\n", region_size);
                 return getout(current_rom, total_roms);
             }
-            Machine.memory_region_length[region] = region_size;
-            Machine.memory_region_type[region] = romp[romp_ptr].crc;
+            Machine.memory_region[region].length = region_size;
+            Machine.memory_region[region].type = romp[romp_ptr].crc;
 
             /* some games (i.e. Pleiades) want the memory clear on startup */
             if (region_size <= 0x400000) /* don't clear large regions which will be filled anyway */ {
-                memset(Machine.u8_memory_region[region], 0, region_size);
+               // memset(Machine.memory_region[region], 0, region_size);
             }
 
             romp_ptr++;
@@ -192,7 +194,7 @@ public class common {
                             }
 
                             /* ROM_LOAD_NIB_LOW and ROM_LOAD_NIB_HIGH */
-                            UBytePtr c = new UBytePtr(Machine.u8_memory_region[region], romp[romp_ptr].offset);
+                            UBytePtr c = new UBytePtr(Machine.memory_region[region].base, romp[romp_ptr].offset);
                             if ((romp[romp_ptr].length & ROMFLAG_ALTERNATE) != 0) {
                                 /* Load into the high nibble */
                                 for (i = 0; i < length; i++) {
@@ -210,7 +212,7 @@ public class common {
 
                             /* ROM_LOAD_EVEN and ROM_LOAD_ODD */
  /* copy the ROM data */
-                            UBytePtr c = new UBytePtr(Machine.u8_memory_region[region], (romp[romp_ptr].offset ^ 1));
+                            UBytePtr c = new UBytePtr(Machine.memory_region[region].base, (romp[romp_ptr].offset ^ 1));
 
                             if (osd_fread_scatter(f, c, length, 2) != length) {
                                 printf("Unable to read ROM %s\n", name);
@@ -241,10 +243,10 @@ public class common {
                             int wide = romp[romp_ptr].length & ROMFLAG_WIDE;
                             int swap = (romp[romp_ptr].length & ROMFLAG_SWAP) ^ ROMFLAG_SWAP;
 
-                            osd_fread(f, new UBytePtr(Machine.u8_memory_region[region], romp[romp_ptr].offset), length);
+                            osd_fread(f, new UBytePtr(Machine.memory_region[region].base, romp[romp_ptr].offset), length);
 
                             /* apply swappage */
-                            UBytePtr c = new UBytePtr(Machine.u8_memory_region[region], (romp[romp_ptr].offset));
+                            UBytePtr c = new UBytePtr(Machine.memory_region[region].base, (romp[romp_ptr].offset));
                             if (wide != 0 && swap != 0) {
 
                                 for (i = 0; i < length; i += 2) {
@@ -295,14 +297,14 @@ public class common {
                                 UBytePtr c;
 
                                 /* ROM_LOAD_EVEN and ROM_LOAD_ODD */
-                                c = new UBytePtr(Machine.u8_memory_region[region], (romp[romp_ptr].offset ^ 1));
+                                c = new UBytePtr(Machine.memory_region[region].base, (romp[romp_ptr].offset ^ 1));
 
                                 for (i = 0; i < (romp[romp_ptr].length & ~ROMFLAG_MASK); i++) {
                                     c.write(2 * i, rand());
                                 }
                             } else {
                                 for (i = 0; i < (romp[romp_ptr].length & ~ROMFLAG_MASK); i++) {
-                                    Machine.u8_memory_region[region][romp[romp_ptr].offset + i] = (char) rand();
+                                    Machine.memory_region[region].base.write(romp[romp_ptr].offset + i,rand());
                                 }
                             }
                         }
@@ -347,7 +349,7 @@ public class common {
         osd_display_loading_rom_message(null, current_rom, total_roms);
 
         for (int region = 0; region < MAX_MEMORY_REGIONS; region++) {
-            Machine.u8_memory_region[region] = null;
+            Machine.memory_region[region] = null;
         }
         return 1;
     }
@@ -593,74 +595,6 @@ public class common {
 
         samples = null;
     }
-
-    public static UBytePtr memory_region(int num) {
-        int i;
-
-        if (num < MAX_MEMORY_REGIONS) {
-            return new UBytePtr(Machine.u8_memory_region[num]);
-        } else {
-            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
-                if ((Machine.memory_region_type[i] & ~REGIONFLAG_MASK) == num) {
-                    return new UBytePtr(Machine.u8_memory_region[i]);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static int memory_region_length(int num) {
-        int i;
-
-        if (num < MAX_MEMORY_REGIONS) {
-            return Machine.memory_region_length[num];
-        } else {
-            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
-                if ((Machine.memory_region_type[i] & ~REGIONFLAG_MASK) == num) {
-                    return Machine.memory_region_length[i];
-                }
-            }
-        }
-
-        return 0;
-    }
-
-    public static int new_memory_region(int num, int length) {
-        int i;
-
-        if (num < MAX_MEMORY_REGIONS) {
-            Machine.memory_region_length[num] = length;
-            Machine.u8_memory_region[num] = new char[length];
-            return (Machine.u8_memory_region[num] == null) ? 1 : 0;
-        } else {
-            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
-                if (Machine.u8_memory_region[i] == null) {
-                    Machine.memory_region_length[i] = length;
-                    Machine.memory_region_type[i] = num;
-                    Machine.u8_memory_region[i] = new char[length];
-                    return (Machine.u8_memory_region[i] == null) ? 1 : 0;
-                }
-            }
-        }
-        return 1;
-    }
-
-    public static void free_memory_region(int num) {
-        int i;
-
-        if (num < MAX_MEMORY_REGIONS) {
-            Machine.u8_memory_region[num] = null;
-        } else {
-            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
-                if ((Machine.memory_region_type[i] & ~REGIONFLAG_MASK) == num) {
-                    Machine.u8_memory_region[i] = null;
-                    return;
-                }
-            }
-        }
-    }
-
 
     /* LBO 042898 - added coin counters */
     public static WriteHandlerPtr coin_counter_w = new WriteHandlerPtr() {

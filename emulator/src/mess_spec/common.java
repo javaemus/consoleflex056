@@ -1,11 +1,18 @@
 /**
  *  ported to mess 0.56 (similar with mame 0.56 but with some mess stuff in it)
- * 
+ *
  */
 package mess_spec;
 
+import static WIP.mame.mame.*;
+import static WIP2.mame.mameH.*;
+import static common.ptr.*;
+import static common.libc.expressions.*;
+import static common.libc.cstring.*;
+
 public class common {
-/*TODO*////***************************************************************************
+
+    /*TODO*////***************************************************************************
 /*TODO*///
 /*TODO*///	Constants
 /*TODO*///
@@ -57,7 +64,8 @@ public class common {
 /*TODO*///
     public static int[] flip_screen_x = new int[1];
     public static int[] flip_screen_y = new int[1];
-/*TODO*///
+
+    /*TODO*///
 /*TODO*///int snapno;
 /*TODO*///
 /*TODO*///
@@ -297,125 +305,109 @@ public class common {
 /*TODO*///}
 /*TODO*///
 /*TODO*///
-/*TODO*///
-/*TODO*////***************************************************************************
-/*TODO*///
-/*TODO*///	Memory region code
-/*TODO*///
-/*TODO*///***************************************************************************/
-/*TODO*///
-/*TODO*////*-------------------------------------------------
-/*TODO*///	memory_region - returns pointer to a memory
-/*TODO*///	region
-/*TODO*///-------------------------------------------------*/
-/*TODO*///
-/*TODO*///unsigned char *memory_region(int num)
-/*TODO*///{
-/*TODO*///	int i;
-/*TODO*///
-/*TODO*///	if (num < MAX_MEMORY_REGIONS)
-/*TODO*///		return Machine->memory_region[num].base;
-/*TODO*///	else
-/*TODO*///	{
-/*TODO*///		for (i = 0;i < MAX_MEMORY_REGIONS;i++)
-/*TODO*///		{
-/*TODO*///			if (Machine->memory_region[i].type == num)
-/*TODO*///				return Machine->memory_region[i].base;
-/*TODO*///		}
-/*TODO*///	}
-/*TODO*///
-/*TODO*///	return 0;
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*////*-------------------------------------------------
-/*TODO*///	memory_region_length - returns length of a
-/*TODO*///	memory region
-/*TODO*///-------------------------------------------------*/
-/*TODO*///
-/*TODO*///size_t memory_region_length(int num)
-/*TODO*///{
-/*TODO*///	int i;
-/*TODO*///
-/*TODO*///	if (num < MAX_MEMORY_REGIONS)
-/*TODO*///		return Machine->memory_region[num].length;
-/*TODO*///	else
-/*TODO*///	{
-/*TODO*///		for (i = 0;i < MAX_MEMORY_REGIONS;i++)
-/*TODO*///		{
-/*TODO*///			if (Machine->memory_region[i].type == num)
-/*TODO*///				return Machine->memory_region[i].length;
-/*TODO*///		}
-/*TODO*///	}
-/*TODO*///
-/*TODO*///	return 0;
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*////*-------------------------------------------------
-/*TODO*///	new_memory_region - allocates memory for a
-/*TODO*///	region
-/*TODO*///-------------------------------------------------*/
-/*TODO*///
-/*TODO*///int new_memory_region(int num, size_t length, UINT32 flags)
-/*TODO*///{
-/*TODO*///    int i;
-/*TODO*///
-/*TODO*///    if (num < MAX_MEMORY_REGIONS)
-/*TODO*///    {
-/*TODO*///        Machine->memory_region[num].length = length;
-/*TODO*///        Machine->memory_region[num].base = malloc(length);
-/*TODO*///        return (Machine->memory_region[num].base == NULL) ? 1 : 0;
-/*TODO*///    }
-/*TODO*///    else
-/*TODO*///    {
-/*TODO*///        for (i = 0;i < MAX_MEMORY_REGIONS;i++)
-/*TODO*///        {
-/*TODO*///            if (Machine->memory_region[i].base == NULL)
-/*TODO*///            {
-/*TODO*///                Machine->memory_region[i].length = length;
-/*TODO*///                Machine->memory_region[i].type = num;
-/*TODO*///                Machine->memory_region[i].flags = flags;
-/*TODO*///                Machine->memory_region[i].base = malloc(length);
-/*TODO*///                return (Machine->memory_region[i].base == NULL) ? 1 : 0;
-/*TODO*///            }
-/*TODO*///        }
-/*TODO*///    }
-/*TODO*///	return 1;
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*////*-------------------------------------------------
-/*TODO*///	free_memory_region - releases memory for a
-/*TODO*///	region
-/*TODO*///-------------------------------------------------*/
-/*TODO*///
-/*TODO*///void free_memory_region(int num)
-/*TODO*///{
-/*TODO*///	int i;
-/*TODO*///
-/*TODO*///	if (num < MAX_MEMORY_REGIONS)
-/*TODO*///	{
-/*TODO*///		free(Machine->memory_region[num].base);
-/*TODO*///		memset(&Machine->memory_region[num], 0, sizeof(Machine->memory_region[num]));
-/*TODO*///	}
-/*TODO*///	else
-/*TODO*///	{
-/*TODO*///		for (i = 0;i < MAX_MEMORY_REGIONS;i++)
-/*TODO*///		{
-/*TODO*///			if (Machine->memory_region[i].type == num)
-/*TODO*///			{
-/*TODO*///				free(Machine->memory_region[i].base);
-/*TODO*///				memset(&Machine->memory_region[i], 0, sizeof(Machine->memory_region[i]));
-/*TODO*///				return;
-/*TODO*///			}
-/*TODO*///		}
-/*TODO*///	}
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*///
-/*TODO*////***************************************************************************
+    /**
+     * *************************************************************************
+     *
+     * Memory region code
+     *
+     **************************************************************************
+     */
+
+    /*-------------------------------------------------
+            memory_region - returns pointer to a memory
+            region
+    -------------------------------------------------*/
+    public static UBytePtr memory_region(int num) {
+        int i;
+
+        if (num < MAX_MEMORY_REGIONS) {
+            return Machine.memory_region[num].base;
+        } else {
+            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
+                if (Machine.memory_region[i].type == num) {
+                    return Machine.memory_region[i].base;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    /*-------------------------------------------------
+            memory_region_length - returns length of a
+            memory region
+    -------------------------------------------------*/
+    public static int memory_region_length(int num) {
+        int i;
+
+        if (num < MAX_MEMORY_REGIONS) {
+            return Machine.memory_region[num].length;
+        } else {
+            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
+                if (Machine.memory_region[i].type == num) {
+                    return Machine.memory_region[i].length;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /*-------------------------------------------------
+            new_memory_region - allocates memory for a
+            region
+    -------------------------------------------------*/
+    public static int new_memory_region(int num, int length, int flags) {
+        int i;
+
+        if (num < MAX_MEMORY_REGIONS) {
+            Machine.memory_region[num].length = length;
+            Machine.memory_region[num].base = new UBytePtr(length);
+            return (Machine.memory_region[num].base == null) ? 1 : 0;
+        } else {
+            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
+                if (Machine.memory_region[i].base == null) {
+                    Machine.memory_region[i].length = length;
+                    Machine.memory_region[i].type = num;
+                    Machine.memory_region[i].flags = flags;
+                    Machine.memory_region[i].base = new UBytePtr(length);
+                    return (Machine.memory_region[i].base == null) ? 1 : 0;
+                }
+            }
+        }
+        return 1;
+    }
+
+
+    /*-------------------------------------------------
+	free_memory_region - releases memory for a
+	region
+    -------------------------------------------------*/
+    public static void free_memory_region(int num) {
+        int i;
+
+        if (num < MAX_MEMORY_REGIONS) {
+            Machine.memory_region[num].base = null;
+            //memset(Machine.memory_region[num], 0, sizeof(Machine.memory_region[num]));
+            Machine.memory_region[num].flags = 0;
+            Machine.memory_region[num].length = 0;
+            Machine.memory_region[num].type = 0;
+        } else {
+            for (i = 0; i < MAX_MEMORY_REGIONS; i++) {
+                if (Machine.memory_region[i].type == num) {
+                    Machine.memory_region[num].base = null;
+                    //memset(Machine.memory_region[i], 0, sizeof(Machine.memory_region[i]));
+                    Machine.memory_region[num].flags = 0;
+                    Machine.memory_region[num].length = 0;
+                    Machine.memory_region[num].type = 0;
+                    return;
+                }
+            }
+        }
+    }
+
+    /*TODO*////***************************************************************************
 /*TODO*///
 /*TODO*///	Coin counter code
 /*TODO*///

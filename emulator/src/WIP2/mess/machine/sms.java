@@ -20,6 +20,7 @@ import static common.libc.cstring.*;
 import static old.arcadeflex.libc_old.SEEK_SET;
 import static old.arcadeflex.libc_old.printf;
 import static old.arcadeflex.libc_old.strcmp;
+import static mess_spec.common.*;
 
 public class sms
 {
@@ -195,7 +196,7 @@ public class sms
 	    }
 	
 	    /* Allocate memory */
-	    ret = new_memory_region(REGION_CPU1, size);
+	    ret = new_memory_region(REGION_CPU1, size,0);
 	
 	    /* Oops.. couldn't do it */
 	    if (ret != 0)

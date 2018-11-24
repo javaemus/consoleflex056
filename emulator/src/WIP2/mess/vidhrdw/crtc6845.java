@@ -20,7 +20,7 @@ import static WIP2.mame.commonH.*;
 import static WIP2.mess.includes.prasterH.*;
 import static old.mame.common.*;
 import static old.arcadeflex.osdepend.logerror;
-
+import static mess_spec.common.*;
 //import static mess.includes.prasterH.*;
 import static WIP2.mess.vidhrdw.praster.*;
 
