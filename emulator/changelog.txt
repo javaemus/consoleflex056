@@ -1,6 +1,7 @@
 25/11/2018
 ==========
 -Some work on new loader , it isn't finished still but should work for the systems we got already
+-Some more work on loader
 
 24/11/2018
 ==========

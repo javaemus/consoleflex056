@@ -1515,16 +1515,17 @@ public class common {
     static rom_load_data romdata = new rom_load_data();
 
     public static int rom_load_new(RomModule[] romp) {
-        /*TODO*///	const struct RomModule *regionlist[REGION_MAX];
+        RomModule[] regionlist = new RomModule[REGION_MAX];
         int region;
 
         int regnum;
         int romp_ptr = 0;
-        /*TODO*///
-/*TODO*///	/* reset the region list */
-/*TODO*///	for (regnum = 0;regnum < REGION_MAX;regnum++)
-/*TODO*///		regionlist[regnum] = NULL;
-/*TODO*///
+
+        /* reset the region list */
+        for (regnum = 0; regnum < REGION_MAX; regnum++) {
+            regionlist[regnum] = null;
+        }
+
         /* reset the romdata struct */
         romdata = new rom_load_data();
         romdata.romstotal = count_roms(romp, romp_ptr);
@@ -1568,21 +1569,22 @@ public class common {
             if (process_rom_entries(romdata, romp, region + 1) == 0) {
                 return 1;
             }
-            /*TODO*///		/* add this region to the list */
-/*TODO*///		if (regiontype < REGION_MAX)
-/*TODO*///			regionlist[regiontype] = region;
+            /* add this region to the list */
+            if (regiontype < REGION_MAX) {
+                regionlist[regiontype] = romp[region];
+            }
+        }
+
+        /* post-process the regions */
+        for (regnum = 0; regnum < REGION_MAX; regnum++) {
+            if (regionlist[regnum] != null) {
+                debugload("Post-processing region %02X\n", regnum);
+                romdata.regionlength = memory_region_length(regnum);
+                romdata.regionbase = memory_region(regnum);
+                /*TODO*///			region_post_process(&romdata, regionlist[regnum]);
+            }
         }
         /*TODO*///
-/*TODO*///	/* post-process the regions */
-/*TODO*///	for (regnum = 0; regnum < REGION_MAX; regnum++)
-/*TODO*///		if (regionlist[regnum])
-/*TODO*///		{
-/*TODO*///			debugload("Post-processing region %02X\n", regnum);
-/*TODO*///			romdata.regionlength = memory_region_length(regnum);
-/*TODO*///			romdata.regionbase = memory_region(regnum);
-/*TODO*///			region_post_process(&romdata, regionlist[regnum]);
-/*TODO*///		}
-/*TODO*///
 /*TODO*///	/* display the results and exit */
 /*TODO*///	return display_rom_load_results(&romdata);
         /*TEMPHACK*/ return 0;
