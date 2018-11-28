@@ -5,8 +5,7 @@ package WIP2.mess;
 
 import WIP.arcadeflex.fucPtr.*;
 import static consoleflex.funcPtr.*;
-import WIP2.mame.commonH.RomModule;
-import static WIP2.mame.commonH.*;
+import static mame.commonH.*;
 import old.mame.driverH.MachineDriver;
 import static old.mame.driverH.ROT0;
 import static old.mame.inptportH.*;

@@ -16,7 +16,7 @@ import static old.arcadeflex.osdepend.logerror;
 import static old.mame.inptport.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static common.libc.cstring.strlen;
-import static old.mame.common.*;
+import static mess_spec.common.*;
 
 public class coleco {
 

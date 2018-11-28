@@ -17,6 +17,7 @@ import static old.mame.common.*;
 import static common.ptr.*;
 import static common.libc.cstdio.*;
 import static common.libc.cstring.*;
+import static mess_spec.common.*;
 
 public class k007232 extends snd_interface {
 

@@ -18,6 +18,7 @@ import static old.arcadeflex.osdepend.*;
 import static common.libc.expressions.*;
 import static old.mame.common.*;
 import static old.sound.mixer.mixer_allocate_channel;
+import static mess_spec.common.*;
 
 public class vlm5030 extends snd_interface {
 

@@ -13,7 +13,7 @@ import static common.ptr.*;
 import static old.arcadeflex.video.osd_allocate_colors;
 import static old.arcadeflex.video.osd_modify_pen;
 import static WIP.mame.artworkC.*;
-import static old.mame.common.memory_region;
+import static mess_spec.common.*;
 import static WIP2.mame.commonH.REGION_PROMS;
 import static old.mame.driverH.GAME_REQUIRES_16BIT;
 import static old.mame.driverH.VIDEO_MODIFIES_PALETTE;

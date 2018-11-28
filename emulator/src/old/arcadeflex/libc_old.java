@@ -33,7 +33,6 @@ public class libc_old {
     public static final int SEEK_CUR = 1;
     public static final int SEEK_END = 2;
 
-
     public static final int UCLOCKS_PER_SEC = 1000000000;
 
     public static char[] CreateArray(int size, char[] array) {
@@ -51,8 +50,6 @@ public class libc_old {
     public static void printf(String str, Object... arguments) {
         System.out.printf(str, arguments);
     }
-
-
 
     public static void sprintf(char[] array, String sstr, Object[] obj) {
         String str = String.format(sstr, obj) + '\0';
@@ -224,7 +221,6 @@ public class libc_old {
     /*
      *   measure a String
      */
-
     public static int strlen(char[] ch) {
         int size = 0;
         for (int i = 0; i < ch.length; i++) {
@@ -240,20 +236,16 @@ public class libc_old {
      *
      *   Memory c relative functions
      */
-
-
-   /* public static void memset(UShortPtr buf, int value, int size) {
+ /* public static void memset(UShortPtr buf, int value, int size) {
         memset(buf.memory, value, size);
     }*/
-
     public static void memset(UBytePtr buf, int offset, int value, int size) {
         memset(buf.memory, offset, value, size);
     }
 
- /*   public static void memset(IntPtr buf, int value, int size) {
+    /*   public static void memset(IntPtr buf, int value, int size) {
         memset(buf.memory, value, size);
     }*/
-
     public static void memset(char[] buf, int ofs, int value, int size) {
         for (int mem = 0; mem < size; mem++) {
             buf[ofs + mem] = (char) value;
@@ -289,7 +281,6 @@ public class libc_old {
         }
         return 0;
     }
-
 
     public static void memcpy(char[] dst, char[] src, int size) {
         for (int i = 0; i < Math.min(size, src.length); i++) {
@@ -476,6 +467,15 @@ public class libc_old {
                 return null;
             }
             return file;
+        } else if (format.compareTo("a") == 0) {
+            try {
+                file.fw = new FileWriter(name, true);
+
+            } catch (Exception e) {
+                file = null;
+                return null;
+            }
+            return file;
         }
         file = null;
         return null;
@@ -521,6 +521,15 @@ public class libc_old {
                 return null;
             }
             return file;
+        } else if (format.compareTo("a") == 0) {
+            try {
+                file.fw = new FileWriter(name, true);
+
+            } catch (Exception e) {
+                file = null;
+                return null;
+            }
+            return file;
         }
         file = null;
         return null;
@@ -560,6 +569,15 @@ public class libc_old {
         } else if (format.compareTo("w") == 0) {
             try {
                 file.fw = new FileWriter(fl, false);
+
+            } catch (Exception e) {
+                file = null;
+                return null;
+            }
+            return file;
+        } else if (format.compareTo("a") == 0) {
+            try {
+                file.fw = new FileWriter(fl, true);
 
             } catch (Exception e) {
                 file = null;
@@ -620,35 +638,31 @@ public class libc_old {
     public static char fgetc(FILE file) {
         return file.buffer[file.offset++];
     }
-    public static void setScanner(FILE f)
-    {
+
+    public static void setScanner(FILE f) {
         f.scan = new Scanner(f.bais);
     }
+
     public static String fgets(char[] str, int n, FILE f) {
-       // Scanner scan = new Scanner(f.bais); 
-        if(f.scan.hasNext())
-        {
+        // Scanner scan = new Scanner(f.bais); 
+        if (f.scan.hasNext()) {
             String x = f.scan.next();
             //System.out.println(x);
             //str = x.toCharArray();
             char[] la = x.toCharArray();
             int la_lenght = la.length;
-            System.arraycopy(x.toCharArray(), 0, str, 0, la_lenght<48?la_lenght:48);
-            if(la_lenght<48)
-            {
-                for(int i=la_lenght; i<48; i++)
-                {
-                    str[i]=' ';
+            System.arraycopy(x.toCharArray(), 0, str, 0, la_lenght < 48 ? la_lenght : 48);
+            if (la_lenght < 48) {
+                for (int i = la_lenght; i < 48; i++) {
+                    str[i] = ' ';
                 }
             }
             //System.out.println(str);
             return x;
-        }
-        else
-        {
+        } else {
             return null;
         }
-        
+
     }
 
     public static void fseek(FILE file, int pos, int whence) {

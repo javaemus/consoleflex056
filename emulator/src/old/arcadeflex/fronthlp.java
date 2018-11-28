@@ -19,10 +19,9 @@ package old.arcadeflex;
 import static WIP2.mess.messH.*;
 import WIP.arcadeflex.settings;
 import static old.arcadeflex.libc_old.*;
-import static old.mame.common.printromlist;
 import static old.mame.common.showdisclaimer;
-import static WIP2.mame.commonH.ROMFLAG_MASK;
-import static WIP2.mame.commonH.RomModule;
+import static mess_spec.common.*;
+import static mame.commonH.*;
 import static old.mame.cpuintrf.cputype_name;
 import static WIP2.mess.system.drivers;
 import static old.mame.driverH.*;
@@ -516,7 +515,7 @@ public class fronthlp {
 			gamedrv = drivers[j];
 			if (list == LIST_LISTROMS)
                         {
-	   		   printromlist(gamedrv.rom,gamename);
+/*TODO*///	   		   printromlist(gamedrv.rom,gamename);
                         }
 			else
 			{
@@ -950,10 +949,10 @@ public class fronthlp {
                                 int romp_ptr=0;
 				romp = drivers[i].rom;
 
-				while (romp!=null && (romp[romp_ptr].name!=null || romp[romp_ptr].offset!=0 || romp[romp_ptr].length!=0))
+				while (romp!=null && (romp[romp_ptr]._name!=null || romp[romp_ptr]._offset!=0 || romp[romp_ptr]._length!=0))
 				{
-					if (romp[romp_ptr].name!=null && romp[romp_ptr].name != "-1")
-						printf("%08x %-12s %s\n",romp[romp_ptr].crc,romp[romp_ptr].name,drivers[i].description);
+					if (romp[romp_ptr]._name!=null && romp[romp_ptr]._name != "-1")
+						printf("%08x %-12s %s\n",romp[romp_ptr]._crc,romp[romp_ptr]._name,drivers[i].description);
 
 					romp_ptr++;
 				}
@@ -961,8 +960,8 @@ public class fronthlp {
 			}
 			return 0;
 
-		case LIST_LISTDUPCRC: /* list duplicate crc-32 (with different ROM name) */
-			i = 0;
+/*		case LIST_LISTDUPCRC: /* list duplicate crc-32 (with different ROM name) */
+/*			i = 0;
 			while (drivers[i]!=null)
 			{
 				RomModule[] romp;
@@ -1007,7 +1006,7 @@ public class fronthlp {
 			return 0;
 
 		case LIST_WRONGMERGE: /* list duplicate crc-32 with different ROM name in clone sets */
-			i = 0;
+/*			i = 0;
 			while (drivers[i]!=null)
 			{
 				RomModule[] romp;
@@ -1080,7 +1079,7 @@ public class fronthlp {
 			return 0;
 
 		case LIST_LISTROMSIZE: /* I used this for statistical analysis */
-			i = 0;
+/*			i = 0;
 			while (drivers[i]!=null)
 			{
 				if (drivers[i].clone_of == null || ((drivers[i].clone_of.flags & NOT_A_DRIVER)!=0))
@@ -1102,7 +1101,7 @@ public class fronthlp {
 
 				i++;
 			}
-			return 0;
+			return 0;*/
 
 		case LIST_LISTCPU: /* I used this for statistical analysis */
 /*TODO*/ //			{

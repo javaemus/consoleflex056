@@ -13,7 +13,7 @@ import static common.libc.cstdio.*;
 import static old.arcadeflex.osdepend.logerror;
 import static common.ptr.*;
 import static WIP.cpu.m6502.n2a03.*;
-import static old.mame.common.memory_region;
+import static mess_spec.common.*;
 import static WIP.mame.sndintrf.sound_name;
 import static WIP.mame.sndintrf.sound_scalebufferpos;
 import static WIP.mame.sndintrfH.MachineSound;
