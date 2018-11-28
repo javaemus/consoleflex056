@@ -1,3 +1,7 @@
+28/11/2018
+==========
+-memoryH 0.56 initial version (16 and 32 bits handlers need to be updated)
+
 25/11/2018
 ==========
 -Some work on new loader , it isn't finished still but should work for the systems we got already
