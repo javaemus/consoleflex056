@@ -482,17 +482,71 @@ public class memoryH {
             public static class Memory_ReadAddress16 {
                 public int start, end;              /* start, end addresses, inclusive */
                 public int handler;                 /* handler callback */
-                public mem_read16_handler _handler; /* handler callback */
+                //public mem_read16_handler _handler; /* handler callback */
+                public ReadHandlerPtr _handler;
+                public UBytePtr base;
                 
+                public Memory_ReadAddress16(int start, int end, int handler, ReadHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                    this._handler = _handler;
+                }
                 
+                public Memory_ReadAddress16(int start, int end, int handler) {
+                    this(start, end, handler, null);
+                }
+                
+                public Memory_ReadAddress16(int start, int end, ReadHandlerPtr _handler, UBytePtr base) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = base;
+                }
+                
+                public Memory_ReadAddress16(int start, int end, ReadHandlerPtr _handler) {
+                    this(start, end, _handler, null);
+                }
+
+                public Memory_ReadAddress16(int start) {
+                    this(start, -1, null);
+                }
             };
             
             public static class Memory_ReadAddress32 {
                 public int start, end;              /* start, end addresses, inclusive */
                 public int handler;                 /* handler callback */
-                public mem_read32_handler _handler; /* handler callback */
+                //public mem_read32_handler _handler; /* handler callback */
+                public ReadHandlerPtr _handler;
+                public UBytePtr base;
                 
+                public Memory_ReadAddress32(int start, int end, int handler, ReadHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                    this._handler = _handler;
+                }
                 
+                public Memory_ReadAddress32(int start, int end, int handler) {
+                    this(start, end, handler, null);
+                }
+                
+                public Memory_ReadAddress32(int start, int end, ReadHandlerPtr _handler, UBytePtr base) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = base;
+                }
+                
+                public Memory_ReadAddress32(int start, int end, ReadHandlerPtr _handler) {
+                    this(start, end, _handler, null);
+                }
+
+                public Memory_ReadAddress32(int start) {
+                    this(start, -1, null);
+                }
             };
             
             /* ----- structs for memory write arrays ----- */
@@ -568,25 +622,139 @@ public class memoryH {
             public static class Memory_WriteAddress16 {
                 public int start, end;              /* start, end addresses, inclusive */
                 public int handler;                 /* handler callback */
-                public mem_write16_handler	_handler;		/* handler callback */
+                //public mem_write16_handler	_handler;		/* handler callback */
+                public WriteHandlerPtr _handler;
                 /* see special values below */
                 public UBytePtr base;
                 /* optional (see explanation above) */
                 public int[] size;
                 /* optional (see explanation above) */
                 
+                public Memory_WriteAddress16(int start, int end, int handler, WriteHandlerPtr _handler, UBytePtr base, int[] size) {
+                    this.start=start;
+                    this.end=end;
+                    this.handler=handler;
+                    this._handler=_handler;
+                    this.base=base;
+                    this.size=size;
+                }
+                
+                public Memory_WriteAddress16(int start, int end, int handler, UBytePtr base, int[] size) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                    this.base = base;
+                    this.size = size;
+                }
+
+                public Memory_WriteAddress16(int start, int end, WriteHandlerPtr _handler, UBytePtr base, int[] size) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = base;
+                    this.size = size;
+                }
+
+                public Memory_WriteAddress16(int start, int end, int handler, UBytePtr base) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                    this.base = base;
+                }
+
+                public Memory_WriteAddress16(int start, int end, int handler) {
+                    this(start, end, handler, null);
+                }
+
+                public Memory_WriteAddress16(int start, int end, WriteHandlerPtr _handler, UBytePtr base) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = base;
+                }
+
+                public Memory_WriteAddress16(int start, int end, WriteHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = null;
+                }
+
+                public Memory_WriteAddress16(int start) {
+                    this(start, -1, null);
+                }
             };
             
             public static class Memory_WriteAddress32 {
                 public int start, end;              /* start, end addresses, inclusive */
                 public int handler;                 /* handler callback */
-                public mem_write32_handler	_handler;		/* handler callback */
+                //public mem_write32_handler	_handler;		/* handler callback */
+                public WriteHandlerPtr	_handler;		/* handler callback */
                 /* see special values below */
                 public UBytePtr base;
                 /* optional (see explanation above) */
                 public int[] size;
                 /* optional (see explanation above) */
                 
+                public Memory_WriteAddress32(int start, int end, int handler, WriteHandlerPtr _handler, UBytePtr base, int[] size) {
+                    this.start=start;
+                    this.end=end;
+                    this.handler=handler;
+                    this._handler=_handler;
+                    this.base=base;
+                    this.size=size;
+                }
+                
+                public Memory_WriteAddress32(int start, int end, int handler, UBytePtr base, int[] size) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                    this.base = base;
+                    this.size = size;
+                }
+
+                public Memory_WriteAddress32(int start, int end, WriteHandlerPtr _handler, UBytePtr base, int[] size) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = base;
+                    this.size = size;
+                }
+
+                public Memory_WriteAddress32(int start, int end, int handler, UBytePtr base) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                    this.base = base;
+                }
+
+                public Memory_WriteAddress32(int start, int end, int handler) {
+                    this(start, end, handler, null);
+                }
+
+                public Memory_WriteAddress32(int start, int end, WriteHandlerPtr _handler, UBytePtr base) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = base;
+                }
+
+                public Memory_WriteAddress32(int start, int end, WriteHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                    this.base = null;
+                }
+
+                public Memory_WriteAddress32(int start) {
+                    this(start, -1, null);
+                }
             };
             
             /* ----- structs for port read arrays ----- */
@@ -620,15 +788,55 @@ public class memoryH {
             public static class IO_ReadPort16 {
                 public int start, end;          /* start, end addresses, inclusive */
                 public int handler;             /* handler callback */
-                port_read16_handler _handler;     /* handler callback */
+                //port_read16_handler _handler;     /* handler callback */
+                public ReadHandlerPtr _handler;
                 
+                public IO_ReadPort16() {
+                }
+
+                public IO_ReadPort16(int start, int end, int handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                }
+
+                public IO_ReadPort16(int start, int end, ReadHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                }
+
+                public IO_ReadPort16(int start) {
+                    this(start, 0, null);
+                }
             };
             
             public static class IO_ReadPort32 {
                 public int start, end;          /* start, end addresses, inclusive */
                 public int handler;             /* handler callback */
-                port_read32_handler _handler;     /* handler callback */
+                //port_read32_handler _handler;     /* handler callback */
+                public ReadHandlerPtr _handler;
                 
+                public IO_ReadPort32() {
+                }
+
+                public IO_ReadPort32(int start, int end, int handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                }
+
+                public IO_ReadPort32(int start, int end, ReadHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                }
+
+                public IO_ReadPort32(int start) {
+                    this(start, 0, null);
+                }
             };
             
             /* ----- structs for port write arrays ----- */
@@ -662,15 +870,55 @@ public class memoryH {
             public static class IO_WritePort16 {
                 public int start, end;          /* start, end addresses, inclusive */
                 public int handler;             /* handler callback */
-                port_write16_handler _handler;     /* handler callback */
+                //port_write16_handler _handler;     /* handler callback */
+                public WriteHandlerPtr _handler;
                 
+                public IO_WritePort16() {
+                }
+
+                public IO_WritePort16(int start, int end, int handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                }
+
+                public IO_WritePort16(int start, int end, WriteHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                }
+
+                public IO_WritePort16(int start) {
+                    this(start, 0, null);
+                }
             };
             
             public static class IO_WritePort32 {
                 public int start, end;          /* start, end addresses, inclusive */
                 public int handler;             /* handler callback */
-                port_write32_handler _handler;     /* handler callback */
+                //port_write32_handler _handler;     /* handler callback */
+                public WriteHandlerPtr _handler;
                 
+                public IO_WritePort32() {
+                }
+
+                public IO_WritePort32(int start, int end, int handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = handler;
+                }
+
+                public IO_WritePort32(int start, int end, WriteHandlerPtr _handler) {
+                    this.start = start;
+                    this.end = end;
+                    this.handler = -15000;//random number for not matching something else
+                    this._handler = _handler;
+                }
+
+                public IO_WritePort32(int start) {
+                    this(start, 0, null);
+                }
             };
 
 
