@@ -1,3 +1,7 @@
+03/12/2018
+==========
+-memory 0.56 initial version (first non working version)
+
 28/11/2018
 ==========
 -memoryH 0.56 initial version (updated 16 and 32 bits handlers)
