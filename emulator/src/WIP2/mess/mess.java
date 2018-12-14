@@ -504,20 +504,18 @@ public class mess {
         return null;
     }
 
-    /*TODO*///
-/*TODO*///
-/*TODO*////*
-/*TODO*/// * Return the 'id'th extrainfo info for a device of type 'type',
-/*TODO*/// * NULL if not enough image names of that type are available.
-/*TODO*/// */
-/*TODO*///const char *device_extrainfo(int type, int id)
-/*TODO*///{
-/*TODO*///	if (type >= IO_COUNT)
-/*TODO*///		return NULL;
-/*TODO*///	if (id < count[type])
-/*TODO*///		return images[type][id].extrainfo;
-/*TODO*///	return NULL;
-/*TODO*///}
+    //*
+    // * Return the 'id'th extrainfo info for a device of type 'type',
+    // * NULL if not enough image names of that type are available.
+    // */
+    public static String device_extrainfo(int type, int id)
+    {
+    	if (type >= IO_COUNT)
+    		return null;
+    	if (id < count[type])
+    		return images[type][id].extrainfo;
+    	return null;
+    }
 
     /*
     * Copy the image names from options.image_files[] to
