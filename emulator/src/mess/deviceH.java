@@ -27,9 +27,15 @@ public class deviceH
     /*TODO*/////};
 
     public static class Devices {
-            public int  id;
-            public String name;
-            public String shortname;
+        public int  id;
+        public String name;
+        public String shortname;
+
+        public Devices(int id, String name, String shortname){
+            this.id = id;
+            this.name = name;
+            this.shortname = shortname;
+        }
     };
 
     /* Call this from the CLI to add a DEVICE (with its arg) to the options struct */
