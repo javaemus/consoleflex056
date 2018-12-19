@@ -82,7 +82,7 @@ public class palette {
             Machine.remapped_colortable = null;
 
         }
-
+        System.out.println(Machine.gamedrv);
         if (Machine.color_depth == 16 || (Machine.gamedrv.flags & GAME_REQUIRES_16BIT) != 0) {
             if (Machine.color_depth == 8 || Machine.drv.total_colors > 65532) {
                 use_16bit = STATIC_16BIT;

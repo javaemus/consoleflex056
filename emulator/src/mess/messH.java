@@ -11,6 +11,11 @@ import static mame.commonH.rommodule_macro;
 import old.mame.driverH;
 import static old.mame.driverH.ROT0;
 import old.mame.inptportH;
+import static old.mame.inptportH.IPT_COIN1;
+import static old.mame.inptportH.IPT_COIN2;
+import static old.mame.inptportH.IPT_COIN3;
+import static old.mame.inptportH.IPT_COIN4;
+import static old.mame.inptportH.IPT_TILT;
 import static old.mame.inptportH.input_macro;
 
 public class messH
@@ -82,11 +87,11 @@ public class messH
 /*TODO*/////	extern int tapecontrol(struct mame_bitmap *bitmap, int selected);
 /*TODO*/////	
 /*TODO*/////	/* driver.h - begin */
-/*TODO*/////	#define IPT_SELECT1		IPT_COIN1
-/*TODO*/////	#define IPT_SELECT2		IPT_COIN2
-/*TODO*/////	#define IPT_SELECT3		IPT_COIN3
-/*TODO*/////	#define IPT_SELECT4		IPT_COIN4
-/*TODO*/////	#define IPT_KEYBOARD	IPT_TILT
+    public static int IPT_SELECT1 = IPT_COIN1;
+    public static int IPT_SELECT2 = IPT_COIN2;
+    public static int IPT_SELECT3 = IPT_COIN3;
+    public static int IPT_SELECT4 = IPT_COIN4;
+    public static int IPT_KEYBOARD = IPT_TILT;
 /*TODO*/////	/* driver.h - end */
 /*TODO*/////	
 /*TODO*/////	
@@ -99,6 +104,19 @@ public class messH
     public static int INIT_FAIL = 1;
     public static int IMAGE_VERIFY_PASS = 0;
     public static int IMAGE_VERIFY_FAIL = 1;
+    
+    /* IODevice Initialisation return values.  Use these to determine if */
+/* the emulation can continue if IODevice initialisation fails */
+    public static int INIT_OK = 0;
+    public static int INIT_FAILED = 1;
+    public static int INIT_UNKNOWN = 2;
+    
+
+/* IODevice ID return values.  Use these to determine if */
+/* the emulation can continue if image cannot be positively IDed */
+    public static int ID_FAILED = 0;
+    public static int ID_OK = 1;
+    public static int ID_UNKNOWN = 2;
 	
 /*TODO*/////	/* possible values for osd_fopen() last argument
 /*TODO*/////	 * OSD_FOPEN_READ
@@ -120,19 +138,19 @@ public class messH
 /*TODO*/////	 *	images from within the emulation. A driver might use this
 /*TODO*/////	 *	if both, OSD_FOPEN_RW and OSD_FOPEN_READ modes, failed.
 /*TODO*/////	 */
-/*TODO*/////	static final int OSD_FOPEN_READ = 0, OSD_FOPEN_WRITE = 1, OSD_FOPEN_RW = 2, OSD_FOPEN_RW_CREATE = 3;
+	public static final int OSD_FOPEN_READ = 0, OSD_FOPEN_WRITE = 1, OSD_FOPEN_RW = 2, OSD_FOPEN_RW_CREATE = 3;
 /*TODO*/////	
 /*TODO*/////	
 /*TODO*/////	#ifdef MAX_KEYS
 /*TODO*/////	 #undef MAX_KEYS
-/*TODO*/////	 #define MAX_KEYS	128 /* for MESS but already done in INPUT.C*/
+        public static int MAX_KEYS	= 128; /* for MESS but already done in INPUT.C*/
 /*TODO*/////	#endif
 /*TODO*/////	
 /*TODO*/////	
 /*TODO*/////	enum {
-/*TODO*/////		IO_RESET_NONE,	/* changing the device file doesn't reset anything 								*/
-/*TODO*/////		IO_RESET_CPU,	/* only reset the CPU 															*/
-/*TODO*/////		IO_RESET_ALL	/* restart the driver including audio/video 									*/
+        public static int IO_RESET_NONE =   0;	/* changing the device file doesn't reset anything 								*/
+        public static int IO_RESET_CPU  =   1;	/* only reset the CPU 															*/
+        public static int IO_RESET_ALL  =   2;	/* restart the driver including audio/video 									*/
 /*TODO*/////	};
 
     
@@ -164,8 +182,8 @@ public class messH
             public int count;
             public String file_extensions;
             public int reset_depth;
-            public String dummy;
-            //public io_idPtr id;
+            //public String dummy;
+            public io_idPtr id;
             public io_initPtr init;
             public io_exitPtr exit;
             public io_infoPtr info;
@@ -179,6 +197,37 @@ public class messH
             public io_input_chunkPtr input_chunk;
             public io_output_chunkPtr output_chunk;
             public io_partialcrcPtr partialcrc;
+            
+            public IODevice(int type, int count, String file_extensions, int reset_depth, io_idPtr id, io_initPtr init, io_exitPtr exit, io_infoPtr info, io_openPtr open, io_closePtr close, io_statusPtr status, io_seekPtr seek, io_tellPtr tell, io_inputPtr input, io_outputPtr output, io_input_chunkPtr input_chunk, io_output_chunkPtr output_chunk, io_partialcrcPtr partialcrc) {
+                this.type = type;
+                this.count = count;
+                this.file_extensions = file_extensions;
+                this.reset_depth = reset_depth;
+                this.id = id;
+                //this.dummy = id;
+                this.init = init;
+                this.exit = exit;
+                this.info = info;
+                this.open = open;
+                this.close = close;
+                this.status = status;
+                this.seek = seek;
+                this.tell = tell;
+                this.input = input;
+                this.output = output;
+                this.input_chunk = input_chunk;
+                this.output_chunk = output_chunk;
+                this.partialcrc = partialcrc;
+            }
+
+            public IODevice(int type, int count, String file_extensions, int reset_depth, io_idPtr id, io_initPtr init, io_exitPtr exit, io_infoPtr info, io_openPtr open, io_closePtr close, io_statusPtr status, io_seekPtr seek, io_tellPtr tell, io_inputPtr input, io_outputPtr output, io_input_chunkPtr input_chunk, io_output_chunkPtr output_chunk) {
+                this(type, count, file_extensions, reset_depth, id, init, exit, info, open, close, status, seek, tell, input, output, input_chunk, output_chunk, null);
+
+            }
+
+            public IODevice(int type) {
+                this(type, 0, "", 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+            }
 	};
 
 
@@ -244,7 +293,7 @@ public class messH
         public static class GameDriver {
 
         //this is used instead of GAME macro
-        public GameDriver(String year, String name, String source, fucPtr.RomLoadPtr romload, GameDriver parent, driverH.MachineDriver drv, fucPtr.InputPortPtr input, fucPtr.InitDriverPtr init, WIP2.mess.messH.IODevice[] dev, String manufacture, String fullname) {
+        public GameDriver(String year, String name, String source, fucPtr.RomLoadPtr romload, GameDriver parent, driverH.MachineDriver drv, fucPtr.InputPortPtr input, fucPtr.InitDriverPtr init, IODevice[] dev, String manufacture, String fullname) {
             this.year = year;
             this.source_file = source;
             this.clone_of = parent;
@@ -278,7 +327,7 @@ public class messH
  /* which is called every time the game is reset. */
 
         public commonH.RomModule[] rom;
-        public WIP2.mess.messH.IODevice[] dev;//mess
+        public IODevice[] dev;//mess
 
         public int flags;
         /* orientation and other flags; see defines below */

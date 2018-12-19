@@ -549,6 +549,7 @@ public class memory {
         int cpu;
 
         /* a change for MESS */
+        System.out.println(Machine.gamedrv);
         if (Machine.gamedrv.rom == null) {
             return 1;
         }

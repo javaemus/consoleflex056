@@ -23,6 +23,10 @@ public class blit {
             {*/
                 for (int i = 0; i < Machine.scrbitmap.height; i++)
                 {
+                    /*System.out.println(Machine);
+                    System.out.println(Machine.scrbitmap);
+                    System.out.println(Machine.scrbitmap.line);
+                    System.out.println(Machine.scrbitmap.line[i]);*/
                     System.arraycopy(Machine.scrbitmap.line[i].memory, Machine.scrbitmap.line[i].offset, back_buffer, i * Machine.scrbitmap.width, Machine.scrbitmap.width);
                 }
 

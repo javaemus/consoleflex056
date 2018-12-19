@@ -11,19 +11,19 @@ public class deviceH
     /*TODO*/////{	
     /* List of all supported devices.  Refer to the device by these names only							*/
     public static int         IO_END = 0;	/*  0 - Dummy type to end IODevice enumerations 									*/
-    public static int         IO_CARTSLOT;	/*  1 - Cartidge Port, as found on most console and on some computers 				*/
-    public static int         IO_FLOPPY;	/*  2 - Floppy Disk unit 															*/
-    public static int         IO_HARDDISK;	/*  3 - Hard Disk unit 																*/
-    public static int         IO_CYLINDER;	/*  4 - Magnetically-Coated Cylinder 												*/
-    public static int         IO_CASSETTE;	/*  5 - Cassette Recorder (common on early home computers) 							*/
-    public static int         IO_PUNCHCARD;	/*  6 - Card Puncher/Reader 															*/
-    public static int         IO_PUNCHTAPE;	/*  7 - Tape Puncher/Reader (reels instead of punchcards) 							*/
-    public static int         IO_PRINTER;	/*  8 - Printer device 																*/
-    public static int         IO_SERIAL;	/*  9 - some serial port 															*/
-    public static int         IO_PARALLEL;      /* 10 - Generic Parallel Port														*/
-    public static int         IO_SNAPSHOT;	/* 11 - Complete 'snapshot' of the state of the computer 							*/
-    public static int         IO_QUICKLOAD;	/* 12 - Allow to load program/data into memory, without matching any actual device	*/
-    public static int         IO_COUNT;		/* 13 - Total Number of IO_devices for searching										*/
+    public static int         IO_CARTSLOT=1;	/*  1 - Cartidge Port, as found on most console and on some computers 				*/
+    public static int         IO_FLOPPY=2;	/*  2 - Floppy Disk unit 															*/
+    public static int         IO_HARDDISK=3;	/*  3 - Hard Disk unit 																*/
+    public static int         IO_CYLINDER=4;	/*  4 - Magnetically-Coated Cylinder 												*/
+    public static int         IO_CASSETTE=5;	/*  5 - Cassette Recorder (common on early home computers) 							*/
+    public static int         IO_PUNCHCARD=6;	/*  6 - Card Puncher/Reader 															*/
+    public static int         IO_PUNCHTAPE=7;	/*  7 - Tape Puncher/Reader (reels instead of punchcards) 							*/
+    public static int         IO_PRINTER=8;	/*  8 - Printer device 																*/
+    public static int         IO_SERIAL=9;	/*  9 - some serial port 															*/
+    public static int         IO_PARALLEL=10;      /* 10 - Generic Parallel Port														*/
+    public static int         IO_SNAPSHOT=11;	/* 11 - Complete 'snapshot' of the state of the computer 							*/
+    public static int         IO_QUICKLOAD=12;	/* 12 - Allow to load program/data into memory, without matching any actual device	*/
+    public static int         IO_COUNT=13;		/* 13 - Total Number of IO_devices for searching										*/
     /*TODO*/////};
 
     public static class Devices {

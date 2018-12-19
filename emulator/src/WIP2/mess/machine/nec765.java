@@ -1829,7 +1829,7 @@ public class nec765
 
                         case 0x0a:      /* read id */
                         {
-                                chrn_id id=null;
+                                chrn_id id=new chrn_id();
 
                                 nec765_setup_drive_and_side();
 

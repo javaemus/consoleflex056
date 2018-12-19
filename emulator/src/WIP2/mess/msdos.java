@@ -7,8 +7,9 @@ import static WIP.mame.mame.options;
 import WIP2.mame.mameH;
 import WIP2.mame.mameH.ImageFile;
 import static WIP2.mame.mameH.MAX_IMAGES;
-import static WIP2.mess.mess.device_typename;
-import static WIP2.mess.messH.*;
+import static mess.mess.device_typename;
+import static mess.messH.*;
+import static mess.deviceH.*;
 import static WIP2.mess.system.drivers;
 import static old.arcadeflex.osdepend.*;
 import static old.arcadeflex.libc_old.*;
@@ -31,6 +32,11 @@ public static int detect_image_type(int game_index, int type, String arg)
 {
 	GameDriver drv = drivers[game_index];
 	String ext;
+        
+        System.out.println("detect_image_type!!!!");
+        System.out.println("game_index "+game_index);
+        System.out.println("type "+type);
+        System.out.println("arg "+arg);
 
 	if (options.image_count >= MAX_IMAGES)
 	{
@@ -184,8 +190,8 @@ public static int detect_image_type(int game_index, int type, String arg)
             return (IO_SNAPSHOT);
         } else if (stricmp(tchar, "-quickload") == 0 || stricmp(tchar, "-quik") == 0) {
             return (IO_QUICKLOAD);
-        } else if (stricmp(tchar, "-alias") == 0) {
-            return (IO_ALIAS);
+        /*TODO*/////} else if (stricmp(tchar, "-alias") == 0) {
+        /*TODO*/////    return (IO_ALIAS);
         } /* all other switches set type to -1 */ else {
             logerror("Requested Device not supported!!\n");
             return -1;
@@ -214,18 +220,18 @@ public static int detect_image_type(int game_index, int type, String arg)
 
                 type = requested_device_type(argv[i]);
 
-                if (type != IO_ALIAS) {
+                //if (type != IO_ALIAS) {
 
                     if (type > IO_END && system_supports_device(game_index, type) == 0) {
                         logerror("Specified Device (%s) not supported by this system\n", argv[i]);
                         type = -1;
                         /* strip device if systems doesnt support it */
                     }
-                }
+                //}
 
             } else if (type != -1) /* only enter when valid option, otherwise get next */ {
-                if (type == IO_ALIAS) {
-                    throw new UnsupportedOperationException("unimplemented");
+                //if (type == IO_ALIAS) {
+                   // throw new UnsupportedOperationException("unimplemented");
                     /*TODO*///				/* check if this is an alias for a set of images */
 /*TODO*///				char *alias = get_alias(driver, argv[i]);
 /*TODO*///
@@ -263,7 +269,8 @@ public static int detect_image_type(int game_index, int type, String arg)
 /*TODO*///
 /*TODO*///				}
 /*TODO*///
-                } /* use normal command line argument! */ else if (type != IO_END) {
+                //} /* use normal command line argument! */ else 
+                if (type != IO_END) {
                     logerror("Loading image - No alias used\n");
                     res = detect_image_type(game_index, type, argv[i]);
                     type = IO_END;

@@ -20,8 +20,9 @@ import static common.ptr.*;
 import static WIP.mame.osdependH.*;
 import static consoleflex.funcPtr.*;
 import static WIP2.mess.includes.flopdrvH.*;
-import static WIP2.mess.mess.*;
-import static WIP2.mess.messH.*;
+import static mess.mess.*;
+import static mess.messH.*;
+import static mess.deviceH.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static old.arcadeflex.fileio.osd_fwrite;
 import static common.libc.cstring.*;
@@ -167,8 +168,10 @@ public class dsk {
                 if ( (memcmp(disk_data.memory, 0, "MV - CPC", 8)==0) || 	/* standard disk image? */
                          (memcmp(disk_data.memory, 0, "EXTENDED", 8)==0))	/* extended disk image? */
                 {
-                        return IMAGE_VERIFY_PASS;
+                    System.out.printf("OK dsk_floppy_verify");
+                    return IMAGE_VERIFY_PASS;
                 }
+                System.out.printf("NO dsk_floppy_verify");
                 return IMAGE_VERIFY_FAIL;
         }
 
@@ -192,7 +195,7 @@ public class dsk {
                         dsk_disk_image_init(thedrive); /* initialise dsk */
                         floppy_drive_set_disk_image_interface(id,dsk_floppy_interface);
                         if(dsk_floppy_verify(thedrive.data) == IMAGE_VERIFY_PASS)
-                            return 0;
+                            return INIT_PASS;
                         else
                             return 1;
                     }

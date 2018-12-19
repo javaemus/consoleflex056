@@ -4,7 +4,7 @@
  */
 package old.mame;
 
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
 import static old.arcadeflex.libc_old.*;

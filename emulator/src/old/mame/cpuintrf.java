@@ -423,6 +423,7 @@ public class cpuintrf {
         reset:
         for (;;) {
             /* read hi scores information from hiscore.dat */
+            System.out.println(Machine.gamedrv);
             hs_open(Machine.gamedrv.name);
             hs_init();
 

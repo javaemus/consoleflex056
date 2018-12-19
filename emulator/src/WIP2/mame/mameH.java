@@ -7,7 +7,7 @@ import static old.arcadeflex.libc_old.FILE;
 import static WIP2.mame.commonH.GameSamples;
 import static old.mame.drawgfxH.GfxElement;
 import static old.mame.drawgfxH.rectangle;
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
 import static old.mame.driverH.MachineDriver;
 import static old.mame.inptportH.InputPort;
 import static WIP.mame.osdependH.mame_bitmap;

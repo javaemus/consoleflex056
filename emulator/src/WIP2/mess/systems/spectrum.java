@@ -93,7 +93,8 @@ import static old.mame.driverH.*;
 import static WIP2.mame.commonH.*;
 import static mess_spec.common.*;
 import static mame.commonH.*;
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
+import static mess.deviceH.*;
 import static common.libc.cstring.*;
 
 import static old.arcadeflex.osdepend.logerror;
@@ -119,7 +120,8 @@ import static WIP2.mess.includes.nec765H.*;
 import static WIP2.mess.includes.flopdrvH.*;
 import static WIP2.mess.machine.flopdrv.*;
 import static WIP2.mess.machine.dsk.*;
-import static WIP2.mess.mess.device_input;
+import static mess.device.device_input;
+
 import common.ptr.UBytePtr;
 
 /*TODO*/////import static mess.machine.wd17xx.h.*;
@@ -1093,34 +1095,15 @@ public class spectrum {
             }
 
             if ((offset & 2) == 0) {
-                switch ((offset >> 14) & 0x03) {
-                    /* +3 fdc,memory,centronics */
-                    case 0: {
-                        switch ((offset >> 12) & 0x03) {
-                            /* +3 centronics */
-                            case 0:
-                                break;
-
-                            /* +3 fdc status */
-                            case 2:
-                                return spectrum_plus3_port_2ffd_r(offset);
-                            /* +3 fdc data */
-                            case 3:
-                                return spectrum_plus3_port_3ffd_r(offset);
-
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-
-                    /* 128k AY data */
-                    case 3:
-                        return spectrum_128_port_fffd_r(offset);
-
-                    default:
-                        break;
-                }
+                switch ((offset>>8) & 0xff)
+		 {
+				case 0xff: return spectrum_128_port_fffd_r(offset);
+				case 0x2f: return spectrum_plus3_port_2ffd_r(offset);
+				case 0x3f: return spectrum_plus3_port_3ffd_r(offset);
+				case 0x1f: return spectrum_port_1f_r(offset);
+				case 0x7f: return spectrum_port_7f_r(offset);
+				case 0xdf: return spectrum_port_df_r(offset);
+		 }
             }
 
             logerror("Read from +3 port: %04x\n", offset);
@@ -1163,51 +1146,32 @@ public class spectrum {
 
             /* the following is not decoded exactly, need to check
 		what is correct! */
-            if ((offset & 2) == 0) {
-                switch ((offset >> 14) & 0x03) {
-                    /* +3 fdc,memory,centronics */
-                    case 0: {
-                        switch ((offset >> 12) & 0x03) {
-                            /* +3 centronics */
-                            case 0: {
-
-                            }
-                            break;
-
-                            /* +3 memory */
-                            case 1:
-                                spectrum_plus3_port_1ffd_w(offset, data);
-                                break;
-
-                            /* +3 fdc data */
-                            case 3:
-                                spectrum_plus3_port_3ffd_w(offset, data);
-                                break;
-
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-
-                    /* 128k memory */
-                    case 1:
-                        spectrum_plus3_port_7ffd_w(offset, data);
-                        break;
-
-                    /* 128k AY data */
-                    case 2:
-                        spectrum_128_port_bffd_w(offset, data);
-                        break;
-
-                    /* 128K AY register */
-                    case 3:
-                        spectrum_128_port_fffd_w(offset, data);
-
-                    default:
-                        break;
-                }
-            }
+            else if ((offset & 2)==0)
+		{
+				switch ((offset>>8) & 0xf0)
+				{
+						case 0x70:
+								spectrum_plus3_port_7ffd_w(offset, data);
+								break;
+						case 0xb0:
+								spectrum_128_port_bffd_w(offset, data);
+								break;
+						case 0xf0:
+								spectrum_128_port_fffd_w(offset, data);
+								break;
+						case 0x10:
+								spectrum_plus3_port_1ffd_w(offset, data);
+								break;
+						case 0x30:
+								spectrum_plus3_port_3ffd_w(offset, data);
+						default:
+								logerror("Write %02x to +3 port: %04x\n", data, offset);
+				}
+		}
+		else
+		{
+			logerror("Write %02x to +3 port: %04x\n", data, offset);
+		}
         }
     };
 

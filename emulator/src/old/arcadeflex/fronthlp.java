@@ -16,7 +16,7 @@ along with Arcadeflex.  If not, see <http://www.gnu.org/licenses/>.
  */
 package old.arcadeflex;
 
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
 import WIP.arcadeflex.settings;
 import static old.arcadeflex.libc_old.*;
 import static old.mame.common.showdisclaimer;

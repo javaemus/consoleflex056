@@ -3,12 +3,13 @@
  */
 package WIP2.mess;
 
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
 import static mess.systems.coleco.*;
 import static WIP2.mess.systems.sms.*;
 import static WIP2.mess.systems.nes.*;
 import static WIP2.mess.systems.spectrum.*;
 import static WIP2.mess.systems.amstrad.*;
+import static mess.systems.lynx.*;
 
 public class system {
 
@@ -390,6 +391,7 @@ public class system {
         /*TODO*///	DRIVER( intv )		/* Mattel Intellivision - 1979 AKA INTV 		  */
         /*TODO*///	DRIVER( jaguar )	/* Atari Jaguar 								  */
         /*TODO*///	DRIVER( lynx )		/* Atari Lynx Handheld							  */
+        driver_lynx,
         /*TODO*///	DRIVER( odyssey )	/* Magnavox Odyssey - analogue (1972)			  */
         /*TODO*///	DRIVER( trs80_m2 )	/* TRS-80 Model II -							  */
         /*TODO*///	DRIVER( x68000 )	/* X68000										  */

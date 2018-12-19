@@ -14,7 +14,7 @@ import static WIP.mame.sndintrf.*;
 import static WIP.mame.sndintrfH.*;
 import static consoleflex.funcPtr.*;
 import static WIP2.mame.usrintrf.ui_text;
-import static WIP2.mess.messH.INIT_OK;
+import static mess.messH.INIT_OK;
 import static old.sound.streams.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static old.arcadeflex.libc_old.*;

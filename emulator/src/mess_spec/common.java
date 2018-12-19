@@ -8,7 +8,7 @@ import static WIP.mame.mame.*;
 import static WIP.mame.osdependH.OSD_FILETYPE_ROM;
 import static mame.commonH.*;
 import static WIP2.mame.mameH.*;
-import WIP2.mess.messH.GameDriver;
+import mess.messH.GameDriver;
 import static WIP2.mess.osdepend.fileio.*;
 import static common.libc.cstdlib.rand;
 import static common.ptr.*;

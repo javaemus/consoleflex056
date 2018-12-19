@@ -6,7 +6,7 @@ package WIP2.mame;
 
 import WIP2.arcadeflex.javaspecific.historyFileParser;
 import WIP2.arcadeflex.javaspecific.mameInfoFileParser;
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
 
 public class datafile {
 

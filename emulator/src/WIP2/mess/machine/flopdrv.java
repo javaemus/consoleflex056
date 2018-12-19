@@ -24,8 +24,9 @@ package WIP2.mess.machine;
 import static consoleflex.funcPtr.*;
 import static WIP2.mess.includes.flopdrvH.*;
 import static old.arcadeflex.osdepend.logerror;
-import static WIP2.mess.messH.*;
-import static WIP2.mess.mess.*;
+import static mess.messH.*;
+import static mess.deviceH.*;
+import static mess.mess.*;
 
 import static old.mame.timer.*;
 import static old.mame.timerH.*;

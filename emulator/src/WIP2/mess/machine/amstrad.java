@@ -32,8 +32,9 @@ import static WIP.mame.memoryH.*;
 
 import static old.arcadeflex.osdepend.logerror;
 import static old.mame.cpuintrf.*;
-import static WIP2.mess.messH.*;
-import static WIP2.mess.mess.*;
+import static mess.messH.*;
+import static mess.deviceH.*;
+import static mess.mess.*;
 import static WIP2.mess.osdepend.fileio.*;
 import static WIP2.cpu.z80.z80H.*;
 

@@ -77,7 +77,7 @@ public class osdepend {
     /*TODO*///
     public static int main(int argc, String[] argv) {
         dlprogress = new UrlDownloadProgress();
-        dlprogress.setVersion("arcadeflex version: " + settings.version);
+        dlprogress.setVersion("consoleflex version: " + settings.version);
         dlprogress.setVisible(true);
         int res, i, j = 0, game_index;
         String playbackname = "";
@@ -158,6 +158,8 @@ public class osdepend {
                     break;//if (argv[j][0] != '-') break; (original c code,conversion seems ok)
                 }
             }
+            //System.out.println("DRIVERS:"+drivers);
+                    
             /* do we have a driver for this? */
             for (i = 0; drivers[i] != null && (game_index == -1); i++) {
                 if (stricmp(argv[j], drivers[i].name) == 0) {

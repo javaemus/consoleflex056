@@ -62,11 +62,11 @@ import static WIP2.mame.cheat.InitCheat;
 import static WIP2.mame.cheat.StopCheat;
 import static WIP2.mame.cheat.he_did_cheat;
 import static WIP2.mame.usrintrf.*;
-import static WIP2.mess.mess.get_filenames;
-import static WIP2.mess.mess.init_devices;
+import static mess.mess.*;
 import static WIP2.vidhrdw.generic.*;
 import static old.arcadeflex.video.osd_create_display;
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
+import static mess.deviceH.*;
 
 public class mame {
 
@@ -176,6 +176,7 @@ public class mame {
         bailing = 0;
 
         if (get_filenames() != 0) {
+        //if (distribute_images() != 0) {
             return err;
         }
 

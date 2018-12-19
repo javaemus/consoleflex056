@@ -22,7 +22,7 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.DirectColorModel;
 import java.awt.image.ImageConsumer;
 import java.awt.image.ImageProducer;
-import static WIP2.mess.messH.*;
+import static mess.messH.*;
 
 import static WIP.mame.mame.Machine;
 

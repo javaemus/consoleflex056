@@ -85,124 +85,124 @@ public class device
 	
 	public static int device_open(int type, int id, int mode, Object args)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while (dev != null && dev[dev_ptr].count != 0) {
-            /*TODO*/////    if (type == dev[dev_ptr].type && dev[dev_ptr].open != null) {
-            /*TODO*/////        return dev[dev_ptr].open.handler(id, mode, args);
-            /*TODO*/////    }
-            /*TODO*/////    dev_ptr++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while (dev != null && dev[dev_ptr].count != 0) {
+                if (type == dev[dev_ptr].type && dev[dev_ptr].open != null) {
+                    return dev[dev_ptr].open.handler(id, mode, args);
+                }
+                dev_ptr++;
+            }
             return 1;
 	}
 	
 	public static void device_close(int type, int id)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.close )
-            /*TODO*/////	{
-            /*TODO*/////		dev[dev_ptr].close.handler(id);
-            /*TODO*/////		return;
-            /*TODO*/////	}
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].close != null))
+                {
+                    dev[dev_ptr].close.handler(id);
+                    return;
+                }
+                dev_ptr++;
+            }
 	}
 	
 	public static int device_seek(int type, int id, int offset, int whence)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.seek )
-            /*TODO*/////		return (dev[dev_ptr].seek.handler(id,offset,whence));
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].seek != null))
+                    return (dev[dev_ptr].seek.handler(id,offset,whence));
+                dev_ptr++;
+            }
             return 0;
 	}
 	
 	public static int device_tell(int type, int id)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.tell )
-            /*TODO*/////		return (dev[dev_ptr].tell.handler(id));
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].tell != null) )
+                    return (dev[dev_ptr].tell.handler(id));
+                dev_ptr++;
+            }
             return 0;
 	}
 	
 	public static int device_status(int type, int id, int newstatus)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.status )
-            /*TODO*/////		return (dev[dev_ptr].status.handler(id,newstatus));
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].status != null))
+                    return (dev[dev_ptr].status.handler(id,newstatus));
+                dev_ptr++;
+            }
             return 0;
 	}
 	
 	public static int device_input(int type, int id)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.input )
-            /*TODO*/////		return (dev[dev_ptr].input.handler(id));
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].input != null))
+                    return (dev[dev_ptr].input.handler(id));
+                dev_ptr++;
+            }
             return 0;
 	}
 	
 	public static void device_output(int type, int id, int data)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.output )
-            /*TODO*/////	{
-            /*TODO*/////		dev[dev_ptr].output.handler(id,data);
-            /*TODO*/////		return;
-            /*TODO*/////	}
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].output != null))
+                {
+                    dev[dev_ptr].output.handler(id,data);
+                    return;
+                }
+                dev_ptr++;
+            }
 	}
 	
 	public static int device_input_chunk(int type, int id, Object dst, int chunks)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.input_chunk )
-            /*TODO*/////		return (dev[dev_ptr].input_chunk.handler(id,dst,chunks));
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].input_chunk != null))
+                    return (dev[dev_ptr].input_chunk.handler(id,dst,chunks));
+                dev_ptr++;
+            }
             return 1;
 	}
 	
 	public static void device_output_chunk(int type, int id, Object src, int chunks)
 	{
-            /*TODO*/////IODevice[] dev = Machine.gamedrv.dev;
-            /*TODO*/////int dev_ptr = 0;
-            /*TODO*/////while( dev != null && dev[dev_ptr].count != 0 )
-            /*TODO*/////{
-            /*TODO*/////	if( type == dev.type && dev.output )
-            /*TODO*/////	{
-            /*TODO*/////		dev[dev_ptr].output_chunk.handler(id,src,chunks);
-            /*TODO*/////		return;
-            /*TODO*/////	}
-            /*TODO*/////	dev++;
-            /*TODO*/////}
+            IODevice[] dev = Machine.gamedrv.dev;
+            int dev_ptr = 0;
+            while( dev != null && dev[dev_ptr].count != 0 )
+            {
+                if( type == dev[dev_ptr].type && (dev[dev_ptr].output != null))
+                {
+                    dev[dev_ptr].output_chunk.handler(id,src,chunks);
+                    return;
+                }
+                dev_ptr++;
+            }
 	}
 }
