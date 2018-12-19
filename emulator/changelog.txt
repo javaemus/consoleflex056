@@ -1,3 +1,7 @@
+19/12/2018
+==========
+- implemented mess, messH, device and deviceH 0.56 version classes and changed all dependencies to these ones
+
 03/12/2018
 ==========
 -memory 0.56 initial version (first non working version)
