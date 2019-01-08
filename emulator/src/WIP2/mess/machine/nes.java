@@ -28,7 +28,7 @@ import static WIP2.mess.machine.nes_mmc.*;
 import static WIP2.vidhrdw.generic.*;
 import static WIP2.mess.vidhrdw.nes.*;
 import static WIP.cpu.m6502.m6502H.*;
-import static old.arcadeflex.video.*;
+import static WIP.arcadeflex.video.*;
 import static WIP.mame.drawgfx.*;
 import static common.libc.expressions.*;
 import static mess_spec.common.*;

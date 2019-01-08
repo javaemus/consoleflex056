@@ -389,6 +389,7 @@ public class spectrum {
         if ((~readinputport(16) & 0x20) != 0) {
             nec765_data_w.handler(0, data);
         }
+        
     }
 
     static int spectrum_plus3_port_3ffd_r(int offset) {
@@ -1108,7 +1109,8 @@ public class spectrum {
 
             logerror("Read from +3 port: %04x\n", offset);
 
-            return (cpu_getscanline() < 193) ? spectrum_128_screen_location.read(0x1800 | (cpu_getscanline() & 0xf8) << 2) : 0xff;
+            //return (cpu_getscanline() < 193) ? spectrum_128_screen_location.read(0x1800 | (cpu_getscanline() & 0xf8) << 2) : 0xff;
+            return 0xff;
         }
     };
 

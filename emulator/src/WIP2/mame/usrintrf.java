@@ -32,7 +32,7 @@ import static WIP2.mess.tapectrl.tapecontrol;
 import static common.libc.cstdio.*;
 import static common.libc.cstring.strlen;
 import static old.arcadeflex.sound.*;
-import static old.arcadeflex.video.*;
+import static WIP.arcadeflex.video.*;
 import static old.mame.cpuintrf.*;
 import static old.mame.drawgfx.*;
 import static old.mame.drawgfxH.*;
@@ -1936,7 +1936,7 @@ public class usrintrf {
         if (sel == -1) {
             /* startup info, print MAME version and ask for any key */
 
-            buf2 = sprintf("\n\t%s ", "Arcadeflex"/*ui_getstring (UI_mame)*/);
+            buf2 = sprintf("\n\t%s ", "Consoleflex"/*ui_getstring (UI_mame)*/);
             /* \t means that the line will be centered */
             buf += buf2;
 

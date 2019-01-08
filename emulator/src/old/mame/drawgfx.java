@@ -6,7 +6,7 @@ package old.mame;
 import static old.arcadeflex.libc_old.IntPtr;
 import static common.ptr.*;
 import static common.subArrays.*;
-import static old.arcadeflex.video.osd_mark_dirty;
+import static WIP.arcadeflex.video.osd_mark_dirty;
 import static old.mame.drawgfxH.*;
 import static old.mame.driverH.*;
 import static WIP.mame.mame.Machine;

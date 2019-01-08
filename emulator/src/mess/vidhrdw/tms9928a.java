@@ -12,7 +12,7 @@ import static common.ptr.*;
 import static WIP.mame.common.bitmap_alloc;
 import static WIP.mame.mame.Machine;
 import static WIP2.mess.vidhrdw.tms9928aH.TMS99x8A;
-import static old.arcadeflex.video.osd_skip_this_frame;
+import static WIP.arcadeflex.video.osd_skip_this_frame;
 import static old.mame.drawgfx.*;
 import static old.mame.drawgfxH.TRANSPARENCY_NONE;
 import static WIP.mame.common.*;

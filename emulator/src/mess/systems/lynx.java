@@ -37,7 +37,6 @@ import static WIP2.mame.usrintrf.*;
 import static old.mame.cpuintrf.*;
 import static old.mame.cpuintrfH.*;
 import static old.mame.cpuintrf.*;
-import static old.arcadeflex.video.*;
 import static WIP.arcadeflex.video.*;
 
 import static common.ptr.*;

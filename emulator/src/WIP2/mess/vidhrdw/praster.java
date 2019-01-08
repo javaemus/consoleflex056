@@ -15,7 +15,7 @@ import static WIP.mame.mame.Machine;
 import static old.mame.drawgfxH.*;
 import static old.mame.drawgfx.*;
 import static common.ptr.*;
-import static old.arcadeflex.video.*;
+import static WIP.arcadeflex.video.*;
 import static WIP.arcadeflex.fucPtr.*;
 import static old.mame.palette.*;
 

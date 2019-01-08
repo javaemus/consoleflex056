@@ -25,7 +25,7 @@ import static old.mame.cpuintrf.*;
 import static old.mame.drawgfxH.*;
 import static WIP.mame.drawgfx.*;
 import static WIP.mame.common.*;
-import static old.arcadeflex.video.*;
+import static WIP.arcadeflex.video.*;
 
 import static WIP2.mess.eventlstH.*;
 import static WIP2.mess.eventlst.*;

@@ -723,7 +723,7 @@ public class nec765
         //READ_HANDLER(nec765_status_r)
         public static ReadHandlerPtr nec765_status_r = new ReadHandlerPtr() {
             public int handler(int offset) {
-                System.out.println("nnec765_data_rec765_status_r "+fdc.FDC_main);
+                //System.out.println("nnec765_data_rec765_status_r "+fdc.FDC_main);
                 return fdc.FDC_main;
         }};
 
@@ -782,7 +782,10 @@ public class nec765
         {
                 /* get next id from disc */
                 floppy_drive_get_next_id(fdc.drive, fdc.side,id);
-
+                //System.out.println("1"+fdc);
+                //System.out.println("2"+fdc.sector_id);
+                //System.out.println("3"+id);
+                //System.out.println("4"+id.data_id);
                 fdc.sector_id = id.data_id;
 
                 /* set correct data type */
@@ -801,7 +804,7 @@ public class nec765
                 /* get sector id's */
                 do
             {
-                        chrn_id id=null;
+                        chrn_id id=new chrn_id();
 
                         nec765_get_next_id(id);
 
@@ -1876,10 +1879,10 @@ public class nec765
                                                 fdc.nec765_result_bytes[0] = fdc.nec765_status[0];
                                                 fdc.nec765_result_bytes[1] = fdc.nec765_status[1];
                                                 fdc.nec765_result_bytes[2] = fdc.nec765_status[2];
-                                                fdc.nec765_result_bytes[3] = id.C; /* C */
-                                                fdc.nec765_result_bytes[4] = id.H; /* H */
-                                                fdc.nec765_result_bytes[5] = id.R; /* R */
-                                                fdc.nec765_result_bytes[6] = id.N; /* N */
+                                                fdc.nec765_result_bytes[3] = (char)id.C; /* C */
+                                                fdc.nec765_result_bytes[4] = (char)id.H; /* H */
+                                                fdc.nec765_result_bytes[5] = (char)id.R; /* R */
+                                                fdc.nec765_result_bytes[6] = (char)id.N; /* N */
 
                                                 nec765_setup_result_phase(7);
                                         }

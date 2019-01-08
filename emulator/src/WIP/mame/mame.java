@@ -40,9 +40,7 @@ import static old.arcadeflex.libc_old.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.arcadeflex.osdepend.osd_exit;
 import static old.arcadeflex.osdepend.osd_init;
-import static old.arcadeflex.video.osd_clearbitmap;
-import static old.arcadeflex.video.osd_skip_this_frame;
-import static old.arcadeflex.video_old.*;
+import static WIP.arcadeflex.video.*;
 import static WIP2.mame.commonH.REGIONFLAG_DISPOSE;
 import static old.mame.cpuintrf.cpu_init;
 import static old.mame.cpuintrf.cpu_run;
@@ -64,7 +62,6 @@ import static WIP2.mame.cheat.he_did_cheat;
 import static WIP2.mame.usrintrf.*;
 import static mess.mess.*;
 import static WIP2.vidhrdw.generic.*;
-import static old.arcadeflex.video.osd_create_display;
 import static mess.messH.*;
 import static mess.deviceH.*;
 

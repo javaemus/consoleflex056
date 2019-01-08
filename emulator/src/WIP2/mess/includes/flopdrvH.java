@@ -24,10 +24,10 @@ public interface flopdrvH {
 
     public static class chrn_id
     {
-            public char C;
-            public char H;
-            public char R;
-            public char N;
+            public int C;
+            public int H;
+            public int R;
+            public int N;
             public int data_id;			// id for read/write data command
             public int flags;
     };
