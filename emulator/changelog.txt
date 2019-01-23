@@ -1,3 +1,8 @@
+24/01/2019
+==========
+- Migrated to 0.56 (using all current Arcadeflex 0.56 classes)
+- Coleco driver runs but doesn't load cartridges in 0.56 still (WIP)
+
 08/01/2019
 ==========
 - All video classes have been merged
