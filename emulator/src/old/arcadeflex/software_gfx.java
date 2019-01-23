@@ -22,9 +22,8 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.DirectColorModel;
 import java.awt.image.ImageConsumer;
 import java.awt.image.ImageProducer;
-import static mess.messH.*;
 
-import static WIP.mame.mame.Machine;
+import static old2.mame.mame.Machine;
 
 public class software_gfx extends java.awt.Frame implements Runnable, ImageProducer, KeyListener, MouseListener, MouseMotionListener {
     /* Data. */

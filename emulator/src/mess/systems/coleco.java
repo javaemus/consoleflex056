@@ -3,78 +3,87 @@
  */
 package mess.systems;
 
-import static WIP.mame.memoryH.*;
-import static WIP2.sound.sn76496.*;
-import static WIP2.sound.sn76496H.*;
 import static old.mame.inptportH.*;
-import static WIP.arcadeflex.fucPtr.*;
-import WIP.mame.sndintrfH.MachineSound;
-import static WIP.mame.sndintrfH.SOUND_SN76496;
-import static WIP2.mame.commonH.REGION_CPU1;
-import old.mame.drawgfxH.rectangle;
 import static old.mame.inputH.*;
-import static old.mame.driverH.*;
-import static mame.commonH.*;
-import static mess.vidhrdw.tms9928aH.*;
-import static mess.vidhrdw.tms9928a.*;
+import static mame056.commonH.*;
+import static mame056.memoryH.*;
+import static mame056.sound.sn76496.*;
+
+import static arcadeflex.fucPtr.*;
+import mame.drawgfxH.rectangle;
+import static mame.driverH.DEFAULT_REAL_60HZ_VBLANK_DURATION;
+import mame.driverH.GameDriver;
+import mame.driverH.MachineDriver;
+import static mame.driverH.VIDEO_TYPE_RASTER;
+import mame.sndintrfH.MachineSound;
+import static mame.sndintrfH.SOUND_SN76496;
+import static mame056.cpuexec.*;
+import static mame056.cpuexecH.*;
+
+import static mame056.cpuintrfH.*;
+import static mame056.sound.sn76496H.*;
+
 import static mess.messH.*;
 import static mess.deviceH.*;
-import static old.mame.cpuintrf.ignore_interrupt;
-import static old.mame.cpuintrfH.PULSE_LINE;
-import static old.mame.cpuintrf.*;
 import static mess.machine.coleco.*;
+import static mess.vidhrdw.tms9928a.*;
+import static mess.vidhrdw.tms9928aH.TMS9928A_COLORTABLE_SIZE;
+import static mess.vidhrdw.tms9928aH.TMS9928A_PALETTE_SIZE;
+import static mess.vidhrdw.tms9928aH.TMS99x8A;
+
+
 
 public class coleco {
 
-    static MemoryReadAddress coleco_readmem[]
+    static Memory_ReadAddress coleco_readmem[]
             = {
-                new MemoryReadAddress(0x0000, 0x1fff, MRA_ROM), /* COLECO.ROM */
-                new MemoryReadAddress(0x6000, 0x63ff, MRA_RAM),
-                new MemoryReadAddress(0x6400, 0x67ff, MRA_RAM),
-                new MemoryReadAddress(0x6800, 0x6bff, MRA_RAM),
-                new MemoryReadAddress(0x6c00, 0x6fff, MRA_RAM),
-                new MemoryReadAddress(0x7000, 0x73ff, MRA_RAM),
-                new MemoryReadAddress(0x7400, 0x77ff, MRA_RAM),
-                new MemoryReadAddress(0x7800, 0x7bff, MRA_RAM),
-                new MemoryReadAddress(0x7c00, 0x7fff, MRA_RAM),
-                new MemoryReadAddress(0x8000, 0xffff, MRA_ROM), /* Cartridge */
-                new MemoryReadAddress(-1) /* end of table */};
+                new Memory_ReadAddress(0x0000, 0x1fff, MRA_ROM), /* COLECO.ROM */
+                new Memory_ReadAddress(0x6000, 0x63ff, MRA_RAM),
+                new Memory_ReadAddress(0x6400, 0x67ff, MRA_RAM),
+                new Memory_ReadAddress(0x6800, 0x6bff, MRA_RAM),
+                new Memory_ReadAddress(0x6c00, 0x6fff, MRA_RAM),
+                new Memory_ReadAddress(0x7000, 0x73ff, MRA_RAM),
+                new Memory_ReadAddress(0x7400, 0x77ff, MRA_RAM),
+                new Memory_ReadAddress(0x7800, 0x7bff, MRA_RAM),
+                new Memory_ReadAddress(0x7c00, 0x7fff, MRA_RAM),
+                new Memory_ReadAddress(0x8000, 0xffff, MRA_ROM), /* Cartridge */
+                new Memory_ReadAddress(MEMPORT_MARKER, 0) /* end of table */};
 
-    static MemoryWriteAddress coleco_writemem[]
+    static Memory_WriteAddress coleco_writemem[]
             = {
-                new MemoryWriteAddress(0x0000, 0x1fff, MWA_ROM), /* COLECO.ROM */
-                new MemoryWriteAddress(0x6000, 0x63ff, MWA_RAM),
-                new MemoryWriteAddress(0x6400, 0x67ff, MWA_RAM),
-                new MemoryWriteAddress(0x6800, 0x6bff, MWA_RAM),
-                new MemoryWriteAddress(0x6c00, 0x6fff, MWA_RAM),
-                new MemoryWriteAddress(0x7000, 0x73ff, MWA_RAM),
-                new MemoryWriteAddress(0x7400, 0x77ff, MWA_RAM),
-                new MemoryWriteAddress(0x7800, 0x7bff, MWA_RAM),
-                new MemoryWriteAddress(0x7c00, 0x7fff, MWA_RAM),
-                new MemoryWriteAddress(0x8000, 0xffff, MWA_ROM), /* Cartridge */
-                new MemoryWriteAddress(-1) /* end of table */};
+                new Memory_WriteAddress(0x0000, 0x1fff, MWA_ROM), /* COLECO.ROM */
+                new Memory_WriteAddress(0x6000, 0x63ff, MWA_RAM),
+                new Memory_WriteAddress(0x6400, 0x67ff, MWA_RAM),
+                new Memory_WriteAddress(0x6800, 0x6bff, MWA_RAM),
+                new Memory_WriteAddress(0x6c00, 0x6fff, MWA_RAM),
+                new Memory_WriteAddress(0x7000, 0x73ff, MWA_RAM),
+                new Memory_WriteAddress(0x7400, 0x77ff, MWA_RAM),
+                new Memory_WriteAddress(0x7800, 0x7bff, MWA_RAM),
+                new Memory_WriteAddress(0x7c00, 0x7fff, MWA_RAM),
+                new Memory_WriteAddress(0x8000, 0xffff, MWA_ROM), /* Cartridge */
+                new Memory_WriteAddress(MEMPORT_MARKER, 0) /* end of table */};
 
-    static IOReadPort coleco_readport[]
+    static IO_ReadPort coleco_readport[]
             = {
-                new IOReadPort(0xA0, 0xA0, TMS9928A_vram_r),
-                new IOReadPort(0xA1, 0xA1, TMS9928A_register_r),
-                new IOReadPort(0xBE, 0xBE, TMS9928A_vram_r),
-                new IOReadPort(0xBF, 0xBF, TMS9928A_register_r),
-                new IOReadPort(0xE0, 0xFF, coleco_paddle_r),
-                new IOReadPort(-1) /* end of table */};
+                new IO_ReadPort(0xA0, 0xA0, TMS9928A_vram_r),
+                new IO_ReadPort(0xA1, 0xA1, TMS9928A_register_r),
+                new IO_ReadPort(0xBE, 0xBE, TMS9928A_vram_r),
+                new IO_ReadPort(0xBF, 0xBF, TMS9928A_register_r),
+                new IO_ReadPort(0xE0, 0xFF, coleco_paddle_r),
+                new IO_ReadPort(MEMPORT_MARKER, 0) /* end of table */};
 
-    static IOWritePort coleco_writeport[]
+    static IO_WritePort coleco_writeport[]
             = {
-                new IOWritePort(0x80, 0x80, coleco_paddle_toggle_off),
-                new IOWritePort(0x9F, 0x9F, coleco_paddle_toggle_off), /* Antarctic Adventure */
-                new IOWritePort(0xA0, 0xA0, TMS9928A_vram_w),
-                new IOWritePort(0xA1, 0xA1, TMS9928A_register_w),
-                new IOWritePort(0xBE, 0xBE, TMS9928A_vram_w),
-                new IOWritePort(0xBF, 0xBF, TMS9928A_register_w),
-                new IOWritePort(0xC0, 0xC0, coleco_paddle_toggle_on),
-                new IOWritePort(0xDF, 0xDF, coleco_paddle_toggle_on), /* Antarctic Adventure */
-                new IOWritePort(0xE0, 0xFF, SN76496_0_w),
-                new IOWritePort(-1) /* end of table */};
+                new IO_WritePort(0x80, 0x80, coleco_paddle_toggle_off),
+                new IO_WritePort(0x9F, 0x9F, coleco_paddle_toggle_off), /* Antarctic Adventure */
+                new IO_WritePort(0xA0, 0xA0, TMS9928A_vram_w),
+                new IO_WritePort(0xA1, 0xA1, TMS9928A_register_w),
+                new IO_WritePort(0xBE, 0xBE, TMS9928A_vram_w),
+                new IO_WritePort(0xBF, 0xBF, TMS9928A_register_w),
+                new IO_WritePort(0xC0, 0xC0, coleco_paddle_toggle_on),
+                new IO_WritePort(0xDF, 0xDF, coleco_paddle_toggle_on), /* Antarctic Adventure */
+                new IO_WritePort(0xE0, 0xFF, SN76496_0_w),
+                new IO_WritePort(MEMPORT_MARKER, 0) /* end of table */};
 
     static InputPortPtr input_ports_coleco = new InputPortPtr() {
         public void handler() {
@@ -202,7 +211,7 @@ public class coleco {
             60, DEFAULT_REAL_60HZ_VBLANK_DURATION, /* frames per second, vblank duration */
             1,
             null, /* init_machine */
-            null, /* stop_machine */
+            //null, /* stop_machine */
             32 * 8, 24 * 8, new rectangle(0 * 8, 32 * 8 - 1, 0 * 8, 24 * 8 - 1),
             null, /* gfxdecodeinfo */
             TMS9928A_PALETTE_SIZE,

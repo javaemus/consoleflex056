@@ -4,12 +4,14 @@
  */ 
 package mess;
 
-import WIP.arcadeflex.fucPtr;
+import arcadeflex.fucPtr;
 import static consoleflex.funcPtr.*;
-import mame.commonH;
-import static mame.commonH.rommodule_macro;
-import old.mame.driverH;
-import static old.mame.driverH.ROT0;
+import mame.driverH;
+import mame.driverH.MachineDriver;
+import static mame.driverH.ROT0;
+import mame056.commonH.RomModule;
+import static mame056.commonH.rommodule_macro;
+
 import old.mame.inptportH;
 import static old.mame.inptportH.IPT_COIN1;
 import static old.mame.inptportH.IPT_COIN2;
@@ -290,49 +292,7 @@ public class messH
 /*TODO*/////		ROT0									\
 /*TODO*/////	};
 
-        public static class GameDriver {
-
-        //this is used instead of GAME macro
-        public GameDriver(String year, String name, String source, fucPtr.RomLoadPtr romload, GameDriver parent, driverH.MachineDriver drv, fucPtr.InputPortPtr input, fucPtr.InitDriverPtr init, IODevice[] dev, String manufacture, String fullname) {
-            this.year = year;
-            this.source_file = source;
-            this.clone_of = parent;
-            this.name = name;
-            this.description = fullname;
-            this.manufacturer = manufacture;
-            this.drv = drv;
-            //inputports
-            this.driver_init = init;
-            romload.handler();//load the rom
-            input.handler();//load input
-            this.input_ports = input_macro;//copy input macro to input ports
-            this.rom = rommodule_macro; //copy rommodule_macro to rom
-            this.dev = dev;
-            this.flags = ROT0;
-        }
-
-        public String source_file;
-        public GameDriver clone_of;
-        /* if this is a clone, point to */
- /* the main version of the game */
-        public String name;
-        public String description;
-        public String year;
-        public String manufacturer;
-        public driverH.MachineDriver drv;
-        public inptportH.InputPortTiny[] input_ports;
-        public fucPtr.InitDriverPtr driver_init;
-        /* optional function to be called during initialization */
- /* This is called ONCE, unlike Machine->init_machine */
- /* which is called every time the game is reset. */
-
-        public commonH.RomModule[] rom;
-        public IODevice[] dev;//mess
-
-        public int flags;
-        /* orientation and other flags; see defines below */
-
-    }
+        
 /*TODO*/////	#define CONSX(YEAR,NAME,PARENT,MACHINE,INPUT,INIT,COMPANY,FULLNAME,FLAGS)	\
 /*TODO*/////	extern const struct GameDriver driver_##PARENT;   \
 /*TODO*/////	extern const struct GameDriver driver_##NAME;   \

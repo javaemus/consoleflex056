@@ -7,11 +7,16 @@
  */ 
 package mess.machine;
 
-import static WIP.arcadeflex.fucPtr.*;
-import static WIP.mame.mame.Machine;
-import static WIP.mame.memoryH.*;
-import static WIP2.mame.commonH.*;
+import arcadeflex.fucPtr.InitMachinePtr;
+import arcadeflex.fucPtr.ReadHandlerPtr;
+import arcadeflex.fucPtr.WriteHandlerPtr;
 import static common.ptr.*;
+import static mame056.commonH.REGION_CPU1;
+import static mame056.commonH.REGION_USER1;
+import static mame056.cpuexec.cpu_set_irq_line;
+import static mame056.cpuintrfH.*;
+import static mame056.timer.*;
+import static mame056.timerH.*;
 import static old.mame.inptportH.*;
 import static old.mame.inptport.*;
 import static mess.includes.lynxH.*;
@@ -20,14 +25,7 @@ import static mess.systems.lynx.lynx_draw_lines;
 import static mess.systems.lynx.lynx_palette;
 
 import static mess_spec.common.*;
-
-import static old.mame.timer.*;
-import static old.mame.timerH.*;
-
-import static old.mame.cpuintrfH.*;
-import static old.mame.cpuintrf.*;
-
-import static WIP.cpu.m6502.m6502H.*;
+import static old2.mame.mame.Machine;
 
 //import static mess.systems.lynx.*;
 //import static mess.includes.lynxH.*;

@@ -1,6 +1,6 @@
 package old.arcadeflex;
 
-import static WIP.mame.mame.Machine;
+import static old2.mame.mame.Machine;
 import static old.sound.mixer.samples_this_frame;
 
 public class sound {

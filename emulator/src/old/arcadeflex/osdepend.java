@@ -1,16 +1,12 @@
 package old.arcadeflex;
 
-import WIP.arcadeflex.settings;
+import old2.arcadeflex.settings;
 import static old.arcadeflex.config.parse_cmdline;
 import static old.arcadeflex.fronthlp.frontend_help;
 import static old.arcadeflex.libc_old.*;
 import static old.arcadeflex.ticker.init_ticker;
-import static WIP.mame.mame.*;
-import WIP2.mame.mameH;
-import WIP2.mame.mameH.ImageFile;
-import static WIP2.mame.mameH.MAX_IMAGES;
-import static WIP2.mess.msdos.load_image;
-import static WIP2.mess.system.drivers;
+import static mame.driver.drivers;
+import static old2.mame.mame.*;
 
 /**
  * This file is relative to msdos.c in mame_old
@@ -77,7 +73,7 @@ public class osdepend {
     /*TODO*///
     public static int main(int argc, String[] argv) {
         dlprogress = new UrlDownloadProgress();
-        dlprogress.setVersion("consoleflex version: " + settings.version);
+        dlprogress.setVersion("arcadeflex version: " + settings.version);
         dlprogress.setVisible(true);
         int res, i, j = 0, game_index;
         String playbackname = "";
@@ -158,8 +154,6 @@ public class osdepend {
                     break;//if (argv[j][0] != '-') break; (original c code,conversion seems ok)
                 }
             }
-            //System.out.println("DRIVERS:"+drivers);
-                    
             /* do we have a driver for this? */
             for (i = 0; drivers[i] != null && (game_index == -1); i++) {
                 if (stricmp(argv[j], drivers[i].name) == 0) {
@@ -214,8 +208,6 @@ public class osdepend {
         }
         /*TODO*///
     /*TODO*///
-    //MESS stuff
-    load_image(argc, argv, j, game_index);
 	/* parse generic (os-independent) options */
         parse_cmdline(argc, argv, game_index);
         /*TODO*///
@@ -274,5 +266,4 @@ public class osdepend {
             fprintf(errorlog, str, arguments);
         }
     }
-    
 }

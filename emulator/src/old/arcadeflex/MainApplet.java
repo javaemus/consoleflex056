@@ -12,9 +12,9 @@ import java.awt.image.DirectColorModel;
 import java.awt.image.ImageConsumer;
 import java.awt.image.ImageProducer;
 
-import static WIP.arcadeflex.libc_v2.*;
+import static old2.arcadeflex.libc_v2.*;
 import static java.awt.event.KeyEvent.VK_INSERT;
-import static WIP.mame.mame.Machine;
+import static old2.mame.mame.Machine;
 
 /**
  *

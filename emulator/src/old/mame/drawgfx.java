@@ -3,20 +3,23 @@
  */
 package old.mame;
 
+import static mame.drawgfx.blockmove_8toN_transthrough;
+import static mame.drawgfx.blockmove_8toN_transthrough_flipx;
 import static old.arcadeflex.libc_old.IntPtr;
-import static common.ptr.*;
+import static arcadeflex.libc.ptr.*;
 import static common.subArrays.*;
-import static WIP.arcadeflex.video.osd_mark_dirty;
-import static old.mame.drawgfxH.*;
-import static old.mame.driverH.*;
-import static WIP.mame.mame.Machine;
-import static WIP.mame.osdependH.mame_bitmap;
-import static WIP2.mame.usrintrf.usrintf_showmessage;
-import static WIP.mame.drawgfx.*;
-import static common.libc.cstring.*;
-import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_8;
-import static WIP2.mame.drawgfx.blockmove_8toN_transthrough_flipx_8;
 import static common.libc.expressions.*;
+import static mame.drawgfx.blockmove_8toN_opaque_pri;
+import static mame.drawgfx.blockmove_8toN_opaque_pri_flipx;
+import static mame.drawgfx.blockmove_8toN_transpen_pri;
+import static mame.drawgfx.blockmove_8toN_transpen_pri_flipx;
+import static arcadeflex.video.osd_mark_dirty;
+import static mame.drawgfxH.*;
+import static mame.driverH.*;
+import static old2.mame.mame.Machine;
+import static mame.osdependH.osd_bitmap;
+import static old.mame.usrintrf.usrintf_showmessage;
+import static old2.mame.drawgfx.*;
 
 public class drawgfx {
 
@@ -27,13 +30,13 @@ public class drawgfx {
 /*TODO*///
 /*TODO*////* LBO */
 /*TODO*///#ifdef LSB_FIRST
-    public static final int BL0 = 0;
-    public static final int BL1 = 1;
-    public static final int BL2 = 2;
-    public static final int BL3 = 3;
-    public static final int WL0 = 0;
-    public static final int WL1 = 1;
-    /*TODO*///#else
+/*TODO*///#define BL0 0
+/*TODO*///#define BL1 1
+/*TODO*///#define BL2 2
+/*TODO*///#define BL3 3
+/*TODO*///#define WL0 0
+/*TODO*///#define WL1 1
+/*TODO*///#else
 /*TODO*///#define BL0 3
 /*TODO*///#define BL1 2
 /*TODO*///#define BL2 1
@@ -245,147 +248,155 @@ public class drawgfx {
         }
     }
 
-    /*TODO*///INLINE void blockmove_NtoN_transpen_noremap_flipx8(
-/*TODO*///		const UINT8 *srcdata,int srcwidth,int srcheight,int srcmodulo,
-/*TODO*///		UINT8 *dstdata,int dstmodulo,
-/*TODO*///		int transpen)
-/*TODO*///{
-/*TODO*///	UINT8 *end;
-/*TODO*///	int trans4;
-/*TODO*///	UINT32 *sd4;
-/*TODO*///
-/*TODO*///	srcmodulo += srcwidth;
-/*TODO*///	dstmodulo -= srcwidth;
-/*TODO*///	//srcdata += srcwidth-1;
-/*TODO*///	srcdata -= 3;
-/*TODO*///
-/*TODO*///	trans4 = transpen * 0x01010101;
-/*TODO*///
-/*TODO*///	while (srcheight)
-/*TODO*///	{
-/*TODO*///		end = dstdata + srcwidth;
-/*TODO*///		while (((long)srcdata & 3) && dstdata < end)	/* longword align */
-/*TODO*///		{
-/*TODO*///			int col;
-/*TODO*///
-/*TODO*///			col = srcdata[3];
-/*TODO*///			srcdata--;
-/*TODO*///			if (col != transpen) *dstdata = col;
-/*TODO*///			dstdata++;
-/*TODO*///		}
-/*TODO*///		sd4 = (UINT32 *)srcdata;
-/*TODO*///		while (dstdata <= end - 4)
-/*TODO*///		{
-/*TODO*///			UINT32 col4;
-/*TODO*///
-/*TODO*///			if ((col4 = *(sd4--)) != trans4)
-/*TODO*///			{
-/*TODO*///				UINT32 xod4;
-/*TODO*///
-/*TODO*///				xod4 = col4 ^ trans4;
-/*TODO*///				if (xod4 & 0x000000ff) dstdata[BL3] = col4;
-/*TODO*///				if (xod4 & 0x0000ff00) dstdata[BL2] = col4 >>  8;
-/*TODO*///				if (xod4 & 0x00ff0000) dstdata[BL1] = col4 >> 16;
-/*TODO*///				if (xod4 & 0xff000000) dstdata[BL0] = col4 >> 24;
-/*TODO*///			}
-/*TODO*///			dstdata += 4;
-/*TODO*///		}
-/*TODO*///		srcdata = (UINT8 *)sd4;
-/*TODO*///		while (dstdata < end)
-/*TODO*///		{
-/*TODO*///			int col;
-/*TODO*///
-/*TODO*///			col = srcdata[3];
-/*TODO*///			srcdata--;
-/*TODO*///			if (col != transpen) *dstdata = col;
-/*TODO*///			dstdata++;
-/*TODO*///		}
-/*TODO*///
-/*TODO*///		srcdata += srcmodulo;
-/*TODO*///		dstdata += dstmodulo;
-/*TODO*///		srcheight--;
-/*TODO*///	}
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*///INLINE void blockmove_NtoN_transpen_noremap16(
-/*TODO*///		const UINT16 *srcdata,int srcwidth,int srcheight,int srcmodulo,
-/*TODO*///		UINT16 *dstdata,int dstmodulo,
-/*TODO*///		int transpen)
-/*TODO*///{
-/*TODO*///	UINT16 *end;
-/*TODO*///
-/*TODO*///	srcmodulo -= srcwidth;
-/*TODO*///	dstmodulo -= srcwidth;
-/*TODO*///
-/*TODO*///	while (srcheight)
-/*TODO*///	{
-/*TODO*///		end = dstdata + srcwidth;
-/*TODO*///		while (dstdata < end)
-/*TODO*///		{
-/*TODO*///			int col;
-/*TODO*///
-/*TODO*///			col = *(srcdata++);
-/*TODO*///			if (col != transpen) *dstdata = col;
-/*TODO*///			dstdata++;
-/*TODO*///		}
-/*TODO*///
-/*TODO*///		srcdata += srcmodulo;
-/*TODO*///		dstdata += dstmodulo;
-/*TODO*///		srcheight--;
-/*TODO*///	}
-/*TODO*///}
-/*TODO*///
-/*TODO*///INLINE void blockmove_NtoN_transpen_noremap_flipx16(
-/*TODO*///		const UINT16 *srcdata,int srcwidth,int srcheight,int srcmodulo,
-/*TODO*///		UINT16 *dstdata,int dstmodulo,
-/*TODO*///		int transpen)
-/*TODO*///{
-/*TODO*///	UINT16 *end;
-/*TODO*///
-/*TODO*///	srcmodulo += srcwidth;
-/*TODO*///	dstmodulo -= srcwidth;
-/*TODO*///	//srcdata += srcwidth-1;
-/*TODO*///
-/*TODO*///	while (srcheight)
-/*TODO*///	{
-/*TODO*///		end = dstdata + srcwidth;
-/*TODO*///		while (dstdata < end)
-/*TODO*///		{
-/*TODO*///			int col;
-/*TODO*///
-/*TODO*///			col = *(srcdata--);
-/*TODO*///			if (col != transpen) *dstdata = col;
-/*TODO*///			dstdata++;
-/*TODO*///		}
-/*TODO*///
-/*TODO*///		srcdata += srcmodulo;
-/*TODO*///		dstdata += dstmodulo;
-/*TODO*///		srcheight--;
-/*TODO*///	}
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*///#define DATA_TYPE UINT8
-/*TODO*///#define DECLARE(function,args,body) INLINE void function##8 args body
-/*TODO*///#define BLOCKMOVE(function,flipx,args) \
-/*TODO*///	if (flipx) blockmove_##function##_flipx##8 args ; \
-/*TODO*///	else blockmove_##function##8 args
-/*TODO*///#include "drawgfx.c"
-/*TODO*///#undef DATA_TYPE
-/*TODO*///#undef DECLARE
-/*TODO*///#undef BLOCKMOVE
-/*TODO*///
-/*TODO*///#define DATA_TYPE UINT16
-/*TODO*///#define DECLARE(function,args,body) INLINE void function##16 args body
-/*TODO*///#define BLOCKMOVE(function,flipx,args) \
-/*TODO*///	if (flipx) blockmove_##function##_flipx##16 args ; \
-/*TODO*///	else blockmove_##function##16 args
-/*TODO*///#include "drawgfx.c"
-/*TODO*///#undef DATA_TYPE
-/*TODO*///#undef DECLARE
-/*TODO*///#undef BLOCKMOVE
-/*TODO*///
+    public static void blockmove_NtoN_transpen_noremap_flipx8(
+            UBytePtr srcdata, int srcwidth, int srcheight, int srcmodulo,
+            UBytePtr dstdata, int dstmodulo,
+            int transpen) {
+        int end;//UINT8 *end;
+        int trans4;
+        IntPtr sd4;//UINT32 *sd4;
+
+        srcmodulo += srcwidth;
+        dstmodulo -= srcwidth;
+        //srcdata += srcwidth-1;
+        srcdata.offset -= 3;
+
+        trans4 = transpen * 0x01010101;
+
+        while (srcheight != 0) {
+            end = dstdata.offset + srcwidth;
+            while (((long) srcdata.offset & 3) != 0 && dstdata.offset < end) /* longword align */ {
+                int col;
+
+                col = srcdata.read(3);
+                srcdata.offset--;
+                if (col != transpen) {
+                    dstdata.write(col);
+                }
+                dstdata.inc();
+            }
+            sd4 = new IntPtr(srcdata);
+            while (dstdata.offset <= end - 4) {
+                int col4;
+
+                if ((col4 = sd4.read(0)) != trans4) {
+                    int xod4;
+
+                    xod4 = col4 ^ trans4;
+
+                    if ((xod4 & 0x000000ff) != 0) {
+                        dstdata.write(3, col4 & 0xFF);
+                    }
+                    if ((xod4 & 0x0000ff00) != 0) {
+                        dstdata.write(2, (col4 >> 8) & 0xFF);
+                    }
+                    if ((xod4 & 0x00ff0000) != 0) {
+                        dstdata.write(1, (col4 >> 16) & 0xFF);
+                    }
+                    if ((xod4 & 0xff000000) != 0) {
+                        dstdata.write(0, (col4 >> 24) & 0xFF);
+                    }
+                }
+                sd4.base -= 4;
+                dstdata.offset += 4;
+            }
+            srcdata.set(sd4.readCA(), sd4.getBase());
+            while (dstdata.offset < end) {
+                int col;
+
+                col = srcdata.read(3);
+                srcdata.dec();
+                if (col != transpen) {
+                    dstdata.write(col);
+                }
+                dstdata.inc();
+            }
+
+            srcdata.inc(srcmodulo);
+            dstdata.inc(dstmodulo);
+            srcheight--;
+        }
+    }
+
+    /*TODO*///
+    /*TODO*///INLINE void blockmove_NtoN_transpen_noremap16(
+    /*TODO*///		const UINT16 *srcdata,int srcwidth,int srcheight,int srcmodulo,
+    /*TODO*///		UINT16 *dstdata,int dstmodulo,
+    /*TODO*///		int transpen)
+    /*TODO*///{
+    /*TODO*///	UINT16 *end;
+    /*TODO*///
+    /*TODO*///	srcmodulo -= srcwidth;
+    /*TODO*///	dstmodulo -= srcwidth;
+    /*TODO*///
+    /*TODO*///	while (srcheight)
+    /*TODO*///	{
+    /*TODO*///		end = dstdata + srcwidth;
+    /*TODO*///		while (dstdata < end)
+    /*TODO*///		{
+    /*TODO*///			int col;
+    /*TODO*///
+    /*TODO*///			col = *(srcdata++);
+    /*TODO*///			if (col != transpen) *dstdata = col;
+    /*TODO*///			dstdata++;
+    /*TODO*///		}
+    /*TODO*///
+    /*TODO*///		srcdata += srcmodulo;
+    /*TODO*///		dstdata += dstmodulo;
+    /*TODO*///		srcheight--;
+    /*TODO*///	}
+    /*TODO*///}
+    /*TODO*///
+    /*TODO*///INLINE void blockmove_NtoN_transpen_noremap_flipx16(
+    /*TODO*///		const UINT16 *srcdata,int srcwidth,int srcheight,int srcmodulo,
+    /*TODO*///		UINT16 *dstdata,int dstmodulo,
+    /*TODO*///		int transpen)
+    /*TODO*///{
+    /*TODO*///	UINT16 *end;
+    /*TODO*///
+    /*TODO*///	srcmodulo += srcwidth;
+    /*TODO*///	dstmodulo -= srcwidth;
+    /*TODO*///	//srcdata += srcwidth-1;
+    /*TODO*///
+    /*TODO*///	while (srcheight)
+    /*TODO*///	{
+    /*TODO*///		end = dstdata + srcwidth;
+    /*TODO*///		while (dstdata < end)
+    /*TODO*///		{
+    /*TODO*///			int col;
+    /*TODO*///
+    /*TODO*///			col = *(srcdata--);
+    /*TODO*///			if (col != transpen) *dstdata = col;
+    /*TODO*///			dstdata++;
+    /*TODO*///		}
+    /*TODO*///
+    /*TODO*///		srcdata += srcmodulo;
+    /*TODO*///		dstdata += dstmodulo;
+    /*TODO*///		srcheight--;
+    /*TODO*///	}
+    /*TODO*///}
+    /*TODO*///
+    /*TODO*///
+    /*TODO*///#define DATA_TYPE UINT8
+    /*TODO*///#define DECLARE(function,args,body) INLINE void function##8 args body
+    /*TODO*///#define BLOCKMOVE(function,flipx,args) \
+    /*TODO*///	if (flipx) blockmove_##function##_flipx##8 args ; \
+    /*TODO*///	else blockmove_##function##8 args
+    /*TODO*///#include "drawgfx.c"
+    /*TODO*///#undef DATA_TYPE
+    /*TODO*///#undef DECLARE
+    /*TODO*///#undef BLOCKMOVE
+    /*TODO*///
+    /*TODO*///#define DATA_TYPE UINT16
+    /*TODO*///#define DECLARE(function,args,body) INLINE void function##16 args body
+    /*TODO*///#define BLOCKMOVE(function,flipx,args) \
+    /*TODO*///	if (flipx) blockmove_##function##_flipx##16 args ; \
+    /*TODO*///	else blockmove_##function##16 args
+    /*TODO*///#include "drawgfx.c"
+    /*TODO*///#undef DATA_TYPE
+    /*TODO*///#undef DECLARE
+    /*TODO*///#undef BLOCKMOVE
+    /*TODO*///
     /**
      * *************************************************************************
      * Draw graphic elements in the specified bitmap.
@@ -408,10 +419,10 @@ public class drawgfx {
      * changed through palette_shadow_table[]
      * *************************************************************************
      */
-    public static void common_drawgfx(mame_bitmap dest, GfxElement gfx,
+    public static void common_drawgfx(osd_bitmap dest, GfxElement gfx,
             /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color,
-            mame_bitmap pri_buffer,/*UINT32*/ int pri_mask) {
+            osd_bitmap pri_buffer,/*UINT32*/ int pri_mask) {
         rectangle myclip = new rectangle();
 
         if (gfx == null) {
@@ -506,7 +517,7 @@ public class drawgfx {
         }
     }
 
-    public static void drawgfx(mame_bitmap dest, GfxElement gfx,
+    public static void drawgfx(osd_bitmap dest, GfxElement gfx,
             /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color) {
         common_drawgfx(dest, gfx, code, color, flipx, flipy, sx, sy, clip, transparency, transparent_color, null, 0);
@@ -527,7 +538,7 @@ public class drawgfx {
      * function will very likely change in the future.
      * *************************************************************************
      */
-    public static void copybitmap(mame_bitmap dest, mame_bitmap src, int flipx, int flipy, int sx, int sy,
+    public static void copybitmap(osd_bitmap dest, osd_bitmap src, int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color) {
         /* translate to proper transparency here */
         if (transparency == TRANSPARENCY_NONE) {
@@ -544,7 +555,7 @@ public class drawgfx {
         copybitmap_remap(dest, src, flipx, flipy, sx, sy, clip, transparency, transparent_color);
     }
 
-    public static void copybitmap_remap(mame_bitmap dest, mame_bitmap src, int flipx, int flipy, int sx, int sy,
+    public static void copybitmap_remap(osd_bitmap dest, osd_bitmap src, int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color) {
         rectangle myclip = new rectangle();
 
@@ -622,7 +633,7 @@ public class drawgfx {
      * *************************************************************************
      */
     /*leave it here for compatibility  (shadow)*/
-    public static void copyscrollbitmap(mame_bitmap dest, mame_bitmap src,
+    public static void copyscrollbitmap(osd_bitmap dest, osd_bitmap src,
             int rows, int[] rowscroll, int cols, int[] colscroll,
             rectangle clip, int transparency, int transparent_color) {
         /* translate to proper transparency here */
@@ -683,7 +694,7 @@ public class drawgfx {
 /*TODO*///
 
     /* fill a bitmap using the specified pen */
-    public static void fillbitmap(mame_bitmap dest, int pen, rectangle clip) {
+    public static void fillbitmap(osd_bitmap dest, int pen, rectangle clip) {
         int sx, sy, ex, ey, y;
         rectangle myclip = new rectangle();
 
@@ -1726,75 +1737,74 @@ public class drawgfx {
 /*TODO*///}
 /*TODO*///
 /*TODO*///
-/*TODO*///void plot_pixel2(struct osd_bitmap *bitmap1,struct osd_bitmap *bitmap2,int x,int y,int pen)
-/*TODO*///{
-/*TODO*///	plot_pixel(bitmap1, x, y, pen);
-/*TODO*///	plot_pixel(bitmap2, x, y, pen);
-/*TODO*///}
-/*TODO*///
+    public static void plot_pixel2(osd_bitmap bitmap1, osd_bitmap bitmap2, int x, int y, int pen) {
+        plot_pixel.handler(bitmap1, x, y, pen);
+        plot_pixel.handler(bitmap2, x, y, pen);
+    }
+
     public static plot_pixel_procPtr pp_8_nd = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[y].write(x, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_fx = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[y].write(b.width - 1 - x, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_fy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[b.height - 1 - y].write(x, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_fxy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[b.height - 1 - y].write(b.width - 1 - x, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[x].write(y, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_fx_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[x].write(b.width - 1 - y, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_fy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[b.height - 1 - x].write(y, p);
         }
     };
     public static plot_pixel_procPtr pp_8_nd_fxy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[b.height - 1 - x].write(b.width - 1 - y, p);
         }
     };
 
     public static plot_pixel_procPtr pp_8_d = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[y].write(x, p);
             osd_mark_dirty(x, y, x, y, 0);
         }
     };
     public static plot_pixel_procPtr pp_8_d_fx = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             x = b.width - 1 - x;
             b.line[y].write(x, p);
             osd_mark_dirty(x, y, x, y, 0);
         }
     };
     public static plot_pixel_procPtr pp_8_d_fy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             y = b.height - 1 - y;
             b.line[y].write(x, p);
             osd_mark_dirty(x, y, x, y, 0);
         }
     };
     public static plot_pixel_procPtr pp_8_d_fxy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             x = b.width - 1 - x;
             y = b.height - 1 - y;
             b.line[y].write(x, p);
@@ -1802,27 +1812,27 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_8_d_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             b.line[x].write(y, p);
             osd_mark_dirty(y, x, y, x, 0);
         }
     };
     public static plot_pixel_procPtr pp_8_d_fx_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             y = b.width - 1 - y;
             b.line[x].write(y, p);
             osd_mark_dirty(y, x, y, x, 0);
         }
     };
     public static plot_pixel_procPtr pp_8_d_fy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             x = b.height - 1 - x;
             b.line[x].write(y, p);
             osd_mark_dirty(y, x, y, x, 0);
         }
     };
     public static plot_pixel_procPtr pp_8_d_fxy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             x = b.height - 1 - x;
             y = b.width - 1 - y;
             b.line[x].write(y, p);
@@ -1830,63 +1840,63 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_16_nd = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           ((UINT16 *) b.line[y])[x]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_fx = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            ((UINT16 *) b.line[y])[b.width - 1 - x]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_fy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           ((UINT16 *) b.line[b.height - 1 - y])[x]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_fxy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           ((UINT16 *) b.line[b.height - 1 - y])[b.width - 1 - x]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            ((UINT16 *) b.line[x])[y]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_fx_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            ((UINT16 *) b.line[x])[b.width - 1 - y]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_fy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            ((UINT16 *) b.line[b.height - 1 - x])[y]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_nd_fxy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            ((UINT16 *) b.line[b.height - 1 - x])[b.width - 1 - y]=p;
             throw new UnsupportedOperationException("Unsupported");
         }
     };
 
     public static plot_pixel_procPtr pp_16_d = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///             ((UINT16 *) b.line[y])[x]=p;
 /*TODO*///            osd_mark_dirty(x, y, x, y, 0);
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_d_fx = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            x = b.width - 1 - x;
 /*TODO*///             ((UINT16 *) b.line[y])[x]=p;
 /*TODO*///            osd_mark_dirty(x, y, x, y, 0);
@@ -1894,7 +1904,7 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_16_d_fy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           y = b.height - 1 - y;
             /*TODO*///            ((UINT16 *) b.line[y])[x]=p;
             /*TODO*///           osd_mark_dirty(x, y, x, y, 0);
@@ -1902,7 +1912,7 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_16_d_fxy = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            x = b.width - 1 - x;
 /*TODO*///            y = b.height - 1 - y;
 /*TODO*///             ((UINT16 *) b.line[y])[x]=p;
@@ -1911,14 +1921,14 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_16_d_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///            ((UINT16 *) b.line[x])[y]=p;
 /*TODO*///            osd_mark_dirty(y, x, y, x, 0);
             throw new UnsupportedOperationException("Unsupported");
         }
     };
     public static plot_pixel_procPtr pp_16_d_fx_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           y = b.width - 1 - y;
 /*TODO*///             ((UINT16 *) b.line[x])[y]=p;
 /*TODO*///            osd_mark_dirty(y, x, y, x, 0);
@@ -1926,7 +1936,7 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_16_d_fy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           x = b.height - 1 - x;
             /*TODO*///            ((UINT16 *) b.line[x])[y]=p;
             /*TODO*///           osd_mark_dirty(y, x, y, x, 0);
@@ -1934,7 +1944,7 @@ public class drawgfx {
         }
     };
     public static plot_pixel_procPtr pp_16_d_fxy_s = new plot_pixel_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int p) {
+        public void handler(osd_bitmap b, int x, int y, int p) {
             /*TODO*///           x = b.height - 1 - x;
             /*TODO*///           y = b.width - 1 - y;
             /*TODO*///            ((UINT16 *) b.line[x])[y]=p;
@@ -1943,95 +1953,95 @@ public class drawgfx {
         }
     };
     public static read_pixel_procPtr rp_8 = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[y].read(x);
         }
     };
     public static read_pixel_procPtr rp_8_fx = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[y].read(bitmap.width - 1 - x);
         }
     };
     public static read_pixel_procPtr rp_8_fy = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[bitmap.height - 1 - y].read(x);
         }
     };
     public static read_pixel_procPtr rp_8_fxy = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[bitmap.height - 1 - y].read(bitmap.width - 1 - x);
         }
     };
     public static read_pixel_procPtr rp_8_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[x].read(y);
         }
     };
     public static read_pixel_procPtr rp_8_fx_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[x].read(bitmap.width - 1 - y);
         }
     };
     public static read_pixel_procPtr rp_8_fy_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[bitmap.height - 1 - x].read(y);
         }
     };
     public static read_pixel_procPtr rp_8_fxy_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             return bitmap.line[bitmap.height - 1 - x].read(bitmap.width - 1 - y);
         }
     };
     /*TODO*///static int rp_16(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[y])[x]; }
     public static read_pixel_procPtr rp_16 = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16");
         }
     };
     /*TODO*///static int rp_16_fx(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[y])[b->width-1-x]; }
     public static read_pixel_procPtr rp_16_fx = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_fx");
         }
     };
     /*TODO*///static int rp_16_fy(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[b->height-1-y])[x]; }
     public static read_pixel_procPtr rp_16_fy = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_fy");
         }
     };
     /*TODO*///static int rp_16_fxy(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[b->height-1-y])[b->width-1-x]; }
     public static read_pixel_procPtr rp_16_fxy = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_fxy");
         }
     };
     /*TODO*///static int rp_16_s(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[x])[y]; }
     public static read_pixel_procPtr rp_16_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_s");
         }
     };
     /*TODO*///static int rp_16_fx_s(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[x])[b->width-1-y]; }
     public static read_pixel_procPtr rp_16_fx_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_fx_s");
         }
     };
     /*TODO*///static int rp_16_fy_s(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[b->height-1-x])[y]; }
     public static read_pixel_procPtr rp_16_fy_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_fy_s");
         }
     };
     /*TODO*///static int rp_16_fxy_s(struct osd_bitmap *b,int x,int y)  { return ((unsigned short *)b->line[b->height-1-x])[b->width-1-y]; }
     public static read_pixel_procPtr rp_16_fxy_s = new read_pixel_procPtr() {
-        public int handler(mame_bitmap bitmap, int x, int y) {
+        public int handler(osd_bitmap bitmap, int x, int y) {
             throw new UnsupportedOperationException("Unsupported rp_16_fxy_s");
         }
     };
     public static plot_box_procPtr pb_8_nd = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             while (h-- > 0) {
                 int c = w;
@@ -2045,7 +2055,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_fx = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.width - 1 - x;
             while (h-- > 0) {
                 int c = w;
@@ -2059,7 +2069,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_fy = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             y = b.height - 1 - y;
             while (h-- > 0) {
@@ -2074,7 +2084,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_fxy = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.width - 1 - x;
             y = b.height - 1 - y;
             while (h-- > 0) {
@@ -2089,7 +2099,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             while (h-- > 0) {
                 int c = w;
@@ -2103,7 +2113,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_fx_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             y = b.width - 1 - y;
             while (h-- > 0) {
@@ -2118,7 +2128,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_fy_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.height - 1 - x;
             while (h-- > 0) {
                 int c = w;
@@ -2132,7 +2142,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_nd_fxy_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.height - 1 - x;
             y = b.width - 1 - y;
             while (h-- > 0) {
@@ -2148,7 +2158,7 @@ public class drawgfx {
     };
 
     public static plot_box_procPtr pb_8_d = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             osd_mark_dirty(t, y, t + w - 1, y + h - 1, 0);
             while (h-- > 0) {
@@ -2163,7 +2173,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_fx = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.width - 1 - x;
             osd_mark_dirty(t - w + 1, y, t, y + h - 1, 0);
             while (h-- > 0) {
@@ -2178,7 +2188,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_fy = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             y = b.height - 1 - y;
             osd_mark_dirty(t, y - h + 1, t + w - 1, y, 0);
@@ -2194,7 +2204,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_fxy = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.width - 1 - x;
             y = b.height - 1 - y;
             osd_mark_dirty(t - w + 1, y - h + 1, t, y, 0);
@@ -2210,7 +2220,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             osd_mark_dirty(y, t, y + h - 1, t + w - 1, 0);
             while (h-- > 0) {
@@ -2225,7 +2235,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_fx_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = x;
             y = b.width - 1 - y;
             osd_mark_dirty(y - h + 1, t, y, t + w - 1, 0);
@@ -2241,7 +2251,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_fy_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.height - 1 - x;
             osd_mark_dirty(y, t - w + 1, y + h - 1, t, 0);
             while (h-- > 0) {
@@ -2256,7 +2266,7 @@ public class drawgfx {
         }
     };
     public static plot_box_procPtr pb_8_d_fxy_s = new plot_box_procPtr() {
-        public void handler(mame_bitmap b, int x, int y, int w, int h, int p) {
+        public void handler(osd_bitmap b, int x, int y, int w, int h, int p) {
             int t = b.height - 1 - x;
             y = b.width - 1 - y;
             osd_mark_dirty(y - h + 1, t - w + 1, y, t, 0);
@@ -2500,116 +2510,102 @@ public class drawgfx {
 /*TODO*///	}
 /*TODO*///})
 /*TODO*///
-    public static void blockmove_8toN_opaque_pri8(
-            UBytePtr srcdata, int srcwidth, int srcheight, int srcmodulo,
-            UBytePtr dstdata, int dstmodulo,
-            UShortArray paldata, UBytePtr pridata,/*UINT32*/ int pmask) {
-        int end;
-
-        pmask |= (1 << 31);
-
-        srcmodulo -= srcwidth;
-        dstmodulo -= srcwidth;
-
-        while (srcheight != 0) {
-            end = dstdata.offset + srcwidth;
-            while (dstdata.offset <= end - 8) {
-                if (((1 << pridata.read(0)) & pmask) == 0) {
-                    dstdata.write(0, paldata.read(srcdata.read(0)));
-                }
-                if (((1 << pridata.read(1)) & pmask) == 0) {
-                    dstdata.write(1, paldata.read(srcdata.read(1)));
-                }
-                if (((1 << pridata.read(2)) & pmask) == 0) {
-                    dstdata.write(2, paldata.read(srcdata.read(2)));
-                }
-                if (((1 << pridata.read(3)) & pmask) == 0) {
-                    dstdata.write(3, paldata.read(srcdata.read(3)));
-                }
-                if (((1 << pridata.read(4)) & pmask) == 0) {
-                    dstdata.write(4, paldata.read(srcdata.read(4)));
-                }
-                if (((1 << pridata.read(5)) & pmask) == 0) {
-                    dstdata.write(5, paldata.read(srcdata.read(5)));
-                }
-                if (((1 << pridata.read(6)) & pmask) == 0) {
-                    dstdata.write(6, paldata.read(srcdata.read(6)));
-                }
-                if (((1 << pridata.read(7)) & pmask) == 0) {
-                    dstdata.write(7, paldata.read(srcdata.read(7)));
-                }
-                memset(pridata, 31, 8);
-                srcdata.inc(8);
-                dstdata.inc(8);
-                pridata.inc(8);
-            }
-            while (dstdata.offset < end) {
-                if (((1 << pridata.read()) & pmask) == 0) {
-                    dstdata.write(paldata.read(srcdata.read()));
-                }
-                pridata.write(31);
-                srcdata.inc();
-                dstdata.inc();
-                pridata.inc();
-            }
-
-            srcdata.inc(srcmodulo);
-            dstdata.inc(dstmodulo);
-            pridata.inc(dstmodulo);
-            srcheight--;
-        }
-    }
-
-    
-public static void blockmove_8toN_opaque_pri_flipx8(
-		UBytePtr srcdata,int srcwidth,int srcheight,int srcmodulo,
-		UBytePtr dstdata,int dstmodulo,
-		UShortArray paldata,UBytePtr pridata,int /*UINT32*/ pmask)
-{
-	int end;
-
-	pmask |= (1<<31);
-
-	srcmodulo += srcwidth;
-	dstmodulo -= srcwidth;
-	//srcdata += srcwidth-1;
-
-	while (srcheight!=0)
-	{
-		end = dstdata.offset + srcwidth;
-		while (dstdata.offset <= end - 8)
-		{
-			srcdata.dec(8);
-			if (((1 << pridata.read(0)) & pmask) == 0) dstdata.write(0, paldata.read(srcdata.read(8)));
-			if (((1 << pridata.read(1)) & pmask) == 0) dstdata.write(1, paldata.read(srcdata.read(7)));
-			if (((1 << pridata.read(2)) & pmask) == 0) dstdata.write(2, paldata.read(srcdata.read(6)));
-			if (((1 << pridata.read(3)) & pmask) == 0) dstdata.write(3, paldata.read(srcdata.read(5)));
-			if (((1 << pridata.read(4)) & pmask) == 0) dstdata.write(4, paldata.read(srcdata.read(4)));
-			if (((1 << pridata.read(5)) & pmask) == 0) dstdata.write(5, paldata.read(srcdata.read(3)));
-			if (((1 << pridata.read(6)) & pmask) == 0) dstdata.write(6, paldata.read(srcdata.read(2)));
-			if (((1 << pridata.read(7)) & pmask) == 0) dstdata.write(7, paldata.read(srcdata.read(1)));
-			memset(pridata,31,8);
-			dstdata.inc(8);
-			pridata.inc(8);
-		}
-		while (dstdata.offset < end)
-		{
-			if (((1 << pridata.read()) & pmask) == 0)
-				dstdata.write(paldata.read(srcdata.read()));
-			pridata.write(31);
-			srcdata.dec();
-			dstdata.inc();
-			pridata.inc();
-		}
-
-		srcdata.inc(srcmodulo);
-		dstdata.inc(dstmodulo);
-		pridata.inc(dstmodulo);
-		srcheight--;
-	}
-}
-
-
+/*TODO*///DECLARE(blockmove_8toN_opaque_pri,(
+/*TODO*///		const UINT8 *srcdata,int srcwidth,int srcheight,int srcmodulo,
+/*TODO*///		DATA_TYPE *dstdata,int dstmodulo,
+/*TODO*///		const UINT16 *paldata,UINT8 *pridata,UINT32 pmask),
+/*TODO*///{
+/*TODO*///	DATA_TYPE *end;
+/*TODO*///
+/*TODO*///	pmask |= (1<<31);
+/*TODO*///
+/*TODO*///	srcmodulo -= srcwidth;
+/*TODO*///	dstmodulo -= srcwidth;
+/*TODO*///
+/*TODO*///	while (srcheight)
+/*TODO*///	{
+/*TODO*///		end = dstdata + srcwidth;
+/*TODO*///		while (dstdata <= end - 8)
+/*TODO*///		{
+/*TODO*///			if (((1 << pridata[0]) & pmask) == 0) dstdata[0] = paldata[srcdata[0]];
+/*TODO*///			if (((1 << pridata[1]) & pmask) == 0) dstdata[1] = paldata[srcdata[1]];
+/*TODO*///			if (((1 << pridata[2]) & pmask) == 0) dstdata[2] = paldata[srcdata[2]];
+/*TODO*///			if (((1 << pridata[3]) & pmask) == 0) dstdata[3] = paldata[srcdata[3]];
+/*TODO*///			if (((1 << pridata[4]) & pmask) == 0) dstdata[4] = paldata[srcdata[4]];
+/*TODO*///			if (((1 << pridata[5]) & pmask) == 0) dstdata[5] = paldata[srcdata[5]];
+/*TODO*///			if (((1 << pridata[6]) & pmask) == 0) dstdata[6] = paldata[srcdata[6]];
+/*TODO*///			if (((1 << pridata[7]) & pmask) == 0) dstdata[7] = paldata[srcdata[7]];
+/*TODO*///			memset(pridata,31,8);
+/*TODO*///			srcdata += 8;
+/*TODO*///			dstdata += 8;
+/*TODO*///			pridata += 8;
+/*TODO*///		}
+/*TODO*///		while (dstdata < end)
+/*TODO*///		{
+/*TODO*///			if (((1 << *pridata) & pmask) == 0)
+/*TODO*///				*dstdata = paldata[*srcdata];
+/*TODO*///			*pridata = 31;
+/*TODO*///			srcdata++;
+/*TODO*///			dstdata++;
+/*TODO*///			pridata++;
+/*TODO*///		}
+/*TODO*///
+/*TODO*///		srcdata += srcmodulo;
+/*TODO*///		dstdata += dstmodulo;
+/*TODO*///		pridata += dstmodulo;
+/*TODO*///		srcheight--;
+/*TODO*///	}
+/*TODO*///})
+/*TODO*///
+/*TODO*///DECLARE(blockmove_8toN_opaque_pri_flipx,(
+/*TODO*///		const UINT8 *srcdata,int srcwidth,int srcheight,int srcmodulo,
+/*TODO*///		DATA_TYPE *dstdata,int dstmodulo,
+/*TODO*///		const UINT16 *paldata,UINT8 *pridata,UINT32 pmask),
+/*TODO*///{
+/*TODO*///	DATA_TYPE *end;
+/*TODO*///
+/*TODO*///	pmask |= (1<<31);
+/*TODO*///
+/*TODO*///	srcmodulo += srcwidth;
+/*TODO*///	dstmodulo -= srcwidth;
+/*TODO*///	//srcdata += srcwidth-1;
+/*TODO*///
+/*TODO*///	while (srcheight)
+/*TODO*///	{
+/*TODO*///		end = dstdata + srcwidth;
+/*TODO*///		while (dstdata <= end - 8)
+/*TODO*///		{
+/*TODO*///			srcdata -= 8;
+/*TODO*///			if (((1 << pridata[0]) & pmask) == 0) dstdata[0] = paldata[srcdata[8]];
+/*TODO*///			if (((1 << pridata[1]) & pmask) == 0) dstdata[1] = paldata[srcdata[7]];
+/*TODO*///			if (((1 << pridata[2]) & pmask) == 0) dstdata[2] = paldata[srcdata[6]];
+/*TODO*///			if (((1 << pridata[3]) & pmask) == 0) dstdata[3] = paldata[srcdata[5]];
+/*TODO*///			if (((1 << pridata[4]) & pmask) == 0) dstdata[4] = paldata[srcdata[4]];
+/*TODO*///			if (((1 << pridata[5]) & pmask) == 0) dstdata[5] = paldata[srcdata[3]];
+/*TODO*///			if (((1 << pridata[6]) & pmask) == 0) dstdata[6] = paldata[srcdata[2]];
+/*TODO*///			if (((1 << pridata[7]) & pmask) == 0) dstdata[7] = paldata[srcdata[1]];
+/*TODO*///			memset(pridata,31,8);
+/*TODO*///			dstdata += 8;
+/*TODO*///			pridata += 8;
+/*TODO*///		}
+/*TODO*///		while (dstdata < end)
+/*TODO*///		{
+/*TODO*///			if (((1 << *pridata) & pmask) == 0)
+/*TODO*///				*dstdata = paldata[*srcdata];
+/*TODO*///			*pridata = 31;
+/*TODO*///			srcdata--;
+/*TODO*///			dstdata++;
+/*TODO*///			pridata++;
+/*TODO*///		}
+/*TODO*///
+/*TODO*///		srcdata += srcmodulo;
+/*TODO*///		dstdata += dstmodulo;
+/*TODO*///		pridata += dstmodulo;
+/*TODO*///		srcheight--;
+/*TODO*///	}
+/*TODO*///})
+/*TODO*///
+/*TODO*///
     public static void blockmove_8toN_opaque_raw(
             UBytePtr srcdata, int srcwidth, int srcheight, int srcmodulo,
             UBytePtr dstdata, int dstmodulo,
@@ -2954,188 +2950,193 @@ public static void blockmove_8toN_opaque_pri_flipx8(
 /*TODO*///		DATA_TYPE *dstdata,int dstmodulo,
 /*TODO*///		const UINT16 *paldata,int transpen,UINT8 *pridata,UINT32 pmask),
 /*TODO*///{
-    public static void blockmove_8toN_transpen_pri8(UBytePtr srcdata, int srcwidth, int srcheight, int srcmodulo,
-            UBytePtr dstdata, int dstmodulo, UShortArray paldata, int transpen, UBytePtr pridata, int pmask) {
-        int end;
-        int trans4;
-        IntPtr sd4;//UINT32 *sd4;
-
-        pmask |= (1 << 31);
-
-        srcmodulo -= srcwidth;
-        dstmodulo -= srcwidth;
-
-        trans4 = transpen * 0x01010101;
-
-        while (srcheight != 0) {
-            end = dstdata.offset + srcwidth;
-            while (((long) srcdata.offset & 3) != 0 && dstdata.offset < end) //while (((long)srcdata & 3) && dstdata < end)	/* longword align */
-            {
-                int col;
-
-                col = srcdata.readinc();
-                if (col != transpen) {
-                    if (((1 << pridata.read()) & pmask) == 0) {
-                        dstdata.write(paldata.read(col));
-                    }
-                    pridata.write(31);
-                }
-                dstdata.offset++;
-                pridata.offset++;
-            }
-            sd4 = new IntPtr(srcdata);//sd4 = (UINT32 *)srcdata;
-            while (dstdata.offset <= end - 4) {
-                int col4;
-
-                if ((col4 = sd4.read(0)) != trans4) {
-                    int/*UINT32*/ xod4;
-
-                    xod4 = col4 ^ trans4;
-                    if ((xod4 & 0x000000ff) != 0) {
-                        if (((1 << pridata.read(0)) & pmask) == 0) {
-                            dstdata.write(0, paldata.read((col4) & 0xff));
-                        }
-                        pridata.write(0, 31);
-                    }
-                    if ((xod4 & 0x0000ff00) != 0) {
-                        if (((1 << pridata.read(1)) & pmask) == 0) {
-                            dstdata.write(1, paldata.read((col4 >> 8) & 0xff));
-                        }
-                        pridata.write(1, 31);
-                    }
-                    if ((xod4 & 0x00ff0000) != 0) {
-                        if (((1 << pridata.read(2)) & pmask) == 0) {
-                            dstdata.write(2, paldata.read((col4 >> 16) & 0xff));
-                        }
-                        pridata.write(2, 31);
-                    }
-                    if ((xod4 & 0xff000000) != 0) {
-                        if (((1 << pridata.read(3)) & pmask) == 0) {
-                            dstdata.write(3, paldata.read(col4 >> 24));
-                        }
-                        pridata.write(3, 31);
-                    }
-                }
-                sd4.base += 4;
-                dstdata.offset += 4;
-                pridata.offset += 4;
-            }
-            srcdata.set(sd4.readCA(), sd4.getBase());//srcdata = (unsigned char *)sd4;
-            while (dstdata.offset < end) {
-                int col;
-
-                col = srcdata.readinc();
-                if (col != transpen) {
-                    if (((1 << pridata.read()) & pmask) == 0) {
-                        dstdata.write(paldata.read(col));
-                    }
-                    pridata.write(31);
-                }
-                dstdata.offset++;
-                pridata.offset++;
-            }
-
-            srcdata.offset += srcmodulo;
-            dstdata.offset += dstmodulo;
-            pridata.offset += dstmodulo;
-            srcheight--;
-        }
-    }
-
-    public static void blockmove_8toN_transpen_pri_flipx8(
-            UBytePtr srcdata, int srcwidth, int srcheight, int srcmodulo,
-            UBytePtr dstdata, int dstmodulo,
-            UShortArray paldata, int transpen, UBytePtr pridata, int/*UINT32*/ pmask) {
-        int end;
-        int trans4;
-        IntPtr sd4;//UINT32 *sd4;
-
-        pmask |= (1 << 31);
-
-        srcmodulo += srcwidth;
-        dstmodulo -= srcwidth;
-        //srcdata += srcwidth-1;
-        srcdata.offset -= 3;
-
-        trans4 = transpen * 0x01010101;
-
-        while (srcheight != 0) {
-            end = dstdata.offset + srcwidth;
-            while (((long) srcdata.offset & 3) != 0 && dstdata.offset < end) //while (((long)srcdata & 3) && dstdata < end)	/* longword align */
-            {
-                int col;
-
-                col = srcdata.read(3);
-                srcdata.offset--;
-                if (col != transpen) {
-                    if (((1 << pridata.read()) & pmask) == 0) {
-                        dstdata.write(paldata.read(col));
-                    }
-                    pridata.write(31);
-                }
-                dstdata.offset++;
-                pridata.offset++;
-            }
-            sd4 = new IntPtr(srcdata);//sd4 = (UINT32 *)srcdata;
-            while (dstdata.offset <= end - 4) {
-                int/*UINT32*/ col4;
-
-                if ((col4 = sd4.read(0)) != trans4) {
-                    int /*UINT32*/ xod4;
-
-                    xod4 = col4 ^ trans4;
-                    if ((xod4 & 0xff000000) != 0) {
-                        if (((1 << pridata.read(BL0)) & pmask) == 0) {
-                            dstdata.write(BL0, paldata.read(col4 >> 24));
-                        }
-                        pridata.write(BL0, 31);
-                    }
-                    if ((xod4 & 0x00ff0000) != 0) {
-                        if (((1 << pridata.read(BL1)) & pmask) == 0) {
-                            dstdata.write(BL1, paldata.read((col4 >> 16) & 0xff));
-                        }
-                        pridata.write(BL1, 31);
-                    }
-                    if ((xod4 & 0x0000ff00) != 0) {
-                        if (((1 << pridata.read(BL2)) & pmask) == 0) {
-                            dstdata.write(BL2, paldata.read((col4 >> 8) & 0xff));
-                        }
-                        pridata.write(BL2, 31);
-                    }
-                    if ((xod4 & 0x000000ff) != 0) {
-                        if (((1 << pridata.read(BL3)) & pmask) == 0) {
-                            dstdata.write(BL3, paldata.read(col4 & 0xff));
-                        }
-                        pridata.write(BL3, 31);
-                    }
-                }
-                sd4.base -= 4;
-                dstdata.offset += 4;
-                pridata.offset += 4;
-            }
-            srcdata.set(sd4.readCA(), sd4.getBase());//srcdata = (unsigned char *)sd4;
-            while (dstdata.offset < end) {
-                int col;
-
-                col = srcdata.read(3);
-                srcdata.offset--;
-                if (col != transpen) {
-                    if (((1 << pridata.read()) & pmask) == 0) {
-                        dstdata.write(paldata.read(col));
-                    }
-                    pridata.write(31);
-                }
-                dstdata.offset++;
-                pridata.offset++;
-            }
-
-            srcdata.offset += srcmodulo;
-            dstdata.offset += dstmodulo;
-            pridata.offset += dstmodulo;
-            srcheight--;
-        }
-    }
-
+/*TODO*///	DATA_TYPE *end;
+/*TODO*///	int trans4;
+/*TODO*///	UINT32 *sd4;
+/*TODO*///
+/*TODO*///	pmask |= (1<<31);
+/*TODO*///
+/*TODO*///	srcmodulo -= srcwidth;
+/*TODO*///	dstmodulo -= srcwidth;
+/*TODO*///
+/*TODO*///	trans4 = transpen * 0x01010101;
+/*TODO*///
+/*TODO*///	while (srcheight)
+/*TODO*///	{
+/*TODO*///		end = dstdata + srcwidth;
+/*TODO*///		while (((long)srcdata & 3) && dstdata < end)	/* longword align */
+/*TODO*///		{
+/*TODO*///			int col;
+/*TODO*///
+/*TODO*///			col = *(srcdata++);
+/*TODO*///			if (col != transpen)
+/*TODO*///			{
+/*TODO*///				if (((1 << *pridata) & pmask) == 0)
+/*TODO*///					*dstdata = paldata[col];
+/*TODO*///				*pridata = 31;
+/*TODO*///			}
+/*TODO*///			dstdata++;
+/*TODO*///			pridata++;
+/*TODO*///		}
+/*TODO*///		sd4 = (UINT32 *)srcdata;
+/*TODO*///		while (dstdata <= end - 4)
+/*TODO*///		{
+/*TODO*///			UINT32 col4;
+/*TODO*///
+/*TODO*///			if ((col4 = *(sd4++)) != trans4)
+/*TODO*///			{
+/*TODO*///				UINT32 xod4;
+/*TODO*///
+/*TODO*///				xod4 = col4 ^ trans4;
+/*TODO*///				if (xod4 & 0x000000ff)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL0]) & pmask) == 0)
+/*TODO*///						dstdata[BL0] = paldata[(col4) & 0xff];
+/*TODO*///					pridata[BL0] = 31;
+/*TODO*///				}
+/*TODO*///				if (xod4 & 0x0000ff00)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL1]) & pmask) == 0)
+/*TODO*///						dstdata[BL1] = paldata[(col4 >>  8) & 0xff];
+/*TODO*///					pridata[BL1] = 31;
+/*TODO*///				}
+/*TODO*///				if (xod4 & 0x00ff0000)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL2]) & pmask) == 0)
+/*TODO*///						dstdata[BL2] = paldata[(col4 >> 16) & 0xff];
+/*TODO*///					pridata[BL2] = 31;
+/*TODO*///				}
+/*TODO*///				if (xod4 & 0xff000000)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL3]) & pmask) == 0)
+/*TODO*///						dstdata[BL3] = paldata[col4 >> 24];
+/*TODO*///					pridata[BL3] = 31;
+/*TODO*///				}
+/*TODO*///			}
+/*TODO*///			dstdata += 4;
+/*TODO*///			pridata += 4;
+/*TODO*///		}
+/*TODO*///		srcdata = (UINT8 *)sd4;
+/*TODO*///		while (dstdata < end)
+/*TODO*///		{
+/*TODO*///			int col;
+/*TODO*///
+/*TODO*///			col = *(srcdata++);
+/*TODO*///			if (col != transpen)
+/*TODO*///			{
+/*TODO*///				if (((1 << *pridata) & pmask) == 0)
+/*TODO*///					*dstdata = paldata[col];
+/*TODO*///				*pridata = 31;
+/*TODO*///			}
+/*TODO*///			dstdata++;
+/*TODO*///			pridata++;
+/*TODO*///		}
+/*TODO*///
+/*TODO*///		srcdata += srcmodulo;
+/*TODO*///		dstdata += dstmodulo;
+/*TODO*///		pridata += dstmodulo;
+/*TODO*///		srcheight--;
+/*TODO*///	}
+/*TODO*///})
+/*TODO*///
+/*TODO*///DECLARE(blockmove_8toN_transpen_pri_flipx,(
+/*TODO*///		const UINT8 *srcdata,int srcwidth,int srcheight,int srcmodulo,
+/*TODO*///		DATA_TYPE *dstdata,int dstmodulo,
+/*TODO*///		const UINT16 *paldata,int transpen,UINT8 *pridata,UINT32 pmask),
+/*TODO*///{
+/*TODO*///	DATA_TYPE *end;
+/*TODO*///	int trans4;
+/*TODO*///	UINT32 *sd4;
+/*TODO*///
+/*TODO*///	pmask |= (1<<31);
+/*TODO*///
+/*TODO*///	srcmodulo += srcwidth;
+/*TODO*///	dstmodulo -= srcwidth;
+/*TODO*///	//srcdata += srcwidth-1;
+/*TODO*///	srcdata -= 3;
+/*TODO*///
+/*TODO*///	trans4 = transpen * 0x01010101;
+/*TODO*///
+/*TODO*///	while (srcheight)
+/*TODO*///	{
+/*TODO*///		end = dstdata + srcwidth;
+/*TODO*///		while (((long)srcdata & 3) && dstdata < end)	/* longword align */
+/*TODO*///		{
+/*TODO*///			int col;
+/*TODO*///
+/*TODO*///			col = srcdata[3];
+/*TODO*///			srcdata--;
+/*TODO*///			if (col != transpen)
+/*TODO*///			{
+/*TODO*///				if (((1 << *pridata) & pmask) == 0)
+/*TODO*///					*dstdata = paldata[col];
+/*TODO*///				*pridata = 31;
+/*TODO*///			}
+/*TODO*///			dstdata++;
+/*TODO*///			pridata++;
+/*TODO*///		}
+/*TODO*///		sd4 = (UINT32 *)srcdata;
+/*TODO*///		while (dstdata <= end - 4)
+/*TODO*///		{
+/*TODO*///			UINT32 col4;
+/*TODO*///
+/*TODO*///			if ((col4 = *(sd4--)) != trans4)
+/*TODO*///			{
+/*TODO*///				UINT32 xod4;
+/*TODO*///
+/*TODO*///				xod4 = col4 ^ trans4;
+/*TODO*///				if (xod4 & 0xff000000)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL0]) & pmask) == 0)
+/*TODO*///						dstdata[BL0] = paldata[col4 >> 24];
+/*TODO*///					pridata[BL0] = 31;
+/*TODO*///				}
+/*TODO*///				if (xod4 & 0x00ff0000)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL1]) & pmask) == 0)
+/*TODO*///						dstdata[BL1] = paldata[(col4 >> 16) & 0xff];
+/*TODO*///					pridata[BL1] = 31;
+/*TODO*///				}
+/*TODO*///				if (xod4 & 0x0000ff00)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL2]) & pmask) == 0)
+/*TODO*///						dstdata[BL2] = paldata[(col4 >>  8) & 0xff];
+/*TODO*///					pridata[BL2] = 31;
+/*TODO*///				}
+/*TODO*///				if (xod4 & 0x000000ff)
+/*TODO*///				{
+/*TODO*///					if (((1 << pridata[BL3]) & pmask) == 0)
+/*TODO*///						dstdata[BL3] = paldata[col4 & 0xff];
+/*TODO*///					pridata[BL3] = 31;
+/*TODO*///				}
+/*TODO*///			}
+/*TODO*///			dstdata += 4;
+/*TODO*///			pridata += 4;
+/*TODO*///		}
+/*TODO*///		srcdata = (UINT8 *)sd4;
+/*TODO*///		while (dstdata < end)
+/*TODO*///		{
+/*TODO*///			int col;
+/*TODO*///
+/*TODO*///			col = srcdata[3];
+/*TODO*///			srcdata--;
+/*TODO*///			if (col != transpen)
+/*TODO*///			{
+/*TODO*///				if (((1 << *pridata) & pmask) == 0)
+/*TODO*///					*dstdata = paldata[col];
+/*TODO*///				*pridata = 31;
+/*TODO*///			}
+/*TODO*///			dstdata++;
+/*TODO*///			pridata++;
+/*TODO*///		}
+/*TODO*///
+/*TODO*///		srcdata += srcmodulo;
+/*TODO*///		dstdata += dstmodulo;
+/*TODO*///		pridata += dstmodulo;
+/*TODO*///		srcheight--;
+/*TODO*///	}
+/*TODO*///})
+/*TODO*///
     public static void blockmove_8toN_transpen_raw(
             UBytePtr srcdata, int srcwidth, int srcheight, int srcmodulo,
             UBytePtr dstdata, int dstmodulo,
@@ -4622,10 +4623,10 @@ public static void blockmove_8toN_opaque_pri_flipx8(
 /*TODO*///
 /*TODO*///
     public static void drawgfx_core8(
-            mame_bitmap dest, GfxElement gfx,
+            osd_bitmap dest, GfxElement gfx,
             /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color,
-            mame_bitmap pri_buffer,/*UINT32*/ int pri_mask) {
+            osd_bitmap pri_buffer,/*UINT32*/ int pri_mask) {
         int ox;
         int oy;
         int ex;
@@ -4711,35 +4712,28 @@ public static void blockmove_8toN_opaque_pri_flipx8(
             case TRANSPARENCY_NONE:
                 if (pribuf != null) {
                     if (flipx != 0) {
-                        blockmove_8toN_opaque_pri_flipx8(sd, sw, sh, sm, dd, dm, paldata, pribuf, pri_mask);
+                        blockmove_8toN_opaque_pri_flipx(sd, sw, sh, sm, dd, dm, paldata, pribuf, pri_mask);
                     } else {
-                        blockmove_8toN_opaque_pri8(sd, sw, sh, sm, dd, dm, paldata, pribuf, pri_mask);
+                        blockmove_8toN_opaque_pri(sd, sw, sh, sm, dd, dm, paldata, pribuf, pri_mask);
                     }
-
-                    /*TODO*///					BLOCKMOVE(8toN_opaque_pri,flipx,(sd,sw,sh,sm,dd,dm,paldata,pribuf,pri_mask));
+                } else if (flipx != 0) {
+                    blockmove_8toN_opaque_flipx8(sd, sw, sh, sm, dd, dm, paldata);
                 } else {
-                    if (flipx != 0) {
-                        blockmove_8toN_opaque_flipx8(sd, sw, sh, sm, dd, dm, paldata);
-                    } else {
-                        blockmove_8toN_opaque8(sd, sw, sh, sm, dd, dm, paldata);
-                    }
+                    blockmove_8toN_opaque8(sd, sw, sh, sm, dd, dm, paldata);
                 }
 
                 break;
             case TRANSPARENCY_PEN:
                 if (pribuf != null) {
                     if (flipx != 0) {
-                        blockmove_8toN_transpen_pri_flipx8(sd, sw, sh, sm, dd, dm, paldata, transparent_color, pribuf, pri_mask);
+                        blockmove_8toN_transpen_pri_flipx(sd, sw, sh, sm, dd, dm, paldata, transparent_color, pribuf, pri_mask);
                     } else {
-                        blockmove_8toN_transpen_pri8(sd, sw, sh, sm, dd, dm, paldata, transparent_color, pribuf, pri_mask);
+                        blockmove_8toN_transpen_pri(sd, sw, sh, sm, dd, dm, paldata, transparent_color, pribuf, pri_mask);
                     }
-                    //BLOCKMOVE(8toN_transpen_pri,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color,pribuf,pri_mask));
+                } else if (flipx != 0) {
+                    blockmove_8toN_transpen_flipx8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
                 } else {
-                    if (flipx != 0) {
-                        blockmove_8toN_transpen_flipx8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
-                    } else {
-                        blockmove_8toN_transpen8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
-                    }
+                    blockmove_8toN_transpen8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
                 }
                 break;
             case TRANSPARENCY_PENS:
@@ -4764,24 +4758,18 @@ public static void blockmove_8toN_opaque_pri_flipx8(
                 }
                 break;
             case TRANSPARENCY_THROUGH:
-                //throw new UnsupportedOperationException("unsupported");
-            /*TODO*///				if (pribuf)
-/*TODO*///usrintf_showmessage("pdrawgfx TRANS_THROUGH not supported");
-/*TODO*/////					BLOCKMOVE(8toN_transthrough,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color));
-/*TODO*///				else
-/*TODO*///					BLOCKMOVE(8toN_transthrough,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color));
-/*TODO*///				break;
-                if(flipx!=0)
-                {
-                    blockmove_8toN_transthrough_8(sd,sw,sh,sm,dd,dm,paldata,transparent_color);
+                if (pribuf != null) {
+                    usrintf_showmessage("pdrawgfx TRANS_THROUGH not supported");
+                } else {
+                    if (flipx != 0) {
+                        blockmove_8toN_transthrough_flipx(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                    } else {
+                        blockmove_8toN_transthrough(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                    }
                 }
-                else
-                {
-                    blockmove_8toN_transthrough_flipx_8(sd,sw,sh,sm,dd,dm,paldata,transparent_color);
-                }
+
                 break;
-                        
-/*TODO*///
+
             case TRANSPARENCY_PEN_TABLE:
                 throw new UnsupportedOperationException("unsupported");
             /*TODO*///				if (pribuf)
@@ -5016,7 +5004,7 @@ public static void blockmove_8toN_opaque_pri_flipx8(
 /*TODO*///})
 /*TODO*///
     public static void copybitmap_core8(
-            mame_bitmap dest, mame_bitmap src,
+            osd_bitmap dest, osd_bitmap src,
             int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color) {
         int ox;
@@ -5112,7 +5100,7 @@ public static void blockmove_8toN_opaque_pri_flipx8(
 
                 case TRANSPARENCY_PEN_RAW:
                     if (flipx != 0) {
-                        throw new UnsupportedOperationException("unimplemented");//BLOCKMOVE(NtoN_transpen_noremap,flipx,(sd,sw,sh,sm,dd,dm,transparent_color));
+                        blockmove_NtoN_transpen_noremap_flipx8(sd, sw, sh, sm, dd, dm, transparent_color);
                     } else {
                         blockmove_NtoN_transpen_noremap8(sd, sw, sh, sm, dd, dm, transparent_color);
                     }

@@ -12,42 +12,52 @@
  */ 
 package mess.systems;
 
-import static WIP.mame.memoryH.*;
-import static WIP.mame.osdependH.*;
-import static WIP2.mame.mameH.*;
+import static arcadeflex.fucPtr.*;
+import static arcadeflex.libc.cstring.strcmp;
+import arcadeflex.libc.ptr.UBytePtr;
+import static arcadeflex.video.osd_set_visible_area;
+import static arcadeflex.video.osd_skip_this_frame;
 import static mess.mess.*;
 import static old.mame.inptportH.*;
 import static old.mame.inptport.*;
-import static WIP.arcadeflex.fucPtr.*;
-import static WIP.mame.mame.*;
-import static WIP.mame.sndintrfH.*;
-import static WIP.mame.sndintrf.*;
-import static WIP2.mame.commonH.REGION_CPU1;
-import static WIP2.mess.osdepend.fileio.*;
+
 import static old.mame.drawgfx.*;
-import static old.mame.drawgfxH.*;
 import static old.mame.inputH.*;
-import static old.mame.driverH.*;
-import static mame.commonH.*;
+import static mame056.commonH.*;
 import static old.arcadeflex.libc_old.*;
+//import static old.arcadeflex.fileio.*;
 
 import static mess.messH.*;
 import static mess.deviceH.*;
-import static WIP2.mame.usrintrf.*;
-import static old.mame.cpuintrf.*;
-import static old.mame.cpuintrfH.*;
-import static old.mame.cpuintrf.*;
-import static WIP.arcadeflex.video.*;
 
 import static common.ptr.*;
 import static consoleflex.funcPtr.*;
+import mame.drawgfxH.rectangle;
+import static mame.driverH.DEFAULT_60HZ_VBLANK_DURATION;
+import mame.driverH.GameDriver;
+import mame.driverH.MachineDriver;
+import static mame.driverH.SOUND_SUPPORTS_STEREO;
+import static mame.driverH.VIDEO_TYPE_RASTER;
+import static mame.osdependH.OSD_FILETYPE_ROM;
+import mame.osdependH.osd_bitmap;
+import mame.sndintrfH.CustomSound_interface;
+import mame.sndintrfH.MachineSound;
+import static mame.sndintrfH.SOUND_CUSTOM;
+import static mame056.cpuexec.ignore_interrupt;
+import mame056.cpuexecH.MachineCPU;
+import static mame056.cpuintrfH.CPU_M6502;
+import static mame056.cpuintrfH.CPU_M65SC02;
+import static mame056.memoryH.*;
+
 import static mess_spec.common.*;
 import static old.arcadeflex.osdepend.logerror;
+import static old.mame.usrintrf.ui_text;
 
 import static mess.includes.lynxH.*;
 import static mess.machine.lynx.*;
 import static mess.sndhrdw.lynx.*;
-
+import static old2.mame.mame.Machine;
+import static mess.osdepend.fileio.*;
 
 
 public class lynx
@@ -62,23 +72,23 @@ public class lynx
         public static final int IMAGE_VERIFY_PASS = 1;
         public static final int IMAGE_VERIFY_FAIL = 0;
 	
-	static MemoryReadAddress lynx_readmem[] = {
-            new MemoryReadAddress( 0x0000, 0xfbff, MRA_RAM ),
-            new MemoryReadAddress( 0xfc00, 0xfcff, MRA_BANK1 ),
-            new MemoryReadAddress( 0xfd00, 0xfdff, MRA_BANK2 ),
-            new MemoryReadAddress( 0xfe00, 0xfff7, MRA_BANK3 ),
-            new MemoryReadAddress( 0xfff8, 0xfff9, MRA_RAM ),
-            new MemoryReadAddress( 0xfffa, 0xffff, MRA_BANK4 ),
-            new MemoryReadAddress(-1) /* end of table */};
+	static Memory_ReadAddress lynx_readmem[] = {
+            new Memory_ReadAddress( 0x0000, 0xfbff, MRA_RAM ),
+            new Memory_ReadAddress( 0xfc00, 0xfcff, MRA_BANK1 ),
+            /*TODO*///new Memory_ReadAddress( 0xfd00, 0xfdff, MRA_BANK2 ),
+            /*TODO*///new Memory_ReadAddress( 0xfe00, 0xfff7, MRA_BANK3 ),
+            new Memory_ReadAddress( 0xfff8, 0xfff9, MRA_RAM ),
+            /*TODO*///new Memory_ReadAddress( 0xfffa, 0xffff, MRA_BANK4 ),
+            new Memory_ReadAddress(MEMPORT_MARKER, 0) /* end of table */};
 	
-	static MemoryWriteAddress lynx_writemem[] = {
-            new MemoryWriteAddress( 0x0000, 0xfbff, MWA_RAM ),
-            new MemoryWriteAddress( 0xfc00, 0xfcff, MWA_BANK1 ),
-            new MemoryWriteAddress( 0xfd00, 0xfdff, MWA_BANK2 ),
-            new MemoryWriteAddress( 0xfe00, 0xfff8, MWA_RAM ),
-            new MemoryWriteAddress( 0xfff9, 0xfff9, lynx_memory_config ),
-            new MemoryWriteAddress( 0xfffa, 0xffff, MWA_RAM ),
-            new MemoryWriteAddress(-1) /* end of table */};
+	static Memory_WriteAddress lynx_writemem[] = {
+            new Memory_WriteAddress( 0x0000, 0xfbff, MWA_RAM ),
+            /*TODO*///new Memory_WriteAddress( 0xfc00, 0xfcff, MWA_BANK1 ),
+            /*TODO*///new Memory_WriteAddress( 0xfd00, 0xfdff, MWA_BANK2 ),
+            new Memory_WriteAddress( 0xfe00, 0xfff8, MWA_RAM ),
+            new Memory_WriteAddress( 0xfff9, 0xfff9, lynx_memory_config ),
+            new Memory_WriteAddress( 0xfffa, 0xffff, MWA_RAM ),
+            new Memory_WriteAddress(MEMPORT_MARKER, 0) /* end of table */};
 	
 	static InputPortPtr input_ports_lynx = new InputPortPtr(){ public void handler() { 
 		PORT_START(); 
@@ -202,7 +212,7 @@ public class lynx
 	
 	//void lynx_vh_screenrefresh (mame_bitmap bitmap, int full_refresh)
 	public static VhUpdatePtr lynx_vh_screenrefresh = new VhUpdatePtr() {
-            public void handler(mame_bitmap bitmap, int full_refresh) {
+            public void handler(osd_bitmap bitmap, int full_refresh) {
                 int j;
 	
                 /*TODO*/////lynx_audio_debug(bitmap);
@@ -265,7 +275,7 @@ public class lynx
 		30, DEFAULT_60HZ_VBLANK_DURATION, // lcd!, varies
 		1,				/* single CPU */
 		lynx_machine_init,
-		null,//pc1401_machine_stop,
+		//null,//pc1401_machine_stop,
 	
 		// 160 x 102
 	//	160, 102, { 0, 160 - 1, 0, 102 - 1},
@@ -304,7 +314,7 @@ public class lynx
 		30, DEFAULT_60HZ_VBLANK_DURATION, // lcd!
 		1,				/* single CPU */
 		lynx_machine_init,
-		null,//pc1401_machine_stop,
+		//null,//pc1401_machine_stop,
 	
 		// 160 x 102
 	//	160, 102, { 0, 160 - 1, 0, 102 - 1},
@@ -418,7 +428,7 @@ public class lynx
 			return 0;
 		}
                 System.out.println("lynx_init_cart1");
-		if ((cartfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0)) == null)
+		if ((cartfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_ROM, 0)) == null)
 		{
 			logerror("%s not found\n",device_filename(IO_CARTSLOT,id));
 			return 1;
@@ -484,7 +494,7 @@ public class lynx
 			return 0;
 		}
 	
-		if ((cartfile = (FILE)image_fopen(IO_QUICKLOAD, id, OSD_FILETYPE_IMAGE, 0)) == null)
+		if ((cartfile = (FILE)image_fopen(IO_QUICKLOAD, id, OSD_FILETYPE_ROM, 0)) == null)
 		{
 			logerror("%s not found\n",device_filename(IO_QUICKLOAD,id));
 			return 1;

@@ -1,6 +1,6 @@
 package common.libc;
 
-import static common.ptr.*;
+import arcadeflex.libc.ptr.UBytePtr;
 
 /**
  *
@@ -55,12 +55,6 @@ public class cstring {
         }
     }
 
-    public static void memset(ShortPtr buf, int value, int size) {
-        for (int i = 0; i < size; i++) {
-            buf.write(i, (short) value);
-        }
-    }
-
     /**
      * memcpy
      */
@@ -93,7 +87,7 @@ public class cstring {
             dst.write(i + dstoffs, src[i]);
         }
     }
-
+    
     public static void memcpy(UBytePtr dst, int dstoffs, char[] src, int size) {
         for (int i = 0; i < Math.min(size, src.length); i++) {
             dst.write(i + dstoffs, src[i]);
@@ -123,46 +117,5 @@ public class cstring {
             }
         }
         return 0;
-    }
-
-    public static int memcmp(char[] dist, int dstoffs, String src, int size) {
-        char[] srcc = src.toCharArray();
-        for (int i = 0; i < size; i++) {
-            if (dist[(dstoffs + i)] != srcc[i]) {
-                return -1;
-
-            }
-        }
-        return 0;
-    }
-        public static String strrchr(String str,char ch)
-    {
-        int found = str.lastIndexOf(ch);
-        if(found==-1)//not found
-        {
-            return null;
-        }
-        else
-        {
-            return Integer.toString(found);//return in String
-        }
-    }
-    /**
-     * Locate first occurrence of character in string Returns a pointer to the first occurrence of character in the C string str.
-     * @param str
-     * @param ch
-     * @return 
-     */
-    public static String strchr(String str,char ch)
-    {
-        int found = str.indexOf(ch);
-        if(found==-1)//not found
-        {
-            return null;
-        }
-        else
-        {
-            return Integer.toString(found);//return in String
-        }
     }
 }

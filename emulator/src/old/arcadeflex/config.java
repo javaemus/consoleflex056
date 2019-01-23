@@ -14,8 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static old.arcadeflex.osdepend.ignorecfg;
-import static WIP.arcadeflex.video.*;
-import static WIP.mame.mame.options;
+import static arcadeflex.video.*;
+import static old2.mame.mame.options;
 
 public class config {
 

@@ -1,6 +1,6 @@
 package common;
 
-import common.ptr.*;
+import arcadeflex.libc.ptr.UBytePtr;
 
 /**
  *

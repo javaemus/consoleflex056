@@ -12,7 +12,8 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static WIP.mame.mame.Machine;
+
+import static old2.mame.mame.Machine;
 
 /**
  *

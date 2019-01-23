@@ -8,29 +8,32 @@ This file is a set of function calls and defs required for MESS.
  */ 
 package mess;
 
+import static arcadeflex.libc.cstring.strrchr;
 import static mess.deviceH.*;
 import static mess.device.*;
 import static mess.messH.*;
-import static common.libc.cstring.*;
-import static WIP2.mame.mameH.*;
-import static WIP.mame.mame.*;
-import static WIP.mame.common.*;
-import static WIP2.mess.osdepend.fileio.*;
-import static WIP2.mess.machine.flopdrv.*;
-import static WIP2.mess.includes.flopdrvH.*;
+import static mess.includes.flopdrvH.*;
+import static mess.machine.flopdrv.*;
 
-import static WIP2.mame.usrintrf.*;
+import static common.libc.cstring.*;
 
 import static common.libc.cstdio.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.arcadeflex.libc_old.*;
 import static common.ptr.*;
+import mame.driverH.GameDriver;
+import mame.osdependH.osd_bitmap;
+import static mess.osdepend.fileio.osd_fopen;
+
+//import static old.arcadeflex.fileio.osd_fopen;
 import static old.arcadeflex.libc_old.SEEK_SET;
 import static old.mame.input.*;
 import static old.mame.inputH.*;
 import static old.mame.inptportH.*;
-
-import WIP.mame.osdependH.mame_bitmap;
+import static old.mame.usrintrf.*;
+import static old2.mame.mame.Machine;
+import static old2.mame.mame.options;
+import static old2.mame.mame.need_to_clear_bitmap;
 
 public class mess
 {
@@ -850,7 +853,7 @@ public class mess
 /*TODO*/////	#endif
 
 
-        public static int displayimageinfo(mame_bitmap bitmap, int selected)
+        public static int displayimageinfo(osd_bitmap bitmap, int selected)
         {
             //char buf[2048], *dst = buf;
         String dst = "";

@@ -4,17 +4,21 @@
  */
 package mess_spec;
 
-import static WIP.mame.mame.*;
-import static WIP.mame.osdependH.OSD_FILETYPE_ROM;
-import static mame.commonH.*;
-import static WIP2.mame.mameH.*;
-import mess.messH.GameDriver;
-import static WIP2.mess.osdepend.fileio.*;
+import static arcadeflex.libc.ptr.UBytePtr;
+import static mame056.commonH.*;
+
 import static common.libc.cstdlib.rand;
 import static common.ptr.*;
 import static common.libc.cstdio.*;
 import static common.libc.cstring.*;
+import mame.driverH.GameDriver;
+import static mame.osdependH.OSD_FILETYPE_ROM;
 import static old.arcadeflex.libc_old.*;
+import static old2.mame.mame.Machine;
+import static old2.mame.mameH.MAX_MEMORY_REGIONS;
+import static old2.mame.mameH.GameOptions;
+
+import static mess.osdepend.fileio.*;
 
 public class common {
 

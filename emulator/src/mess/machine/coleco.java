@@ -3,20 +3,26 @@
  */
 package mess.machine;
 
-import static WIP.arcadeflex.fucPtr.*;
+import static arcadeflex.fucPtr.*;
+import static arcadeflex.libc.ptr.UBytePtr;
 import static common.ptr.*;
-import static WIP.mame.osdependH.OSD_FILETYPE_IMAGE;
-import static WIP2.mame.commonH.REGION_CPU1;
-import static WIP2.mess.machine.dsk.*;
 import static mess.mess.device_filename;
 import static mess.mess.image_fopen;
 import static mess.deviceH.IO_CARTSLOT;
 import static consoleflex.funcPtr.*;
 import static old.arcadeflex.osdepend.logerror;
+//import static old.arcadeflex.fileio.*;
 import static old.mame.inptport.*;
-import static WIP2.mess.osdepend.fileio.*;
+
 import static common.libc.cstring.strlen;
+import static mame.commonH.REGION_CPU1;
+import static mame.osdependH.OSD_FILETYPE_ROM;
+import static mess.messH.IMAGE_VERIFY_FAIL;
+import static mess.messH.IMAGE_VERIFY_PASS;
+import static mess.messH.INIT_FAIL;
+import static mess.messH.INIT_PASS;
 import static mess_spec.common.*;
+import static mess.osdepend.fileio.*;
 
 public class coleco {
 
@@ -47,7 +53,7 @@ public class coleco {
                 return INIT_PASS;
             }
             /* Load the specified Cartridge File */
-            if ((cartfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE, 0)) == null) {
+            if ((cartfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_ROM, 0)) == null) {
                 logerror("Coleco - Unable to locate cartridge: %s\n", device_filename(IO_CARTSLOT, id));
                 return INIT_FAIL;
             }

@@ -48,10 +48,8 @@ public class inptportH {
         public String name;		/* name to display */
 
         public int[] seq = new int[SEQ_MAX]; /* input sequence affecting the input bits */
-//for MESS
-        public int /*UINT32*/ arg;				/* extra argument needed in some cases */
-	public int /*UINT16*/ min, max;		/* for analog controls */
-//ENDOF MESS
+
+
         public InputPort() {
             for (int i = 0; i < SEQ_MAX; i++) {
                 seq[i] = 0;
@@ -267,7 +265,7 @@ public class inptportH {
 
     /* start of table */
     public static InputPortTiny[] input_macro = null;
-    static ArrayList<InputPortTiny> inputload = new ArrayList<InputPortTiny>();
+    public static ArrayList<InputPortTiny> inputload = new ArrayList<InputPortTiny>();
 
 
     /* end of table */

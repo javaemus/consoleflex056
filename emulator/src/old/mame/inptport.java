@@ -22,18 +22,18 @@ package old.mame;
 import java.util.HashMap;
 
 import static old.arcadeflex.osdepend.logerror;
-import static old.mame.common.*;
-import static WIP2.mame.commonH.COIN_COUNTERS;
-import static old.mame.cpuintrf.cpu_scalebyfcount;
-import static old.mame.cpuintrf.cpu_set_reset_line;
-import static old.mame.cpuintrfH.PULSE_LINE;
-import static WIP.arcadeflex.fucPtr.ReadHandlerPtr;
+import static mame056.common.*;
+import static mame056.commonH.COIN_COUNTERS;
+import static arcadeflex.fucPtr.ReadHandlerPtr;
 import static old.mame.inptportH.*;
 import static old.mame.input.*;
 import static old.mame.inputH.*;
-import static WIP.mame.mame.Machine;
-import static WIP.mame.mame.options;
-import static WIP.mame.osdependH.*;
+import static old2.mame.mame.Machine;
+import static old2.mame.mame.options;
+import static mame.osdependH.*;
+import static mame056.cpuexec.cpu_scalebyfcount;
+import static mame056.cpuexec.cpu_set_reset_line;
+import static mame056.cpuintrfH.PULSE_LINE;
 
 public class inptport {
 
@@ -134,7 +134,6 @@ public class inptport {
             new ipd(IPT_UI_SHOW_FPS, "Show FPS", SEQ_DEF_5(KEYCODE_F11, CODE_NOT, KEYCODE_LCONTROL, CODE_NOT, KEYCODE_LSHIFT)),
             new ipd(IPT_UI_SHOW_PROFILER, "Show Profiler", SEQ_DEF_2(KEYCODE_F11, KEYCODE_LSHIFT)),
             new ipd(IPT_UI_SHOW_COLORS, "Show Colors", SEQ_DEF_2(KEYCODE_F11, KEYCODE_LCONTROL)),
-            new ipd( IPT_UI_TOGGLE_UI,         "UI Toggle",         SEQ_DEF_1(KEYCODE_SCRLOCK) ),//MESS
             new ipd(IPT_UI_SNAPSHOT, "Save Snapshot", SEQ_DEF_1(KEYCODE_F12)),
             new ipd(IPT_UI_TOGGLE_CHEAT, "Toggle Cheat", SEQ_DEF_1(KEYCODE_F5)),
             new ipd(IPT_UI_UP, "UI Up", SEQ_DEF_3(KEYCODE_UP, CODE_OR, JOYCODE_1_UP)),
@@ -159,8 +158,7 @@ public class inptport {
             new ipd(IPT_SERVICE2, "Service 2", SEQ_DEF_1(KEYCODE_0)),
             new ipd(IPT_SERVICE3, "Service 3", SEQ_DEF_1(KEYCODE_MINUS)),
             new ipd(IPT_SERVICE4, "Service 4", SEQ_DEF_1(KEYCODE_EQUALS)),
-            //new ipd(IPT_TILT, "Tilt", SEQ_DEF_1(KEYCODE_T)),
-            new ipd(IPT_TILT, "Tilt", SEQ_DEF_0()),  //FOR MESS
+            new ipd(IPT_TILT, "Tilt", SEQ_DEF_1(KEYCODE_T)),
             new ipd(IPT_JOYSTICK_UP | IPF_PLAYER1, "P1 Up", SEQ_DEF_3(KEYCODE_UP, CODE_OR, JOYCODE_1_UP)),
             new ipd(IPT_JOYSTICK_DOWN | IPF_PLAYER1, "P1 Down", SEQ_DEF_3(KEYCODE_DOWN, CODE_OR, JOYCODE_1_DOWN)),
             new ipd(IPT_JOYSTICK_LEFT | IPF_PLAYER1, "P1 Left", SEQ_DEF_3(KEYCODE_LEFT, CODE_OR, JOYCODE_1_LEFT)),

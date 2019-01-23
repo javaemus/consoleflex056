@@ -3,8 +3,8 @@ package old.arcadeflex;
 
 import java.awt.event.KeyEvent;
 
-import static WIP.arcadeflex.video.screen;
-import static WIP.arcadeflex.fucPtr.WriteHandlerPtr;
+import static arcadeflex.video.screen;
+import static arcadeflex.fucPtr.WriteHandlerPtr;
 import static old.mame.inputH.*;
 
 public class input {

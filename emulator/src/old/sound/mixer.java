@@ -3,15 +3,15 @@
  * using automatic conversion tool v0.01
  */
 package old.sound;
-
+import static arcadeflex.libc.cstdio.*;
+import arcadeflex.libc.ptr.*;
 import static common.ptr.*;
 
-import static common.libc.cstdio.*;
 import static old.arcadeflex.osdepend.logerror;
 import static old.arcadeflex.sound.*;
-import static old.mame.driverH.SOUND_SUPPORTS_STEREO;
-import static WIP.mame.mame.Machine;
-import static WIP.mame.sndintrf.sound_scalebufferpos;
+import static mame.driverH.SOUND_SUPPORTS_STEREO;
+import static old2.mame.mame.Machine;
+import static mame.sndintrf.sound_scalebufferpos;
 import static old.sound.mixerH.*;
 
 public class mixer {

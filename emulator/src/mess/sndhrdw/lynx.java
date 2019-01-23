@@ -7,8 +7,10 @@
  */ 
 package mess.sndhrdw;
 
-import static WIP.arcadeflex.fucPtr.*;
-import static WIP.mame.sndintrfH.*;
+import arcadeflex.fucPtr.ShStartPtr;
+import arcadeflex.fucPtr.ShStopPtr;
+import arcadeflex.fucPtr.ShUpdatePtr;
+import mame.sndintrfH.MachineSound;
 
 public class lynx
 {

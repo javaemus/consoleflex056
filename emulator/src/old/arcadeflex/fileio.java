@@ -5,16 +5,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import static common.libc.cstdio.*;
+
 import static old.arcadeflex.libc_old.*;
-import static common.ptr.*;
-import static WIP.mame.mame.mame_highscore_enabled;
-import static WIP.mame.osdependH.*;
-import static WIP2.mess.osdepend.fileio.*;
+import static arcadeflex.libc.ptr.*;
+import static arcadeflex.libc.cstdio.*;
+import static old2.arcadeflex.libc_v2.*;
+import static old2.mame.mame.mame_highscore_enabled;
+import static mame.osdependH.*;
+import static arcadeflex.fileio.*;
 
 public class fileio {
 
@@ -32,14 +32,24 @@ public class fileio {
     /*temp nvdir, will be configurable lator*/ static String nvdir = "nvram";
     static String hidir="hi";
     /*TODO*/ //     char *alternate_name;				   /* for "-romdir" */
-
+    public static final int kPlainFile = 1;
+    public static final int kRAMFile = 2;
+    public static final int kZippedFile = 3;
     private static boolean cacheExist = false, checkedExists = false;
     private static byte[] zipOnlineCacheData1 = null;
     private static String zipOnlineCacheName1 = "";
     private static byte[] zipOnlineCacheData2 = null;
     private static String zipOnlineCacheName2 = "";
 
+    static class FakeFileHandle {
 
+        public FILE file;
+        public char[] data = new char[1];
+        public int offset;
+        public int length;
+        public int type;
+        public int crc;
+    }
 
     /*TODO*/ //     typedef struct
     /*TODO*/ //     {
@@ -76,7 +86,6 @@ public class fileio {
         switch (filetype) {
             case OSD_FILETYPE_ROM:
             case OSD_FILETYPE_SAMPLE:
-            
 
                 /* only for reading */
                 if (_write != 0) {
@@ -275,207 +284,6 @@ public class fileio {
 /*TODO*///                            }
                 }
 
-                break;
-            case OSD_FILETYPE_IMAGE_R:
-                                /* only for reading */
-                if (_write != 0) {
-                    fprintf(errorlog, "osd_fopen: OSD_FILETYPE_ROM/SAMPLE/ROM_CART write not supported\n");
-                    break;
-                }
-
-                if (filetype == OSD_FILETYPE_SAMPLE) {
-                    /*TODO*///                        LOG((errorlog, "osd_fopen: using samplepath\n"));
-                    /*TODO*///                        pathc = samplepathc;
-                    /*TODO*///                       pathv = samplepathv;
-                    pathc = 1;
-                    pathv = new String[1];
-                    pathv[0] = "samples";
-                } else {
-                    /*TODO*///                       LOG((errorlog, "osd_fopen: using rompath\n"));
-                    /*TODO*///                       pathc = rompathc;
-                    /*TODO*///                       pathv = rompathv;
-                    /*TEMPHACK*/ //just added manually roms directory since else we need to implement conf class (in future)                      
-                    pathc = 1;
-                    pathv = new String[1];
-                    pathv[0] = "roms";
-                }
-
-                for (indx = 0; indx < pathc && found == 0; ++indx) {
-                    String dir_name = pathv[indx];
-                    //unZipIt(dir_name + File.separator + gamename + ".zip", dir_name + File.separator + gamename, filename);
-                    if (found == 0) {
-                        
-                            gamename = gamename+".rom";
-                        
-                        name = sprintf("%s/%s", "roms", "coleco");
-                        fprintf(errorlog, "Trying %s\n", name);
-                        //java code to emulate stat command (shadow)
-                        osdepend.dlprogress.setFileName("loading file: " + name);
-                        //case where file exists in rom folder
-                        if (new File(name).isDirectory() && new File(name).exists()) // if( cache_stat (name, &stat_buffer) == 0 && (stat_buffer.st_mode & S_IFDIR) )               
-                        {
-                            //System.out.println("case where file exists in rom folder");
-                            name = sprintf("%s/%s/%s", dir_name, "coleco", "dkong.rom");
-                            //System.out.println(name);
-                            if (new File(name).exists()) {
-                                if (filetype == OSD_FILETYPE_IMAGE_R) {
-                                    //java issue since there is no way to pass by reference the data table 
-                                    //get it here
-                                    f.file = fopen(name, "rb");
-                                    long size = ftell(f.file);
-                                    f.data = new char[(int) size];
-                                    fclose(f.file);
-                                    // http://www.java-tips.org/java-se-tips/java.lang/pass-an-integer-by-reference.html
-                                    int tlen[] = new int[1];
-                                    int tcrc[] = new int[1];
-                                    if (checksum_file(name, f.data, tlen, tcrc) == 0) {
-                                        f.type = kRAMFile;
-                                        f.offset = 0;
-                                        found = 1;
-                                    }
-                                    //copy values where they belong
-                                    f.length = tlen[0];
-                                    f.crc = tcrc[0];
-                                } else {
-                                    f.type = kPlainFile;
-                                    f.file = fopen(name, "rb");
-                                    found = (f.file != null) ? 1 : 0; //found = f.file !=0;
-                                }
-                            } else {
-                                System.out.println(filename + " does not seem to exist as a file");
-                            }
-                        } else if (new File(dir_name + File.separator + gamename + ".zip").exists()) { //case where file exists in rom zip file
-                            //System.out.println("case where file exists in rom zip file");
-                            System.out.println("loading " + filename + " from zip");
-                            //File thefile = unZipIt2(dir_name + File.separator + gamename + ".zip", filename);
-                            byte[] bytes = unZipIt3(dir_name + File.separator + gamename + ".zip", filename);
-                            if (bytes != null) {
-                                name = sprintf("%s/%s/%s", dir_name, gamename, filename);
-                                //System.out.println(name);
-                                //if (new File(name).exists()) {
-                                if (filetype == OSD_FILETYPE_ROM) {
-                                    //java issue since there is no way to pass by reference the data table 
-                                    //get it here
-                                    f.file = fopen(bytes, filename, "rb");
-                                    long size = ftell(f.file);
-                                    f.data = new char[(int) size];
-                                    fclose(f.file);
-                                    // http://www.java-tips.org/java-se-tips/java.lang/pass-an-integer-by-reference.html
-                                    int tlen[] = new int[1];
-                                    int tcrc[] = new int[1];
-                                    if (checksum_file_zipped(bytes, filename, f.data, tlen, tcrc) == 0) {
-                                        f.type = kRAMFile;
-                                        f.offset = 0;
-                                        found = 1;
-                                    }
-                                    //copy values where they belong
-                                    f.length = tlen[0];
-                                    f.crc = tcrc[0];
-                                } else {
-                                    f.type = kPlainFile;
-                                    f.file = fopen(bytes, filename, "rb");
-                                    found = (f.file != null) ? 1 : 0; //found = f.file !=0;
-                                }
-                                //thefile.delete();
-                                //thefile=null;
-                                //}
-                            } else {
-                                System.out.println(filename + " does not seem to exist in the zip file");
-                            }
-
-                        } else if (URLexistsWithCache("http://www.arcadeflex.com/roms/" + gamename + ".zip")) {// url loading here, the last resort of finding the rom. *todo.
-                            System.out.println("loading " + filename + " from zip online");
-                            byte[] bytes = unZipItOnlineWithCache("http://www.arcadeflex.com/roms/" + gamename + ".zip", filename);
-                            if (bytes != null) {
-                                name = sprintf("%s/%s/%s", dir_name, gamename, filename);
-                                //System.out.println(name);
-                                //if (new File(name).exists()) {
-                                if (filetype == OSD_FILETYPE_ROM) {
-                                    //java issue since there is no way to pass by reference the data table 
-                                    //get it here
-                                    f.file = fopen(bytes, filename, "rb");
-                                    long size = ftell(f.file);
-                                    f.data = new char[(int) size];
-                                    fclose(f.file);
-                                    // http://www.java-tips.org/java-se-tips/java.lang/pass-an-integer-by-reference.html
-                                    int tlen[] = new int[1];
-                                    int tcrc[] = new int[1];
-                                    if (checksum_file_zipped(bytes, filename, f.data, tlen, tcrc) == 0) {
-                                        f.type = kRAMFile;
-                                        f.offset = 0;
-                                        found = 1;
-                                    }
-                                    //copy values where they belong
-                                    f.length = tlen[0];
-                                    f.crc = tcrc[0];
-                                } else {
-                                    f.type = kPlainFile;
-                                    f.file = fopen(bytes, filename, "rb");
-                                    found = (f.file != null) ? 1 : 0; //found = f.file !=0;
-                                }
-
-                            } else {
-                                System.out.println(filename + " does not seem to exist in the zip file online");
-                                //System.out.println("possibly it is in parent rom: "+Machine.gamedrv.clone_of.name);
-                            }
-                        } else if (URLexists("http://www.arcadeflex.com/roms/" + gamename + "/" + filename)) {
-                            System.out.println("(loading file online)");
-                            byte[] bytes = FetchOnlineFile("http://www.arcadeflex.com/roms/" + gamename + "/" + filename);
-                            if (bytes != null) {
-                                name = sprintf("%s/%s/%s", dir_name, gamename, filename);
-                                //System.out.println(name);
-                                //if (new File(name).exists()) {
-                                if (filetype == OSD_FILETYPE_ROM) {
-                                    //java issue since there is no way to pass by reference the data table 
-                                    //get it here
-                                    f.file = fopen(bytes, filename, "rb");
-                                    long size = ftell(f.file);
-                                    f.data = new char[(int) size];
-                                    fclose(f.file);
-                                    // http://www.java-tips.org/java-se-tips/java.lang/pass-an-integer-by-reference.html
-                                    int tlen[] = new int[1];
-                                    int tcrc[] = new int[1];
-                                    if (checksum_file_zipped(bytes, filename, f.data, tlen, tcrc) == 0) {
-                                        f.type = kRAMFile;
-                                        f.offset = 0;
-                                        found = 1;
-                                    }
-                                    //copy values where they belong
-                                    f.length = tlen[0];
-                                    f.crc = tcrc[0];
-                                } else {
-                                    f.type = kPlainFile;
-                                    f.file = fopen(bytes, filename, "rb");
-                                    found = (f.file != null) ? 1 : 0; //found = f.file !=0;
-                                }
-                                //thefile.delete();
-                                //thefile=null;
-                                //}
-                            } else {
-                                System.out.println(filename + " does not seem to exist in the zip file");
-                                osdepend.dlprogress.setFileName(filename + " does not seem to exist in the zip file");
-                            }
-                        }
-                    }
-
-                    /*TODO*///                           if( !found )
-/*TODO*///                            {
-                    /*TODO*///                                   /* try with a .zip extension */
-/*TODO*///                                    sprintf (name, "%s/%s.zip", dir_name, gamename);
-/*TODO*///                                    LOG((errorlog, "Trying %s file\n", name));
-/*TODO*///                    if( cache_stat (name, &stat_buffer) == 0 )
-/*TODO*///                                    {
-/*TODO*///                                            if( load_zipped_file (name, filename, &f->data, &f->length) == 0 )
-/*TODO*///                                            {
-/*TODO*///                                                    LOG((errorlog, "Using (osd_fopen) zip file for %s\n", filename));
-/*TODO*///                                                    f->type = kZippedFile;
-/*TODO*///                                                    f->offset = 0;
-/*TODO*///                                                    f->crc = crc32 (0L, f->data, f->length);
-/*TODO*///                                                    found = 1;
-/*TODO*///                                            }
-/*TODO*///                                    }
-/*TODO*///                            }
-                }
                 break;
 
             case OSD_FILETYPE_NVRAM:

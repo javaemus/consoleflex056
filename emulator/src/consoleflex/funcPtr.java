@@ -1,5 +1,6 @@
 package consoleflex;
 
+import arcadeflex.libc.ptr.UBytePtr;
 import static common.ptr.*;
 
 /**

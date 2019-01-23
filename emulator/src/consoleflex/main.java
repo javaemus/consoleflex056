@@ -1,9 +1,9 @@
 package consoleflex;
 
-import static WIP.arcadeflex.libc_v2.ConvertArguments;
-import static WIP.arcadeflex.libc_v2.argc;
-import static WIP.arcadeflex.libc_v2.argv;
+
 import old.arcadeflex.osdepend;
+import static old2.arcadeflex.libc_v2.*;
+
 
 /**
  *

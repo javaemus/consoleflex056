@@ -26,7 +26,7 @@ public class UrlDownloadProgress extends javax.swing.JFrame {
     /** Creates new form UrlDownloadProgress */
     public UrlDownloadProgress() {
         initComponents();
-        setTitle("consoleflex initialization");
+        setTitle("arcadeflex initialization");
         setLocationRelativeTo(null);
     }
 

@@ -17,10 +17,12 @@ import static mess.deviceH.*;
 import static mess.messH.*;
 import static mess.mess.*;
 
-import static WIP.mame.mame.*;
-import static WIP2.mame.mameH.*;
+
 
 import static old.arcadeflex.libc_old.*;
+import static old2.mame.mame.Machine;
+import static old2.mame.mame.options;
+import static old2.mame.mameH.MAX_IMAGES;
 
 public class device
 {
