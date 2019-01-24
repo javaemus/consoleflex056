@@ -180,13 +180,13 @@ public class mess
             sysname = Machine.gamedrv.name;
             logerror("image_fopen: trying %s for system %s\n", img.name, sysname);
 
-            System.out.println("image_fopen: trying %s for system %s\n");
-            System.out.println(img.name);
-            System.out.println(sysname);
+            //System.out.println("image_fopen: trying %s for system %s\n");
+            //System.out.println(img.name);
+            //System.out.println(sysname);
 
             file = osd_fopen(sysname, img.name, filetype, read_or_write);
             /* file found, break out */
-            System.out.println("file==null " + file);
+            //System.out.println("file==null " + file);
             if (file != null) {
                 break;
             }

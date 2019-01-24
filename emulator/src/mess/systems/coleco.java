@@ -37,6 +37,7 @@ public class coleco {
 
     static Memory_ReadAddress coleco_readmem[]
             = {
+                new Memory_ReadAddress(MEMPORT_MARKER, MEMPORT_DIRECTION_READ | MEMPORT_TYPE_MEM | MEMPORT_WIDTH_8),
                 new Memory_ReadAddress(0x0000, 0x1fff, MRA_ROM), /* COLECO.ROM */
                 new Memory_ReadAddress(0x6000, 0x63ff, MRA_RAM),
                 new Memory_ReadAddress(0x6400, 0x67ff, MRA_RAM),
@@ -51,6 +52,7 @@ public class coleco {
 
     static Memory_WriteAddress coleco_writemem[]
             = {
+                new Memory_WriteAddress(MEMPORT_MARKER, MEMPORT_DIRECTION_WRITE | MEMPORT_TYPE_MEM | MEMPORT_WIDTH_8),
                 new Memory_WriteAddress(0x0000, 0x1fff, MWA_ROM), /* COLECO.ROM */
                 new Memory_WriteAddress(0x6000, 0x63ff, MWA_RAM),
                 new Memory_WriteAddress(0x6400, 0x67ff, MWA_RAM),
@@ -65,6 +67,7 @@ public class coleco {
 
     static IO_ReadPort coleco_readport[]
             = {
+                new IO_ReadPort(MEMPORT_MARKER, MEMPORT_DIRECTION_READ | MEMPORT_TYPE_IO | MEMPORT_WIDTH_8),
                 new IO_ReadPort(0xA0, 0xA0, TMS9928A_vram_r),
                 new IO_ReadPort(0xA1, 0xA1, TMS9928A_register_r),
                 new IO_ReadPort(0xBE, 0xBE, TMS9928A_vram_r),
@@ -74,6 +77,7 @@ public class coleco {
 
     static IO_WritePort coleco_writeport[]
             = {
+                new IO_WritePort(MEMPORT_MARKER, MEMPORT_DIRECTION_WRITE | MEMPORT_TYPE_IO | MEMPORT_WIDTH_8),
                 new IO_WritePort(0x80, 0x80, coleco_paddle_toggle_off),
                 new IO_WritePort(0x9F, 0x9F, coleco_paddle_toggle_off), /* Antarctic Adventure */
                 new IO_WritePort(0xA0, 0xA0, TMS9928A_vram_w),

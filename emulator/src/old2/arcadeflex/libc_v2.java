@@ -24,8 +24,10 @@ public class libc_v2 {
         argc = arguments.length + 1;
         argv = new String[argc];
         argv[0] = mainClass;
+        System.out.println(argv[0]);
         for (int i = 1; i < argc; i++) {
             argv[i] = arguments[i - 1];
+            System.out.println(argv[i]);
         }
     }
 

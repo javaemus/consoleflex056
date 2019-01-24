@@ -16,6 +16,7 @@ import static old.mame.inptport.*;
 
 import static common.libc.cstring.strlen;
 import static mame.commonH.REGION_CPU1;
+import static mame.osdependH.OSD_FILETYPE_IMAGE_R;
 import static mame.osdependH.OSD_FILETYPE_ROM;
 import static mess.messH.IMAGE_VERIFY_FAIL;
 import static mess.messH.IMAGE_VERIFY_PASS;
@@ -53,7 +54,7 @@ public class coleco {
                 return INIT_PASS;
             }
             /* Load the specified Cartridge File */
-            if ((cartfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_ROM, 0)) == null) {
+            if ((cartfile = image_fopen(IO_CARTSLOT, id, OSD_FILETYPE_IMAGE_R, 0)) == null) {
                 logerror("Coleco - Unable to locate cartridge: %s\n", device_filename(IO_CARTSLOT, id));
                 return INIT_FAIL;
             }

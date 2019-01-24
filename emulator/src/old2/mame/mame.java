@@ -59,6 +59,8 @@ import static mame056.cpuexec.cpu_run;
 import static old.mame.usrintrf.*;
 import static vidhrdw.generic.*;
 import static mame.driverH.MachineDriver;
+import static mess.mess.get_filenames;
+import static mess.mess.init_devices;
 
 public class mame {
 
@@ -166,6 +168,11 @@ public class mame {
         /* Do the work*/
         err = 1;
         bailing = 0;
+        
+        // MESS
+        if (get_filenames() != 0) {
+            return err;
+        }
 
         if (osd_init() == 0) {
             if (init_machine() == 0) {
@@ -230,6 +237,11 @@ public class mame {
         /* Mish:  Multi-session safety - set spriteram size to zero before memory map is set up */
         spriteram_size[0] = 0;
         spriteram_2_size[0] = 0;
+        
+        // MESS
+        if (init_devices(gamedrv) != 0) {
+            return out_free();
+        }
 
         /* first of all initialize the memory handlers, which could be used by the */
  /* other initialization routines */

@@ -1,12 +1,15 @@
 package old.arcadeflex;
 
-import old2.arcadeflex.settings;
+//import WIP.arcadeflex.settings;
 import static old.arcadeflex.config.parse_cmdline;
 import static old.arcadeflex.fronthlp.frontend_help;
 import static old.arcadeflex.libc_old.*;
 import static old.arcadeflex.ticker.init_ticker;
-import static mame.driver.drivers;
-import static old2.mame.mame.*;
+
+import static mess.msdos.load_image;
+import static mess.system.drivers;
+import old2.arcadeflex.settings;
+import static old2.mame.mame.run_game;
 
 /**
  * This file is relative to msdos.c in mame_old
@@ -14,6 +17,7 @@ import static old2.mame.mame.*;
  * @author george
  */
 public class osdepend {
+
     static FILE errorlog=null;
     public static int ignorecfg;
     public static UrlDownloadProgress dlprogress;
@@ -73,7 +77,7 @@ public class osdepend {
     /*TODO*///
     public static int main(int argc, String[] argv) {
         dlprogress = new UrlDownloadProgress();
-        dlprogress.setVersion("arcadeflex version: " + settings.version);
+        dlprogress.setVersion("consoleflex version: " + settings.version);
         dlprogress.setVisible(true);
         int res, i, j = 0, game_index;
         String playbackname = "";
@@ -208,6 +212,8 @@ public class osdepend {
         }
         /*TODO*///
     /*TODO*///
+    //MESS stuff
+    load_image(argc, argv, j, game_index);
 	/* parse generic (os-independent) options */
         parse_cmdline(argc, argv, game_index);
         /*TODO*///
@@ -266,4 +272,5 @@ public class osdepend {
             fprintf(errorlog, str, arguments);
         }
     }
+    
 }
