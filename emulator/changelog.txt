@@ -2,6 +2,7 @@
 ==========
 - ui_text and ui_textH fully ported to 0.56
 - Created variable MESS for switch menu between MAME and MESS
+- usrintrf moved to mame package
 
 24/01/2019
 ==========
