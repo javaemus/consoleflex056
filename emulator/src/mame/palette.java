@@ -15,7 +15,7 @@ import static mame.artworkC.*;
 import static mame056.common.*;
 import static mame.commonH.REGION_PROMS;
 import static arcadeflex.video.*;
-import static old.mame.usrintrf.*;
+import static mame.usrintrf.*;
 import static common.subArrays.*;
 
 public class palette {

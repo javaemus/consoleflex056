@@ -18,7 +18,7 @@ import static mame.drawgfxH.*;
 import static mame.driverH.*;
 import static old2.mame.mame.Machine;
 import static mame.osdependH.osd_bitmap;
-import static old.mame.usrintrf.usrintf_showmessage;
+import static mame.usrintrf.usrintf_showmessage;
 import static old2.mame.drawgfx.*;
 
 public class drawgfx {

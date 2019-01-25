@@ -56,7 +56,7 @@ import static mame056.common.*;
 import static mame056.commonH.*;
 import static mame056.cpuexec.cpu_init;
 import static mame056.cpuexec.cpu_run;
-import static old.mame.usrintrf.*;
+import static mame.usrintrf.*;
 import static vidhrdw.generic.*;
 import static mame.driverH.MachineDriver;
 import static mess.mess.get_filenames;

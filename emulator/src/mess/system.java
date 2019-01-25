@@ -5,7 +5,9 @@ package mess;
 
 import mame.driverH.GameDriver;
 import static mess.messH.*;
+
 import static mess.systems.coleco.*;
+import static mess.systems.lynx.*;
 
 public class system {
 
@@ -25,6 +27,7 @@ public class system {
         /*TODO*///
         /*TODO*///    /* COLECO */
         driver_coleco, /* ColecoVision (Original BIOS )				  */
+        driver_colecoa,
         /*TODO*///#if 0						/* Please dont include these next 2 in a distribution, they are Hacks	*/
         /*TODO*///	DRIVER( colecofb )	/* ColecoVision (Fast BIOS load)				  */
         /*TODO*///	DRIVER( coleconb )	/* ColecoVision (No BIOS load)					  */
@@ -397,6 +400,9 @@ public class system {
         /*TODO*///	DRIVER( intv )		/* Mattel Intellivision - 1979 AKA INTV 		  */
         /*TODO*///	DRIVER( jaguar )	/* Atari Jaguar 								  */
         /*TODO*///	DRIVER( lynx )		/* Atari Lynx Handheld							  */
+        driver_lynx,
+        driver_lynx2,
+        driver_lynxa,
         /*TODO*///	DRIVER( odyssey )	/* Magnavox Odyssey - analogue (1972)			  */
         /*TODO*///	DRIVER( trs80_m2 )	/* TRS-80 Model II -							  */
         /*TODO*///	DRIVER( x68000 )	/* X68000										  */

@@ -51,7 +51,7 @@ import static mame056.memoryH.*;
 
 import static mess_spec.common.*;
 import static old.arcadeflex.osdepend.logerror;
-import static old.mame.usrintrf.ui_text;
+import static mame.usrintrf.ui_text;
 
 import static mess.includes.lynxH.*;
 import static mess.machine.lynx.*;
@@ -73,18 +73,20 @@ public class lynx
         public static final int IMAGE_VERIFY_FAIL = 0;
 	
 	static Memory_ReadAddress lynx_readmem[] = {
+            new Memory_ReadAddress(MEMPORT_MARKER, MEMPORT_DIRECTION_READ | MEMPORT_TYPE_MEM | MEMPORT_WIDTH_8),
             new Memory_ReadAddress( 0x0000, 0xfbff, MRA_RAM ),
             new Memory_ReadAddress( 0xfc00, 0xfcff, MRA_BANK1 ),
-            /*TODO*///new Memory_ReadAddress( 0xfd00, 0xfdff, MRA_BANK2 ),
-            /*TODO*///new Memory_ReadAddress( 0xfe00, 0xfff7, MRA_BANK3 ),
+            new Memory_ReadAddress( 0xfd00, 0xfdff, MRA_BANK2 ),
+            new Memory_ReadAddress( 0xfe00, 0xfff7, MRA_BANK3 ),
             new Memory_ReadAddress( 0xfff8, 0xfff9, MRA_RAM ),
-            /*TODO*///new Memory_ReadAddress( 0xfffa, 0xffff, MRA_BANK4 ),
+            new Memory_ReadAddress( 0xfffa, 0xffff, MRA_BANK4 ),
             new Memory_ReadAddress(MEMPORT_MARKER, 0) /* end of table */};
 	
 	static Memory_WriteAddress lynx_writemem[] = {
+            new Memory_WriteAddress(MEMPORT_MARKER, MEMPORT_DIRECTION_WRITE | MEMPORT_TYPE_MEM | MEMPORT_WIDTH_8),
             new Memory_WriteAddress( 0x0000, 0xfbff, MWA_RAM ),
-            /*TODO*///new Memory_WriteAddress( 0xfc00, 0xfcff, MWA_BANK1 ),
-            /*TODO*///new Memory_WriteAddress( 0xfd00, 0xfdff, MWA_BANK2 ),
+            new Memory_WriteAddress( 0xfc00, 0xfcff, MWA_BANK1 ),
+            new Memory_WriteAddress( 0xfd00, 0xfdff, MWA_BANK2 ),
             new Memory_WriteAddress( 0xfe00, 0xfff8, MWA_RAM ),
             new Memory_WriteAddress( 0xfff9, 0xfff9, lynx_memory_config ),
             new Memory_WriteAddress( 0xfffa, 0xffff, MWA_RAM ),

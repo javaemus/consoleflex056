@@ -30,7 +30,7 @@ import static old.arcadeflex.libc_old.SEEK_SET;
 import static old.mame.input.*;
 import static old.mame.inputH.*;
 import static old.mame.inptportH.*;
-import static old.mame.usrintrf.*;
+import static mame.usrintrf.*;
 import static old2.mame.mame.Machine;
 import static old2.mame.mame.options;
 import static old2.mame.mame.need_to_clear_bitmap;

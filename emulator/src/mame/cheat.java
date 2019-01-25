@@ -14,7 +14,7 @@ import static mame.ui_text.*;
 import static mame.ui_textH.*;
 import static old.mame.inptportH.*;
 import static old.mame.input.*;
-import static old.mame.usrintrf.*;
+import static mame.usrintrf.*;
 import static old2.mame.mame.*;
 import static mame056.cpuintrf.cpunum_address_mask;
 import static mame056.cpuintrfH.cpu_gettotalcpu;

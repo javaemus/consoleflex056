@@ -1,5 +1,5 @@
 /**
- * ported to 0.37b7
+ * ported to 0.56
  */
 package mame;
 

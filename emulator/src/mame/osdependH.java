@@ -1,5 +1,6 @@
-/**
- *  Ported to 0.37b7
+/*
+ * ported to v0.56
+ * using automatic conversion tool v0.01
  */
 package mame;
 
@@ -41,11 +42,12 @@ public class osdependH {
      */
 
     /* inp header */
- /*TODO*///        typedef struct {
-/*TODO*///            char name[9];      /* 8 bytes for game->name + NULL */
-/*TODO*///            char version[3];   /* byte[0] = 0, byte[1] = version byte[2] = beta_version */
-/*TODO*///            char reserved[20]; /* for future use, possible store game options? */
-/*TODO*///       } INP_HEADER;
+    public static class INP_HEADER {
+        public String  name;      /* 8 bytes for game->name + NULL */
+        public String  version;   /* byte[0] = 0, byte[1] = version byte[2] = beta_version */
+        public String  reserved; /* for future use, possible store game options? */
+    };
+    
     /* file handling routines */
     public static final int OSD_FILETYPE_ROM = 1;
     public static final int OSD_FILETYPE_SAMPLE = 2;

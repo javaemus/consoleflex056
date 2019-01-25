@@ -1,7 +1,7 @@
 /**
  * ported to 0.37b5
  */
-package old.mame;
+package mame;
 import static arcadeflex.libc.cstdio.*;
 import static old.arcadeflex.libc_old.strlen;
 import static common.subArrays.*;
@@ -33,7 +33,7 @@ import static mame.version.build_version;
 import static mame056.cpuexec.machine_reset;
 import static mame056.cpuexecH.CPU_AUDIO_CPU;
 import static mame056.cpuintrf.cputype_name;
-
+import static old.mame.input.seq_name;
 
 public class usrintrf {
     public static int setup_selected;
