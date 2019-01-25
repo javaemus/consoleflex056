@@ -1,3 +1,8 @@
+25/01/2019
+==========
+- ui_text and ui_textH fully ported to 0.56
+- Created variable MESS for switch menu between MAME and MESS
+
 24/01/2019
 ==========
 - Migrated to 0.56 (using all current Arcadeflex 0.56 classes)
