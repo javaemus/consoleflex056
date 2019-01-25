@@ -15,7 +15,7 @@ public class main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // selects MESS
+        // selects MESS (menu, options and messages)
         MESS = true;
         
         ConvertArguments("consoleflex", args);
