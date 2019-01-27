@@ -817,14 +817,13 @@ public class cpuexec {
 /*TODO*///	is >0.
 /*TODO*///
 /*TODO*///--------------------------------------------------------------*/
-/*TODO*///
-/*TODO*///int cpu_getscanline(void)
-/*TODO*///{
-/*TODO*///	return (int)(timer_timeelapsed(refresh_timer) * scanline_period_inv);
-/*TODO*///}
-/*TODO*///
-/*TODO*///
-/*TODO*///
+
+    public static int cpu_getscanline()
+    {
+        return (int)(timer_timeelapsed(refresh_timer) * scanline_period_inv);
+    }
+
+    
 /*TODO*////*************************************
 /*TODO*/// *
 /*TODO*/// *	Returns time until given scanline
