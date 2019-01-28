@@ -570,6 +570,10 @@ public class cpuintrfH {
     public static int cpu_get_reg(int regnum) {
         return activecpu_get_reg(regnum);
     }
+    
+    public static void cpu_set_reg(int regnum, int data) {
+        activecpu_set_reg(regnum, data);
+    }
 
     /*TODO*///#define		cpu_set_reg					activecpu_set_reg
     public static int cpu_getpreviouspc() {

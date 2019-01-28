@@ -712,13 +712,13 @@ public class cpuintrf {
         return cpu[activecpu].intf.get_reg(regnum);
     }
 
-    /*TODO*///
-/*TODO*///void activecpu_set_reg(int regnum, unsigned val)
-/*TODO*///{
-/*TODO*///	VERIFY_ACTIVECPU_VOID(activecpu_set_reg);
-/*TODO*///	(*cpu[activecpu].intf.set_reg)(regnum, val);
-/*TODO*///}
-/*TODO*///
+    public static void activecpu_set_reg(int regnum, int val)
+    {
+	if (activecpu < 0) {
+            logerror("activecpu_get_reg() called with no active cpu!\n");            
+        }
+        cpu[activecpu].intf.set_reg(regnum, val);
+    }
 
     /*--------------------------
  	Get/set PC
