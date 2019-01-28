@@ -366,7 +366,7 @@ public class memory {
     //	memory base
     //-------------------------------------------------*/
 
-    opbase_handlerPtr memory_set_opbase_handler(int cpunum, opbase_handlerPtr function)
+    public static opbase_handlerPtr memory_set_opbase_handler(int cpunum, opbase_handlerPtr function)
     {
     	opbase_handlerPtr old = cpudata[cpunum].opbase;
     	cpudata[cpunum].opbase = function;
