@@ -2,6 +2,7 @@
 ==========
 - Added ZX Spectrum (spectrum), ZX Spectrum 128 (spec128) and Pentagon drivers
 - Memory banks supported
+- Wave and Speaker sound supported
 
 28/01/2019
 ==========
