@@ -214,7 +214,7 @@ public class mess
             //System.out.println("ext: " + ext);
 
             /* does the current name already have an extension? */
-            if (p != null) {
+            if (p == null) {
                 throw new UnsupportedOperationException("unimplemented");
                 /*TODO*///			++p; /* skip the dot */
 /*TODO*///			/* new extension won't fit? */

@@ -199,13 +199,13 @@ public class spectrum
 		if ((Changed & (1<<4))!=0)
 		{
 			/* DAC output state */
-			/*TODO*///speaker_level_w(0,(data>>4) & 0x01);
+			speaker_level_w(0,(data>>4) & 0x01);
 		}
 	
 		if ((Changed & (1<<3))!=0)
 		{
 			// Added by CHUSOGAR: Sounds while saving
-                        /*TODO*///speaker_level_w(0,(data>>3) & 0x01);
+                        speaker_level_w(0,(data>>3) & 0x01);
                         /* write cassette data */
 			/*TODO*///device_output(IO_CASSETTE, 0, (data & (1<<3)) ? -32768: 32767);
 		}
@@ -2275,20 +2275,19 @@ public class spectrum
 	
 		/* sound hardware */
 		0,0,0,0,
-                null
                 
-		/*TODO*///new MachineSound[] {
+		new MachineSound[] {
 			/* standard spectrum sound */
-		/*TODO*///	new MachineSound(
-		/*TODO*///			SOUND_SPEAKER,
-		/*TODO*///			spectrum_speaker_interface
-		/*TODO*///	),
+			new MachineSound(
+					SOUND_SPEAKER,
+					spectrum_speaker_interface
+			),
 			/* cassette wave sound */
-		/*TODO*///	new MachineSound(
-		/*TODO*///			SOUND_WAVE,
-		/*TODO*///			spectrum_wave_interface
-		/*TODO*///	)
-		/*TODO*///}
+			new MachineSound(
+					SOUND_WAVE,
+					spectrum_wave_interface
+			)
+		}
 	);
 	
 	static MachineDriver machine_driver_spectrum_128 = new MachineDriver
@@ -2332,16 +2331,16 @@ public class spectrum
 			new MachineSound(
 					SOUND_AY8910,
 					spectrum_ay_interface
-			/*TODO*///),
+			),
 			/* standard spectrum buzzer sound */
-			/*TODO*///new MachineSound(
-			/*TODO*///		SOUND_SPEAKER,
-			/*TODO*///		spectrum_speaker_interface
-			/*TODO*///),
+			new MachineSound(
+					SOUND_SPEAKER,
+					spectrum_speaker_interface
+			),
 			/* cassette wave sound */
-			/*TODO*///new MachineSound(
-			/*TODO*///		SOUND_WAVE,
-			/*TODO*///		spectrum_wave_interface
+			new MachineSound(
+					SOUND_WAVE,
+					spectrum_wave_interface
 			)
 		}
 	);
@@ -2641,16 +2640,16 @@ public class spectrum
 			new MachineSound(
 					SOUND_AY8910,
 					spectrum_ay_interface
-			/*TODO*///),
+			),
 			/* standard spectrum buzzer sound */
-			/*TODO*///new MachineSound(
-			/*TODO*///		SOUND_SPEAKER,
-			/*TODO*///		spectrum_speaker_interface
-			/*TODO*///),
+			new MachineSound(
+					SOUND_SPEAKER,
+					spectrum_speaker_interface
+			),
 			/* cassette wave sound */
-			/*TODO*///new MachineSound(
-			/*TODO*///		SOUND_WAVE,
-			/*TODO*///		spectrum_wave_interface
+			new MachineSound(
+					SOUND_WAVE,
+					spectrum_wave_interface
 			)
 		}
 	);

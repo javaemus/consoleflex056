@@ -1,6 +1,9 @@
-/*
- * ported to v0.56
- * using automatic conversion tool v0.01
+/**
+ * ported to 0.37b7
+ */
+/**
+ * Changelog
+ * 23/07/2018 (shadow) - Adjustments for MESS
  */
 package mame;
 
@@ -15,175 +18,133 @@ public class ui_text {
     /* All entries in this table must match the enum ordering in "ui_text.h" */
     public static String default_text[]
             = {
-                MESS?"MESS":"MAME",
+                "MESS",
                 /* copyright stuff */
                 "Usage of emulators in conjunction with ROMs you don't own is forbidden by copyright law.",
-		"IF YOU ARE NOT LEGALLY ENTITLED TO PLAY \"%s\" ON THIS EMULATOR, PRESS ESC.",
-		"Otherwise, type OK to continue",
-	
+                "IF YOU ARE NOT LEGALLY ENTITLED TO PLAY \"%s\" ON THIS EMULATOR, PRESS ESC.",
+                "Otherwise, type OK to continue",
                 /* misc stuff */
-		"Return to Main Menu",
-		"Return to Prior Menu",
-		"Press Any Key",
-		"On",
-		"Off",
-		"NA",
-		"OK",
-		"INVALID",
-		"(none)",
-		"CPU",
-		"Address",
-		"Value",
-		"Sound",
-		"sound",
-		"stereo",
-		"Vector Game",
-		"Screen Resolution",
-		"Text",
-		"Volume",
-		"Relative",
-		"ALL CHANNELS",
-		"Brightness",
-		"Gamma",
-		"Vector Flicker",
-		"Vector Intensity",
-		"Overclock",
-		"ALL CPUS",
-        
-                !MESS ? "History not available" : "System Info not available",
-	
-		/* special characters */
-		"\u0011",
+                "Return to Main Menu",
+                "Return to Prior Menu",
+                "Press Any Key",
+                "On",
+                "Off",
+                "NA",
+                "INVALID",
+                "(none)",
+                "CPU",
+                "Address",
+                "Value",
+                "Sound",
+                "sound",
+                "stereo",
+                "Vector Game",
+                "Screen Resolution",
+                "Text",
+                "Volume",
+                "Relative",
+                "ALL CHANNELS",
+                "Brightness",
+                "Gamma",
+                "Vector Intensity",
+                "Overclock",
+                "ALL CPUS",
+                "System Info not available",
+                /* special characters */
+                "\u0011",
                 "\u0010",
                 "\u0018",
                 "\u0019",
                 "\u001A",
                 "\u001b",
-	
-		/* known problems */
-                !MESS ? "There are known problems with this game:" : "There are known problems with this system",
-	
-		"The colors aren't 100% accurate.",
-		"The colors are completely wrong.",
-		"The video emulation isn't 100% accurate.",
-		"The sound emulation isn't 100% accurate.",
-		"The game lacks sound.",
-		"Screen flipping in cocktail mode is not supported.",
-                
-                !MESS ? "THIS GAME DOESN'T WORK PROPERLY" : "THIS SYSTEM DOESN'T WORK PROPERLY",
-	
-		"The game has protection which isn't fully emulated.",
-		"There are working clones of this game. They are:",
-		"Type OK to continue",
-        
-                MESS ? "The emulated system is a computer: " : "The keyboard emulation may not be 100% accurate.",
-	
-		/* main menu */
-		"Input (general)",
-		"Dip Switches",
-		"Analog Controls",
-		"Calibrate Joysticks",
-		"Bookkeeping Info",
-        
-                !MESS ? "Input (this game)" : "Input (this machine)",
-		!MESS ? "Game Information" : "Machine Information",
-		!MESS ? "Game History" : "Machine Usage & History",
-		!MESS ? "Reset Game" : "Reset Machine",
-		!MESS ? "Return to Game" : "Return to Machine",
-        	
-		MESS ? "Image Information" : "N/A",
-		MESS ? "File Manager" : "N/A",
-		MESS ? "Tape Control" : "N/A",
-        
-		"Cheat",
-		"Memory Card",
-	
-		/* input */
-		"Key/Joy Speed",
-		"Reverse",
-		"Sensitivity",
-	
-		/* stats */
-		"Tickets dispensed",
-		"Coin",
-		"(locked)",
-	
-		/* memory card */
-		"Load Memory Card",
-		"Eject Memory Card",
-		"Create Memory Card",
-		"Call Memory Card Manager (RESET)",
-		"Failed To Load Memory Card!",
-		"Load OK!",
-		"Memory Card Ejected!",
-		"Memory Card Created OK!",
-		"Failed To Create Memory Card!",
-		"(It already exists ?)",
-		"DAMN!! Internal Error!",
-	
-		/* cheats */
-		"Enable/Disable a Cheat",
-		"Add/Edit a Cheat",
-		"Start a New Cheat Search",
-		"Continue Search",
-		"View Last Results",
-		"Restore Previous Results",
-		"Configure Watchpoints",
-		"General Help",
-		"Options",
-		"Reload Database",
-		"Watchpoint",
-		"Disabled",
-		"Cheats",
-		"Watchpoints",
-		"More Info",
-		"More Info for",
-		"Name",
-		"Description",
-		"Activation Key",
-		"Code",
-		"Max",
-		"Set",
-		"Cheat conflict found: disabling",
-		"Help not available yet",
-	
-		/* watchpoints */
-		"Number of bytes",
-		"Display Type",
-		"Label Type",
-		"Label",
-		"X Position",
-		"Y Position",
-		"Watch",
-	
-		"Hex",
-		"Decimal",
-		"Binary",
-	
-		/* searching */
-		"Lives (or another value)",
-		"Timers (+/- some value)",
-		"Energy (greater or less)",
-		"Status (bits or flags)",
-		"Slow But Sure (changed or not)",
-		"Default Search Speed",
-		"Fast",
-		"Medium",
-		"Slow",
-		"Very Slow",
-		"All Memory",
-		"Select Memory Areas",
-		"Matches found",
-		"Search not initialized",
-		"No previous values saved",
-		"Previous values already restored",
-		"Restoration successful",
-		"Select a value",
-		"All values saved",
-		"One match found - added to list",
-	
-		null
-	};
+                /* known problems */
+                "There are known problems with this system",
+                "The colors aren't 100% accurate.",
+                "The colors are completely wrong.",
+                "The sound emulation isn't 100% accurate.",
+                "The game lacks sound.",
+                "Screen flipping in cocktail mode is not supported.",
+                "THIS GAME DOESN'T WORK PROPERLY",
+                "The game has protection which isn't fully emulated.",
+                "There are working clones of this game. They are:",
+                "Type OK to continue",
+                "The emulated system is a computer: ",
+                "The keyboard emulation may not be 100% accurate.",
+                /* main menu */
+                "Input (general)",
+                "Dip Switches",
+                "Analog Controls",
+                "Calibrate Joysticks",
+                "Bookkeeping Info",
+                "Input (this machine)",
+                "Machine Information",
+                "Machine Usage & History",
+                "Reset Machine",
+                "Return to Machine",
+                "Image Information",
+                "File Manager",
+                "Tape Control",
+                "Cheat",
+                "Memory Card",
+                /* input */
+                "Key/Joy Speed",
+                "Reverse",
+                "Sensitivity",
+                /* stats */
+                "Tickets dispensed",
+                "Coin",
+                "(locked)",
+                /* memory card */
+                "Load Memory Card",
+                "Eject Memory Card",
+                "Create Memory Card",
+                "Call Memory Card Manager (RESET)",
+                "Failed To Load Memory Card!",
+                "Load OK!",
+                "Memory Card Ejected!",
+                "Memory Card Created OK!",
+                "Failed To Create Memory Card!",
+                "(It already exists ?)",
+                "DAMN!! Internal Error!",
+                /* cheats */
+                "Enable/Disable a Cheat",
+                "Add/Edit a Cheat",
+                "Start a New Cheat Search",
+                "Continue Search",
+                "View Last Results",
+                "Restore Previous Results",
+                "Configure Watchpoints",
+                "General Help",
+                "Watchpoint",
+                "Disabled",
+                "Cheats",
+                "Watchpoints",
+                "More Info",
+                "More Info for",
+                "Name",
+                "Description",
+                "Code",
+                /* watchpoints */
+                "Number of bytes",
+                "Label type",
+                "Label",
+                "X position",
+                "Y position",
+                "Watch",
+                /* searching */
+                "Lives (or some other value)",
+                "Timers (+/- some value)",
+                "Energy (greater or less)",
+                "Status (bits or flags)",
+                "Slow but sure (changed or not)",
+                "Change Search Speed",
+                "Matches found",
+                "Search not initialized",
+                "No previous values saved",
+                "Previous values already restored",
+                "Restoration successful",
+                null
+            };
 
     public static int uistring_init(Object langfile) {
         /*

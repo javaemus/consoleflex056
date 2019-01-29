@@ -103,7 +103,7 @@ public class spectrum
 	public static final int SPECTRUM_SNAPSHOT_Z80 = 2;
 	public static final int SPECTRUM_TAPEFILE_TAP = 3;
 	
-	int SPECTRUM_SNAPSHOT_TYPE;
+	static int SPECTRUM_SNAPSHOT_TYPE;
 	
 	
 	static int spectrum_snapshot_type = SPECTRUM_SNAPSHOT_NONE;
@@ -223,6 +223,7 @@ public class spectrum
 				{
 					/* .SNA */
 					spectrum_setup_sna(pSnapshotData, SnapshotDataSize);
+                                        SPECTRUM_SNAPSHOT_TYPE=SPECTRUM_SNAPSHOT_NONE;
 				}
 				break;
 	
@@ -230,6 +231,7 @@ public class spectrum
 				{
 					/* .Z80 */
 					spectrum_setup_z80(pSnapshotData, SnapshotDataSize);
+                                        SPECTRUM_SNAPSHOT_TYPE=SPECTRUM_SNAPSHOT_NONE;
 				}
 				break;
 	

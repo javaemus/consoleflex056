@@ -4,7 +4,7 @@ package consoleflex;
 import old.arcadeflex.osdepend;
 import static old2.arcadeflex.libc_v2.*;
 
-import static mame.ui_textH.MESS;
+//import static mame.ui_textH.MESS;
 /**
  *
  * @author shadow
@@ -16,7 +16,7 @@ public class main {
      */
     public static void main(String[] args) {
         // selects MESS (menu, options and messages)
-        MESS = true;
+        //MESS = true;
         
         ConvertArguments("consoleflex", args);
         args = null;
