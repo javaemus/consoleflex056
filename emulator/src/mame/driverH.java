@@ -398,12 +398,19 @@ public class driverH {
     public static final int GAME_NOT_WORKING = 0x0008;
     public static final int GAME_WRONG_COLORS = 0x0010;/* colors are totally wrong */
     public static final int GAME_IMPERFECT_COLORS = 0x0020;/* colors are not 100% accurate, but close */
+    public static final int GAME_IMPERFECT_GRAPHICS = 0x0080;	/* graphics are wrong/incomplete */
     public static final int GAME_NO_SOUND = 0x0040;/* sound is missing */
     public static final int GAME_IMPERFECT_SOUND = 0x0080;/* sound is known to be wrong */
     public static final int GAME_REQUIRES_16BIT = 0x0100;/* cannot fit in 256 colors */
     public static final int GAME_NO_COCKTAIL = 0x0200;/* screen flip support is missing */
     public static final int GAME_UNEMULATED_PROTECTION = 0x0400;/* game's protection not fully emulated */
     public static final int NOT_A_DRIVER = 0x4000;/* set by the fake "root" driver_ and by "containers" e.g. driver_neogeo. */
+    
+    // MESS
+    public static final int GAME_COMPUTER               = 0x8000;  /* Driver is a computer (needs full keyboard) */
+    public static final int GAME_COMPUTER_MODIFIED      = 0x0800;	/* Official? Hack */
+    public static final int GAME_ALIAS                  = NOT_A_DRIVER;	/* Driver is only an alias for an existing model */
+    // end MESS
 
  /* monitor parameters to be used with the GAME() macro */
     public static final int ROT0 = 0x0000;

@@ -57,6 +57,10 @@ public class cstring {
         }
     }
     
+    public static void memcpy(char[] dst, char[] src, int size) {
+        System.arraycopy(src, 0, dst, 0, Math.min(size, src.length));
+    }
+    
     /**
      * STRCMP function
      */

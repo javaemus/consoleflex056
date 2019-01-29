@@ -8,6 +8,7 @@ import static mess.messH.*;
 
 import static mess.systems.coleco.*;
 import static mess.systems.lynx.*;
+import static mess.systems.spectrum.*;
 
 public class system {
 
@@ -296,7 +297,7 @@ public class system {
         /*TODO*///driver_pow3000,
         /*TODO*///
         //	DRIVER( spectrum )	/* Sinclair ZX Spectrum 48k
-        /*TODO*///driver_spectrum,
+        driver_spectrum,
         //	DRIVER( specbusy )	/*												  */
         /*TODO*///driver_specbusy,
         //	DRIVER( specgrot )	/*												  */
@@ -317,7 +318,7 @@ public class system {
         /*TODO*///driver_ts2068,
         /*TODO*///
         //	DRIVER( spec128 )	/* Spectrum 									  */
-        /*TODO*///driver_spec128,
+        driver_spec128,
         //	DRIVER( spec128s )	/* Spectrum 									  */
         /*TODO*///driver_spec128s,
         //	DRIVER( specpls2 )	/* Spectrum 									  */
@@ -339,7 +340,7 @@ public class system {
         //	DRIVER( scorpio )	/*
         /*TODO*///driver_scorpion,
         //	DRIVER( pentagon )	/*
-        /*TODO*///driver_pentagon,
+        driver_pentagon,
         /*TODO*///#endif
         /*TODO*///
         /*TODO*///	/* ASCII & MICROSOFT */

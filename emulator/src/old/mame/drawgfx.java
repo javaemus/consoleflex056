@@ -19,6 +19,7 @@ import static mame.driverH.*;
 import static old2.mame.mame.Machine;
 import static mame.osdependH.osd_bitmap;
 import static mame.usrintrf.usrintf_showmessage;
+import mame056.commonH.mame_bitmap;
 import static old2.mame.drawgfx.*;
 
 public class drawgfx {
@@ -522,6 +523,110 @@ public class drawgfx {
             rectangle clip, int transparency, int transparent_color) {
         common_drawgfx(dest, gfx, code, color, flipx, flipy, sx, sy, clip, transparency, transparent_color, null, 0);
     }
+    
+    public static void drawgfx056(mame_bitmap dest, GfxElement gfx,
+            /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
+            rectangle clip, int transparency, int transparent_color) {
+        common_drawgfx056(dest, gfx, code, color, flipx, flipy, sx, sy, clip, transparency, transparent_color, null, 0);
+    }
+    
+    public static void common_drawgfx056(mame_bitmap dest, GfxElement gfx,
+            /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
+            rectangle clip, int transparency, int transparent_color,
+            osd_bitmap pri_buffer,/*UINT32*/ int pri_mask) {
+        rectangle myclip = new rectangle();
+
+        if (gfx == null) {
+            usrintf_showmessage("drawgfx() gfx == 0");
+            return;
+        }
+        if (gfx.colortable == null && is_raw[transparency] == 0) {
+            usrintf_showmessage("drawgfx() gfx->colortable == 0");
+            return;
+        }
+
+        code %= gfx.total_elements;
+        if (is_raw[transparency] == 0) {
+            color %= gfx.total_colors;
+        }
+
+        if (gfx.pen_usage != null && (transparency == TRANSPARENCY_PEN || transparency == TRANSPARENCY_PENS)) {
+            int transmask = 0;
+
+            if (transparency == TRANSPARENCY_PEN) {
+                transmask = 1 << transparent_color;
+            } else /* transparency == TRANSPARENCY_PENS */ {
+                transmask = transparent_color;
+            }
+
+            if ((gfx.pen_usage[code] & ~transmask) == 0) /* character is totally transparent, no need to draw */ {
+                return;
+            } else if ((gfx.pen_usage[code] & transmask) == 0) /* character is totally opaque, can disable transparency */ {
+                transparency = TRANSPARENCY_NONE;
+            }
+        }
+
+        if ((Machine.orientation & ORIENTATION_SWAP_XY) != 0) {
+            int temp;
+
+            temp = sx;
+            sx = sy;
+            sy = temp;
+
+            temp = flipx;
+            flipx = flipy;
+            flipy = temp;
+
+            if (clip != null) {
+                /* clip and myclip might be the same, so we need a temporary storage */
+                temp = clip.min_x;
+                myclip.min_x = clip.min_y;
+                myclip.min_y = temp;
+                temp = clip.max_x;
+                myclip.max_x = clip.max_y;
+                myclip.max_y = temp;
+                clip = myclip;
+            }
+        }
+        if ((Machine.orientation & ORIENTATION_FLIP_X) != 0) {
+            sx = dest.width - gfx.width - sx;
+            if (clip != null) {
+                int temp;
+
+
+                /* clip and myclip might be the same, so we need a temporary storage */
+                temp = clip.min_x;
+                myclip.min_x = dest.width - 1 - clip.max_x;
+                myclip.max_x = dest.width - 1 - temp;
+                myclip.min_y = clip.min_y;
+                myclip.max_y = clip.max_y;
+                clip = myclip;
+            }
+            flipx = NOT(flipx);
+        }
+        if ((Machine.orientation & ORIENTATION_FLIP_Y) != 0) {
+            sy = dest.height - gfx.height - sy;
+            if (clip != null) {
+                int temp;
+
+                myclip.min_x = clip.min_x;
+                myclip.max_x = clip.max_x;
+                /* clip and myclip might be the same, so we need a temporary storage */
+                temp = clip.min_y;
+                myclip.min_y = dest.height - 1 - clip.max_y;
+                myclip.max_y = dest.height - 1 - temp;
+                clip = myclip;
+            }
+            flipy = NOT(flipy);
+        }
+
+        if (dest.depth != 16) {
+            drawgfx_core8_056(dest, gfx, code, color, flipx, flipy, sx, sy, clip, transparency, transparent_color, pri_buffer, pri_mask);
+        } else {
+            throw new UnsupportedOperationException("Unsupported");
+            /*TODO*///		drawgfx_core16(dest,gfx,code,color,flipx,flipy,sx,sy,clip,transparency,transparent_color,pri_buffer,pri_mask);
+        }
+    }
 
     /*TODO*///
 /*TODO*///void pdrawgfx(struct osd_bitmap *dest,const struct GfxElement *gfx,
@@ -787,6 +892,100 @@ public class drawgfx {
             }
         }
     }
+    public static void fillbitmap056(mame_bitmap dest, int pen, rectangle clip) {
+        int sx, sy, ex, ey, y;
+        rectangle myclip = new rectangle();
+
+        if ((Machine.orientation & ORIENTATION_SWAP_XY) != 0) {
+            if (clip != null) {
+                myclip.min_x = clip.min_y;
+                myclip.max_x = clip.max_y;
+                myclip.min_y = clip.min_x;
+                myclip.max_y = clip.max_x;
+                clip = myclip;
+            }
+        }
+        if ((Machine.orientation & ORIENTATION_FLIP_X) != 0) {
+            if (clip != null) {
+                int temp;
+
+                temp = clip.min_x;
+                myclip.min_x = dest.width - 1 - clip.max_x;
+                myclip.max_x = dest.width - 1 - temp;
+                myclip.min_y = clip.min_y;
+                myclip.max_y = clip.max_y;
+                clip = myclip;
+            }
+        }
+        if ((Machine.orientation & ORIENTATION_FLIP_Y) != 0) {
+            if (clip != null) {
+                int temp;
+
+                myclip.min_x = clip.min_x;
+                myclip.max_x = clip.max_x;
+                temp = clip.min_y;
+                myclip.min_y = dest.height - 1 - clip.max_y;
+                myclip.max_y = dest.height - 1 - temp;
+                clip = myclip;
+            }
+        }
+
+        sx = 0;
+        ex = dest.width - 1;
+        sy = 0;
+        ey = dest.height - 1;
+
+        if (clip != null && sx < clip.min_x) {
+            sx = clip.min_x;
+        }
+        if (clip != null && ex > clip.max_x) {
+            ex = clip.max_x;
+        }
+        if (sx > ex) {
+            return;
+        }
+        if (clip != null && sy < clip.min_y) {
+            sy = clip.min_y;
+        }
+        if (clip != null && ey > clip.max_y) {
+            ey = clip.max_y;
+        }
+        if (sy > ey) {
+            return;
+        }
+
+        osd_mark_dirty(sx, sy, ex, ey, 0);
+        /* ASG 971011 */
+
+ /* ASG 980211 */
+        if (dest.depth == 16) {
+            throw new UnsupportedOperationException("unsupported");
+            /*TODO*///		if ((pen >> 8) == (pen & 0xff))
+/*TODO*///		{
+/*TODO*///			for (y = sy;y <= ey;y++)
+/*TODO*///				memset(&dest->line[y][sx*2],pen&0xff,(ex-sx+1)*2);
+/*TODO*///		}
+/*TODO*///		else
+/*TODO*///		{
+/*TODO*///			UINT16 *sp = (UINT16 *)dest->line[sy];
+/*TODO*///			int x;
+/*TODO*///
+/*TODO*///			for (x = sx;x <= ex;x++)
+/*TODO*///				sp[x] = pen;
+/*TODO*///			sp+=sx;
+/*TODO*///			for (y = sy+1;y <= ey;y++)
+/*TODO*///				memcpy(&dest->line[y][sx*2],sp,(ex-sx+1)*2);
+/*TODO*///		}
+        } else {
+            for (y = sy; y <= ey; y++) {
+                //memset(&dest->line[y][sx],pen,ex-sx+1);
+                for (int k = 0; k < ex - sx + 1; k++) {
+                    dest.line[y].write(sx + k, pen);
+                }
+            }
+        }
+    }
+
 
     /*TODO*///
 /*TODO*///INLINE void common_drawgfxzoom( struct osd_bitmap *dest_bmp,const struct GfxElement *gfx,
@@ -4624,6 +4823,230 @@ public class drawgfx {
 /*TODO*///
     public static void drawgfx_core8(
             osd_bitmap dest, GfxElement gfx,
+            /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
+            rectangle clip, int transparency, int transparent_color,
+            osd_bitmap pri_buffer,/*UINT32*/ int pri_mask) {
+        int ox;
+        int oy;
+        int ex;
+        int ey;
+
+
+        /* check bounds */
+        ox = sx;
+        oy = sy;
+
+        ex = sx + gfx.width - 1;
+        if (sx < 0) {
+            sx = 0;
+        }
+        if (clip != null && sx < clip.min_x) {
+            sx = clip.min_x;
+        }
+        if (ex >= dest.width) {
+            ex = dest.width - 1;
+        }
+        if (clip != null && ex > clip.max_x) {
+            ex = clip.max_x;
+        }
+        if (sx > ex) {
+            return;
+        }
+
+        ey = sy + gfx.height - 1;
+        if (sy < 0) {
+            sy = 0;
+        }
+        if (clip != null && sy < clip.min_y) {
+            sy = clip.min_y;
+        }
+        if (ey >= dest.height) {
+            ey = dest.height - 1;
+        }
+        if (clip != null && ey > clip.max_y) {
+            ey = clip.max_y;
+        }
+        if (sy > ey) {
+            return;
+        }
+
+        osd_mark_dirty(sx, sy, ex, ey, 0);
+        /* ASG 971011 */
+
+        UBytePtr sd = new UBytePtr(gfx.gfxdata, code * gfx.char_modulo);
+        /* source data */
+        int sw = ex - sx + 1;
+        /* source width */
+        int sh = ey - sy + 1;
+        /* source height */
+        int sm = gfx.line_modulo;
+        /* source modulo */
+        UBytePtr dd = new UBytePtr(dest.line[sy], sx);
+        /* dest data */
+        int dm = (int) ((dest.line[1].offset) - (dest.line[0].offset));/* dest modulo */
+        UShortArray paldata = null;
+        if (gfx.colortable != null) {
+            paldata = new UShortArray(gfx.colortable, gfx.color_granularity * color);
+        }
+        UBytePtr pribuf = (pri_buffer != null) ? new UBytePtr(pri_buffer.line[sy], sx) : null;
+
+        if (flipx != 0) {
+            //if ((sx-ox) == 0) sd += gfx.width - sw;
+            sd.inc(gfx.width - 1 - (sx - ox));
+        } else {
+            sd.inc(sx - ox);
+        }
+
+        if (flipy != 0) {
+            //if ((sy-oy) == 0) sd += sm * (gfx.height - sh);
+            //dd += dm * (sh - 1);
+            //dm = -dm;
+            sd.inc(sm * (gfx.height - 1 - (sy - oy)));
+            sm = -sm;
+        } else {
+            sd.inc(sm * (sy - oy));
+        }
+
+        switch (transparency) {
+            case TRANSPARENCY_NONE:
+                if (pribuf != null) {
+                    if (flipx != 0) {
+                        blockmove_8toN_opaque_pri_flipx(sd, sw, sh, sm, dd, dm, paldata, pribuf, pri_mask);
+                    } else {
+                        blockmove_8toN_opaque_pri(sd, sw, sh, sm, dd, dm, paldata, pribuf, pri_mask);
+                    }
+                } else if (flipx != 0) {
+                    blockmove_8toN_opaque_flipx8(sd, sw, sh, sm, dd, dm, paldata);
+                } else {
+                    blockmove_8toN_opaque8(sd, sw, sh, sm, dd, dm, paldata);
+                }
+
+                break;
+            case TRANSPARENCY_PEN:
+                if (pribuf != null) {
+                    if (flipx != 0) {
+                        blockmove_8toN_transpen_pri_flipx(sd, sw, sh, sm, dd, dm, paldata, transparent_color, pribuf, pri_mask);
+                    } else {
+                        blockmove_8toN_transpen_pri(sd, sw, sh, sm, dd, dm, paldata, transparent_color, pribuf, pri_mask);
+                    }
+                } else if (flipx != 0) {
+                    blockmove_8toN_transpen_flipx8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                } else {
+                    blockmove_8toN_transpen8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                }
+                break;
+            case TRANSPARENCY_PENS:
+
+                if (pribuf != null) {
+                    /*TODO*///                    BLOCKMOVE(8toN_transmask_pri,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color,pribuf,pri_mask));				
+                    throw new UnsupportedOperationException("unsupported");
+                } else if (flipx != 0) {
+                    blockmove_transmask_flipx8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                } else {
+                    blockmove_transmask8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                }
+                break;
+            case TRANSPARENCY_COLOR:
+                if (pribuf != null) {
+                    /*TODO*///					BLOCKMOVE(8toN_transcolor_pri,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color,pribuf,pri_mask));
+                    throw new UnsupportedOperationException("unsupported");
+                } else if (flipx != 0) {
+                    blockmove_8toN_transcolor_flipx8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                } else {
+                    blockmove_8toN_transcolor8(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                }
+                break;
+            case TRANSPARENCY_THROUGH:
+                if (pribuf != null) {
+                    usrintf_showmessage("pdrawgfx TRANS_THROUGH not supported");
+                } else {
+                    if (flipx != 0) {
+                        blockmove_8toN_transthrough_flipx(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                    } else {
+                        blockmove_8toN_transthrough(sd, sw, sh, sm, dd, dm, paldata, transparent_color);
+                    }
+                }
+
+                break;
+
+            case TRANSPARENCY_PEN_TABLE:
+                throw new UnsupportedOperationException("unsupported");
+            /*TODO*///				if (pribuf)
+/*TODO*///usrintf_showmessage("pdrawgfx TRANS_PEN_TABLE not supported");
+/*TODO*/////					BLOCKMOVE(8toN_pen_table_pri,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color));
+/*TODO*///				else
+/*TODO*///					BLOCKMOVE(8toN_pen_table,flipx,(sd,sw,sh,sm,dd,dm,paldata,transparent_color));
+/*TODO*///				break;
+/*TODO*///
+            case TRANSPARENCY_PEN_TABLE_RAW:
+                throw new UnsupportedOperationException("unsupported");
+            /*TODO*///				if (pribuf)
+/*TODO*///usrintf_showmessage("pdrawgfx TRANS_PEN_TABLE_RAW not supported");
+/*TODO*/////					BLOCKMOVE(8toN_pen_table_pri_raw,flipx,(sd,sw,sh,sm,dd,dm,color,transparent_color));
+/*TODO*///				else
+/*TODO*///					BLOCKMOVE(8toN_pen_table_raw,flipx,(sd,sw,sh,sm,dd,dm,color,transparent_color));
+/*TODO*///				break;
+/*TODO*///
+            case TRANSPARENCY_NONE_RAW:
+                if (pribuf != null) {
+                    throw new UnsupportedOperationException("unsupported");
+                    /*TODO*///                    usrintf_showmessage("pdrawgfx TRANS_NONE_RAW not supported");
+//					BLOCKMOVE(8toN_opaque_pri_raw,flipx,(sd,sw,sh,sm,dd,dm,paldata,pribuf,pri_mask));
+                } else if (flipx != 0) {
+                    blockmove_8toN_opaque_raw_flipx(sd, sw, sh, sm, dd, dm, color);
+                } else {
+                    //BLOCKMOVE(8toN_opaque_raw, flipx, (sd, sw, sh, sm, dd, dm, color));
+                    blockmove_8toN_opaque_raw(sd, sw, sh, sm, dd, dm, color);
+                }
+                break;
+
+            case TRANSPARENCY_PEN_RAW:
+                if (pribuf != null) {
+                    throw new UnsupportedOperationException("unsupported");
+                } else if (flipx != 0) {
+                    throw new UnsupportedOperationException("unsupported");
+                } else {
+                    blockmove_8toN_transpen_raw(sd, sw, sh, sm, dd, dm, color, transparent_color);
+                }
+//                throw new UnsupportedOperationException("unsupported");
+                /*TODO*///				if (pribuf)
+/*TODO*///usrintf_showmessage("pdrawgfx TRANS_PEN_RAW not supported");
+/*TODO*/////					BLOCKMOVE(8toN_transpen_pri_raw,flipx,(sd,sw,sh,sm,dd,dm,paldata,pribuf,pri_mask));
+/*TODO*///				else
+/*TODO*///					BLOCKMOVE(8toN_transpen_raw,flipx,(sd,sw,sh,sm,dd,dm,color,transparent_color));
+/*TODO*///				break;
+/*TODO*///
+                break;
+            case TRANSPARENCY_PENS_RAW:
+                throw new UnsupportedOperationException("unsupported");
+            /*TODO*///				if (pribuf)
+/*TODO*///usrintf_showmessage("pdrawgfx TRANS_PENS_RAW not supported");
+/*TODO*/////					BLOCKMOVE(8toN_transmask_pri_raw,flipx,(sd,sw,sh,sm,dd,dm,paldata,pribuf,pri_mask));
+/*TODO*///				else
+/*TODO*///					BLOCKMOVE(8toN_transmask_raw,flipx,(sd,sw,sh,sm,dd,dm,color,transparent_color));
+/*TODO*///				break;
+/*TODO*///
+            case TRANSPARENCY_THROUGH_RAW:
+                throw new UnsupportedOperationException("unsupported");
+            /*TODO*///				if (pribuf)
+/*TODO*///usrintf_showmessage("pdrawgfx TRANS_PEN_RAW not supported");
+/*TODO*/////					BLOCKMOVE(8toN_transpen_pri_raw,flipx,(sd,sw,sh,sm,dd,dm,paldata,pribuf,pri_mask));
+/*TODO*///				else
+/*TODO*///					BLOCKMOVE(8toN_transthrough_raw,flipx,(sd,sw,sh,sm,dd,dm,color,transparent_color));
+/*TODO*///				break;
+/*TODO*///
+            default:
+                if (pribuf != null) {
+                    usrintf_showmessage("pdrawgfx pen mode not supported");
+                } else {
+                    usrintf_showmessage("drawgfx pen mode not supported");
+                }
+                break;
+        }
+    }
+    
+    public static void drawgfx_core8_056(
+            mame_bitmap dest, GfxElement gfx,
             /*unsigned*/ int code,/*unsigned*/ int color, int flipx, int flipy, int sx, int sy,
             rectangle clip, int transparency, int transparent_color,
             osd_bitmap pri_buffer,/*UINT32*/ int pri_mask) {

@@ -115,6 +115,7 @@ public class eventlst
 	
 	        if (NumEvents < TotalEvents)
 	        {
+                        pCurrentItem = new EVENT_LIST_ITEM();
 	                /* setup item only if there is space in the buffer */
 	                pCurrentItem.Event_ID = ID;
 	                pCurrentItem.Event_Data = Data;
