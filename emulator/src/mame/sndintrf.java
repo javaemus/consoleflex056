@@ -36,6 +36,7 @@ import mame056.sound.sn76477;
 import sound._2608intf;
 import sound.adpcm;
 import sound.okim6295;
+import sound.wave;
 
 
 public class sndintrf {
@@ -565,6 +566,7 @@ public class sndintrf {
                 /*TODO*///	},
                 /*TODO*///#endif
                 new Dummy_snd(),
+                new Dummy_snd(),
                 /*TODO*///#if (HAS_SAA1099)
                 /*TODO*///	{
                 /*TODO*///		SOUND_SAA1099,
@@ -578,7 +580,7 @@ public class sndintrf {
                 /*TODO*///	},
                 /*TODO*///#endif
                 new speaker(),
-                new Dummy_snd(),
+                new wave(),
                 /*TODO*///#if (HAS_WAVE)
                 /*TODO*///	{
                 /*TODO*///		SOUND_WAVE,
