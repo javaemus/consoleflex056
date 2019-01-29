@@ -203,7 +203,7 @@ public class memory {
     public static handler_data[] wporthandler32 = handler_data.create(ENTRY_COUNT);/* 32-bit port write handlers */
 
     public static handler_data[] rmemhandler8s = handler_data.create(STATIC_COUNT);	/* copy of 8-bit static read memory handlers */
-/*TODO*///static write8_handler 		wmemhandler8s[STATIC_COUNT];	/* copy of 8-bit static write memory handlers */
+    public static handler_data[] wmemhandler8s = handler_data.create(STATIC_COUNT);	/* copy of 8-bit static write memory handlers */
 /*TODO*///
     public static cpu_data[] cpudata = new cpu_data[MAX_CPU];/* data gathered for each CPU */
     public static bank_data[] bankdata = new bank_data[MAX_BANKS];/* data gathered for each bank */
@@ -320,22 +320,25 @@ public class memory {
     //	handler for bank memory (8-bit only!)
     //-------------------------------------------------*/
 
-    public static void memory_set_bankhandler_r(int bank, int offset, int handler)
+    public static void memory_set_bankhandler_r(int bank, int offset, int _handler)
     {
+        Object handler = ((handler_data) rmemhandler8[_handler]).handler;
+        
 	/* determine the new offset */
-	if (HANDLER_IS_RAM(handler) || HANDLER_IS_ROM(handler)){
+	if (HANDLER_IS_RAM(_handler) || HANDLER_IS_ROM(_handler)){
 		rmemhandler8[bank].offset = 0 - offset;
-                handler = STATIC_RAM;
-        } else if (HANDLER_IS_BANK(handler)){
-		rmemhandler8[bank].offset = bankdata[HANDLER_TO_BANK(handler)].readoffset - offset;
+                _handler = STATIC_RAM;
+        } else if (HANDLER_IS_BANK(_handler)){
+		rmemhandler8[bank].offset = bankdata[HANDLER_TO_BANK(_handler)].readoffset - offset;
         } else {
 		rmemhandler8[bank].offset = bankdata[bank].readoffset - offset;
         }
 
-	/* set the new handler */
-	/*TODO*///if (HANDLER_IS_STATIC(handler))
-	/*TODO*///	handler = (rmemhandler8s[handler]);
+	/* set the new handler */        
+	if (HANDLER_IS_STATIC(_handler))
+		handler = ((handler_data) rmemhandler8s[_handler]).handler;
 	rmemhandler8[bank].handler = handler;
+        
     }
 
     
@@ -344,20 +347,23 @@ public class memory {
     //	handler for bank memory (8-bit only!)
     //-------------------------------------------------*/
 
-    public static void memory_set_bankhandler_w(int bank, int offset, int handler)
+    public static void memory_set_bankhandler_w(int bank, int offset, int _handler)
     {
+        Object handler = ((handler_data) wmemhandler8[_handler]).handler;
+        
 	/* determine the new offset */
-	if (HANDLER_IS_RAM(handler) || HANDLER_IS_ROM(handler) || HANDLER_IS_RAMROM(handler))
+	if (HANDLER_IS_RAM(_handler) || HANDLER_IS_ROM(_handler) || HANDLER_IS_RAMROM(_handler))
 		wmemhandler8[bank].offset = 0 - offset;
-	else if (HANDLER_IS_BANK(handler))
-		wmemhandler8[bank].offset = bankdata[HANDLER_TO_BANK(handler)].writeoffset - offset;
+	else if (HANDLER_IS_BANK(_handler))
+		wmemhandler8[bank].offset = bankdata[HANDLER_TO_BANK(_handler)].writeoffset - offset;
 	else
 		wmemhandler8[bank].offset = bankdata[bank].writeoffset - offset;
 
 	/* set the new handler */
-	/*TODO*///if (HANDLER_IS_STATIC(handler))
-	/*TODO*///	handler = wmemhandler8s[handler];
+	if (HANDLER_IS_STATIC(_handler))
+		handler = ((handler_data) wmemhandler8s[_handler]).handler;
 	wmemhandler8[bank].handler = handler;
+        
     }
 
     
@@ -909,8 +915,8 @@ public class memory {
             ReadHandlerPtr r8handler, /*read16_handler r16handler, read32_handler r32handler,*/
             WriteHandlerPtr w8handler/*, write16_handler w16handler, write32_handler w32handler*/) {
 
-        /*TODO*///	rmemhandler8s[idx] = r8handler;
-/*TODO*///	wmemhandler8s[idx] = w8handler;
+            rmemhandler8s[idx].handler = r8handler;
+            wmemhandler8s[idx].handler = w8handler;
 /*TODO*///
         rmemhandler8[idx].handler = r8handler;
         /*TODO*///	rmemhandler16[idx].handler = (void *)r16handler;
@@ -2441,7 +2447,10 @@ public class memory {
 
             /* allow overrides */
             if (opbasefunc != null) {
-                throw new UnsupportedOperationException("Unsupported");
+                pc = opbasefunc.handler(pc);
+                if (pc == ~0) {
+                    return;
+                }
                 /*TODO*///		pc = (*opbasefunc)(pc);															
 /*TODO*///		if (pc == ~0)																	
 /*TODO*///			return; 
@@ -2862,6 +2871,7 @@ public class memory {
     /*TODO*///static WRITE16_HANDLER( mwh16_ramrom ) { COMBINE_DATA(&cpu_bankbase[STATIC_RAM][offset*2]); COMBINE_DATA(&cpu_bankbase[0][offset*2 + (OP_ROM - OP_RAM)]); }
     /*TODO*///static WRITE32_HANDLER( mwh32_ramrom ) { COMBINE_DATA(&cpu_bankbase[STATIC_RAM][offset*4]); COMBINE_DATA(&cpu_bankbase[0][offset*4 + (OP_ROM - OP_RAM)]); }
     /*TODO*///
+    
     public static ReadHandlerPtr mrh8_bank1 = new ReadHandlerPtr() {
         public int handler(int offset) {
             return cpu_bankbase[1].read(offset);
@@ -3125,30 +3135,31 @@ public class memory {
         /*TODO*///	memset(wporthandler16, 0, sizeof(wporthandler16));
         /*TODO*///	memset(wporthandler32, 0, sizeof(wporthandler32));
         /*TODO*///
-        set_static_handler(STATIC_BANK1, mrh8_bank1, mwh8_bank1);/*TODO*///	set_static_handler(STATIC_BANK1,  mrh8_bank1,  NULL,         NULL,         mwh8_bank1,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK2,  mrh8_bank2,  NULL,         NULL,         mwh8_bank2,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK3,  mrh8_bank3,  NULL,         NULL,         mwh8_bank3,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK4,  mrh8_bank4,  NULL,         NULL,         mwh8_bank4,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK5,  mrh8_bank5,  NULL,         NULL,         mwh8_bank5,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK6,  mrh8_bank6,  NULL,         NULL,         mwh8_bank6,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK7,  mrh8_bank7,  NULL,         NULL,         mwh8_bank7,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK8,  mrh8_bank8,  NULL,         NULL,         mwh8_bank8,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK9,  mrh8_bank9,  NULL,         NULL,         mwh8_bank9,  NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK10, mrh8_bank10, NULL,         NULL,         mwh8_bank10, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK11, mrh8_bank11, NULL,         NULL,         mwh8_bank11, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK12, mrh8_bank12, NULL,         NULL,         mwh8_bank12, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK13, mrh8_bank13, NULL,         NULL,         mwh8_bank13, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK14, mrh8_bank14, NULL,         NULL,         mwh8_bank14, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK15, mrh8_bank15, NULL,         NULL,         mwh8_bank15, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK16, mrh8_bank16, NULL,         NULL,         mwh8_bank16, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK17, mrh8_bank17, NULL,         NULL,         mwh8_bank17, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK18, mrh8_bank18, NULL,         NULL,         mwh8_bank18, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK19, mrh8_bank19, NULL,         NULL,         mwh8_bank19, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK20, mrh8_bank20, NULL,         NULL,         mwh8_bank20, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK21, mrh8_bank21, NULL,         NULL,         mwh8_bank21, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK22, mrh8_bank22, NULL,         NULL,         mwh8_bank22, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK23, mrh8_bank23, NULL,         NULL,         mwh8_bank23, NULL,         NULL);
-        /*TODO*///	set_static_handler(STATIC_BANK24, mrh8_bank24, NULL,         NULL,         mwh8_bank24, NULL,         NULL);
+        set_static_handler(STATIC_BANK1,  mrh8_bank1, mwh8_bank1);/*TODO*///	set_static_handler(STATIC_BANK1,  mrh8_bank1,  NULL,         NULL,         mwh8_bank1,  NULL,         NULL);
+        set_static_handler(STATIC_BANK2,  mrh8_bank2, mwh8_bank2);
+        set_static_handler(STATIC_BANK3,  mrh8_bank3, mwh8_bank3);
+        set_static_handler(STATIC_BANK4,  mrh8_bank4, mwh8_bank4);
+        set_static_handler(STATIC_BANK5,  mrh8_bank5, mwh8_bank5);
+        set_static_handler(STATIC_BANK6,  mrh8_bank6, mwh8_bank6);
+        set_static_handler(STATIC_BANK7,  mrh8_bank7, mwh8_bank7);
+        set_static_handler(STATIC_BANK8,  mrh8_bank8, mwh8_bank8);
+        set_static_handler(STATIC_BANK9,  mrh8_bank9, mwh8_bank9);
+        set_static_handler(STATIC_BANK10, mrh8_bank10,mwh8_bank10);
+        set_static_handler(STATIC_BANK11, mrh8_bank11,mwh8_bank11);
+        set_static_handler(STATIC_BANK12, mrh8_bank12,mwh8_bank12);
+        set_static_handler(STATIC_BANK13, mrh8_bank13,mwh8_bank13);
+        set_static_handler(STATIC_BANK14, mrh8_bank14,mwh8_bank14);
+        set_static_handler(STATIC_BANK15, mrh8_bank15,mwh8_bank15);
+        set_static_handler(STATIC_BANK16, mrh8_bank16,mwh8_bank16);
+        set_static_handler(STATIC_BANK17, mrh8_bank17,mwh8_bank17);
+        set_static_handler(STATIC_BANK18, mrh8_bank18,mwh8_bank18);
+        set_static_handler(STATIC_BANK19, mrh8_bank19,mwh8_bank19);
+        set_static_handler(STATIC_BANK20, mrh8_bank20,mwh8_bank20);
+        set_static_handler(STATIC_BANK21, mrh8_bank21,mwh8_bank21);
+        set_static_handler(STATIC_BANK22, mrh8_bank22,mwh8_bank22);
+        set_static_handler(STATIC_BANK23, mrh8_bank23,mwh8_bank23);
+        set_static_handler(STATIC_BANK24, mrh8_bank24,mwh8_bank24);
+        
         set_static_handler(STATIC_UNMAP, mrh8_bad, mwh8_bad);/*TODO*///	set_static_handler(STATIC_UNMAP,  mrh8_bad,    mrh16_bad,    mrh32_bad,    mwh8_bad,    mwh16_bad,    mwh32_bad);
         set_static_handler(STATIC_NOP, mrh8_nop, mwh8_nop);/*TODO*///	set_static_handler(STATIC_NOP,    mrh8_nop,    mrh16_nop,    mrh32_nop,    mwh8_nop,    mwh16_nop,    mwh32_nop);
         set_static_handler(STATIC_RAM, mrh8_ram, mwh8_ram);/*TODO*///	set_static_handler(STATIC_RAM,    mrh8_ram,    NULL,         NULL,         mwh8_ram,    NULL,         NULL);
@@ -3276,4 +3287,5 @@ public class memory {
         }
         fclose(file);
     }
+    
 }
