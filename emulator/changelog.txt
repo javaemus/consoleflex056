@@ -1,3 +1,20 @@
+29/01/2019
+==========
+- Added ZX Spectrum (spectrum), ZX Spectrum 128 (spec128) and Pentagon drivers
+- Memory banks supported
+
+28/01/2019
+==========
+- Added wave and waveH classes
+- Added memory_set_opbase_handler method in memory classes
+- Added cpu_set_reg method in cpuintrf and cpuintrfH classes
+
+27/01/2019
+==========
+- Added eventlst and eventlstH classes
+- Added cpu_getscanline in cpuexec
+- Added cpu_getscanlineperiod in cpuexec
+
 25/01/2019
 ==========
 - ui_text and ui_textH fully ported to 0.56
