@@ -1,12 +1,23 @@
+/*
+ * ported to v0.56
+ * using automatic conversion tool v0.01
+ */
+
 package mess.includes;
 
-import mame056.timer.timer_callback;
 import mame056.timer.timer_entry;
 
-public interface flopdrvH {
+/* flopdrv provides simple emulation of a disc drive */
+/* the 8271, nec765 and wd179x use this */
+
+public class flopdrvH {
+    
+    public static final int DEN_FM_LO = 0;
+    public static final int DEN_FM_HI = 1;
+    public static final int DEN_MFM_LO = 2;
+    public static final int DEN_MFM_HI = 3;
     
     public static enum DENSITY {
-            //DEN_FM_LO = 0,
             DEN_FM_LO,
             DEN_FM_HI,
             DEN_MFM_LO,
@@ -18,16 +29,16 @@ public interface flopdrvH {
     /* CRC error in id field */
     public static final int ID_FLAG_CRC_ERROR_IN_ID_FIELD = 0x0002;
     /* CRC error in data field */
-    public static final int ID_FLAG_CRC_ERROR_IN_DATA_FIELD =  0x0004;
+    public static final int ID_FLAG_CRC_ERROR_IN_DATA_FIELD = 0x0004;
 
-    //int 	floppy_status(int id, int new_status);
+    /*TODO*///int 	floppy_status(int id, int new_status);
 
     public static class chrn_id
     {
-            public char C;
-            public char H;
-            public char R;
-            public char N;
+            public int C;
+            public int H;
+            public int R;
+            public int N;
             public int data_id;			// id for read/write data command
             public int flags;
     };
@@ -53,7 +64,7 @@ public interface flopdrvH {
     public static interface floppy_interface
     {
             /* seek to physical track */
-            void seek_callback(int drive, int physical_track);
+            public void seek_callback(int drive, int physical_track);
 
             /* the following are not strictly floppy drive operations, but are used by the
             nec765 to get data from the track - really the whole track should be constructed
@@ -62,19 +73,28 @@ public interface flopdrvH {
             with the data */
 
             /* get number of sectors per track on side specified */
-            int get_sectors_per_track(int drive, int physical_side);
+            public int get_sectors_per_track(int drive, int physical_side);
             /* get id from current track and specified side */
-            void get_id_callback(int drive, chrn_id chrn, int id_index, int physical_side);
+            public void get_id_callback(int drive, chrn_id id_chrn, int id_index, int physical_side);
 
             /* read sector data into buffer, length = number of bytes to read */
-            void	read_sector_data_into_buffer(int drive, int side,int data_id,char[] data, int length);
+            public void	read_sector_data_into_buffer(int drive, int side,int data_id,char[] buf, int length);
             /* write sector data from buffer, length = number of bytes to read  */
-            void	write_sector_data_from_buffer(int drive, int side,int data_id, char[] data, int length, int ddam);
+            public void	write_sector_data_from_buffer(int drive, int side,int data_id, char[] buf, int length, int ddam);
             /* Read track in buffer, length = number of bytes to read */
-            void	read_track_data_info_buffer(int drive, int side, char[] ptr, int length );
+            public void	read_track_data_info_buffer(int drive, int side, char[] ptr, int length );
             /* format */
-            void format_sector(int drive, int side, int sector_index,int c, int h, int r, int n, int filler);
+            public void format_sector(int drive, int side, int sector_index,int c, int h, int r, int n, int filler);
     };
+    
+    public static abstract interface i_index_pulse_callback {
+
+        public abstract void handler(int id);
+    }
+    
+    public static abstract interface i_ready_state_change_callback {
+        public abstract void handler(int drive, int state);
+    }
 
     public static class floppy_drive
     {
@@ -89,21 +109,62 @@ public interface flopdrvH {
             public int current_track;
 
             /* index pulse timer */
-            public timer_entry index_timer;
+            public timer_entry	index_timer;
             /* index pulse callback */
-            public timer_callback index_pulse_callback;
+            public i_index_pulse_callback index_pulse_callback=new i_index_pulse_callback() {
+                public void handler(int id) {
+                    // nothing to do
+                }
+            };
 
+            public i_ready_state_change_callback ready_state_change_callback=new i_ready_state_change_callback() {
+                public void handler(int drive, int state) {
+                    // nothing to do
+                }
+            };
+            
             /* physical real drive unit */
             public int fdd_unit;
 
-            public char[] id_buffer= new char[4];
+            public char[] id_buffer=new char[4];
 
             public int id_index;
             public chrn_id[] ids=new chrn_id[32];
 
-            public floppy_interface f_interface;
+            public floppy_interface f_interface = new floppy_interface() {
+                public void seek_callback(int drive, int physical_track) {
+                    // nothing to do
+                }
+
+                public int get_sectors_per_track(int drive, int physical_side) {
+                    // nothing to do
+                    return 0;
+                }
+
+                public void get_id_callback(int drive, chrn_id id_chrn, int id_index, int physical_side) {
+                    // nothing to do
+                }
+
+                public void read_sector_data_into_buffer(int drive, int side, int data_id, char[] buf, int length) {
+                    // nothing to do
+                }
+
+                public void write_sector_data_from_buffer(int drive, int side, int data_id, char[] buf, int length, int ddam) {
+                    // nothing to do
+                }
+
+                public void read_track_data_info_buffer(int drive, int side, char[] ptr, int length) {
+                    // nothing to do
+                }
+
+                public void format_sector(int drive, int side, int sector_index, int c, int h, int r, int n, int filler) {
+                    // nothing to do
+                }
+            };
     };
 
+    /* a callback which will be executed if the ready state of the drive changes e.g. not ready.ready, ready.not ready */
+    /*TODO*///void	floppy_drive_set_ready_state_change_callback(int drive, void (*callback)(int drive, int state));
 
     /* floppy drive types */
     public static enum floppy_type
@@ -112,42 +173,42 @@ public interface flopdrvH {
             FLOPPY_DRIVE_DS_80
     };
 
-    //void	floppy_drive_set_index_pulse_callback(int drive, void (*callback)(int id));
+    /*TODO*///void	floppy_drive_set_index_pulse_callback(int drive, void (*callback)(int id));
 
     /* set flag state */
-    //int floppy_drive_get_flag_state(int drive, int flag);
+    /*TODO*///int floppy_drive_get_flag_state(int drive, int flag);
     /* get flag state */
-    //void floppy_drive_set_flag_state(int drive, int flag, int state);
+    /*TODO*///void floppy_drive_set_flag_state(int drive, int flag, int state);
     /* get current physical track drive is on */
-    //int floppy_drive_get_current_track(int drive);
+    /*TODO*///int floppy_drive_get_current_track(int drive);
 
-    //void	floppy_drive_set_geometry(int,floppy_type type);
+    /*TODO*///void	floppy_drive_set_geometry(int,floppy_type type);
+    /*TODO*///void	floppy_drive_set_geometry_absolute(int id, int tracks, int sides);
 
-    //void	floppy_drives_init(void);
-    //void	floppy_drives_exit(void);
 
     /* get next id from track, 1 if got a id, 0 if no id was got */
-    //int floppy_drive_get_next_id(int drive, int side, chrn_id *);
+    /*TODO*///int floppy_drive_get_next_id(int drive, int side, chrn_id *);
     /* set ready state of drive. If flag == 1, set ready state only if drive present,
     disk is in drive, and motor is on. Otherwise set ready state to the state passed */
-    //void	floppy_drive_set_ready_state(int drive, int state, int flag);
+    /*TODO*///void	floppy_drive_set_ready_state(int drive, int state, int flag);
 
-    //void	floppy_drive_set_motor_state(int drive, int state);
+    /*TODO*///void	floppy_drive_set_motor_state(int drive, int state);
 
     /* set interface for disk image functions */
-    //void	floppy_drive_set_disk_image_interface(int, floppy_interface *);
+    /*TODO*///void	floppy_drive_set_disk_image_interface(int, floppy_interface *);
 
     /* set real fdd unit */
-    //void	floppy_drive_set_real_fdd_unit(int, unsigned char);
+    /*TODO*///void	floppy_drive_set_real_fdd_unit(int, unsigned char);
 
     /* seek up or down */
-    //void floppy_drive_seek(int drive, signed int signed_tracks);
+    /*TODO*///void floppy_drive_seek(int drive, signed int signed_tracks);
 
 
-    //void	floppy_drive_read_track_data_info_buffer(int drive, int side, char *ptr, int *length );
-    //void	floppy_drive_format_sector(int drive, int side, int sector_index, int c, int h, int r, int n, int filler);
-    //void    floppy_drive_read_sector_data(int drive, int side, int index1, char *pBuffer, int length);
-    //void    floppy_drive_write_sector_data(int drive, int side, int index1, char *pBuffer, int length, int ddam);
-    //int		floppy_drive_get_datarate_in_us(DENSITY density);
+    /*TODO*///void	floppy_drive_read_track_data_info_buffer(int drive, int side, char *ptr, int *length );
+    /*TODO*///void	floppy_drive_format_sector(int drive, int side, int sector_index, int c, int h, int r, int n, int filler);
+    /*TODO*///void    floppy_drive_read_sector_data(int drive, int side, int index1, char *pBuffer, int length);
+    /*TODO*///void    floppy_drive_write_sector_data(int drive, int side, int index1, char *pBuffer, int length, int ddam);
+    /*TODO*///int		floppy_drive_get_datarate_in_us(DENSITY density);
 
-};
+
+}

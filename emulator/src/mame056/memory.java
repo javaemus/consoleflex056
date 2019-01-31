@@ -372,12 +372,31 @@ public class memory {
     //	memory base
     //-------------------------------------------------*/
 
+    public static opbase_handlerPtr empty_handler = new opbase_handlerPtr() {
+        public int handler(int address) {
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return 1;
+        }
+    };
+    
     public static opbase_handlerPtr memory_set_opbase_handler(int cpunum, opbase_handlerPtr function)
     {
-    	opbase_handlerPtr old = cpudata[cpunum].opbase;
+    	/*System.out.println("memory_set_opbase_handler");
+        System.out.println(cpudata);
+        System.out.println(cpunum);
+        System.out.println(cpudata[cpunum]);
+        System.out.println(cpudata[1]);*/
+        
+        if (cpudata[cpunum] == null){
+            cpudata[cpunum] = new cpu_data();//empty_handler;
+            cpudata[cpunum].opbase = function;
+        }
+        
+        opbase_handlerPtr old = cpudata[cpunum].opbase;
     	cpudata[cpunum].opbase = function;
     	if (cpunum == cpu_getactivecpu())
     		opbasefunc = function;
+        
     	return old;
     }
 

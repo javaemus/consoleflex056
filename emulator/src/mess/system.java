@@ -322,7 +322,7 @@ public class system {
         //	DRIVER( spec128s )	/* Spectrum 									  */
         /*TODO*///driver_spec128s,
         //	DRIVER( specpls2 )	/* Spectrum 									  */
-        /*TODO*///driver_specpls2,
+        driver_specpls2,
         //	DRIVER( specpl2a )	/* Spectrum 									  */
         /*TODO*///driver_specpl2a,
         //	DRIVER( specp2fr )	/*												  */
@@ -330,7 +330,7 @@ public class system {
         //	DRIVER( specp2sp )	/*												  */
         /*TODO*///driver_specp2sp,
         //	DRIVER( specpls3 )	/* Spectrum Plus 3								  */
-        /*TODO*///driver_specpls3,
+        driver_specpls3,
         //	DRIVER( specp3sp )	/*												  */
         /*TODO*///driver_specp3sp,
         //	DRIVER( specpl3e )	/*												  */
@@ -340,7 +340,7 @@ public class system {
         //	DRIVER( scorpio )	/*
         /*TODO*///driver_scorpion,
         //	DRIVER( pentagon )	/*
-        driver_pentagon,
+        //driver_pentagon,
         /*TODO*///#endif
         /*TODO*///
         /*TODO*///	/* ASCII & MICROSOFT */

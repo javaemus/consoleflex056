@@ -79,10 +79,10 @@ public class waveH {
         public int display;
         /*TODO*///	int (*fill_wave)(INT16 *buffer, int length, UINT8 *bytes);
         public int smpfreq;
-        /*TODO*///    int header_samples;
-/*TODO*///    int trailer_samples;
-/*TODO*///    int chunk_size;
-/*TODO*///	int chunk_samples;
+        public int header_samples;
+        public int trailer_samples;
+        public int chunk_size;
+        public int chunk_samples;
     };
     /*TODO*///
 /*TODO*////*****************************************************************************

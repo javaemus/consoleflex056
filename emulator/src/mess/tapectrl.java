@@ -136,6 +136,7 @@ public class tapectrl {
         }
 
         if (input_ui_pressed(IPT_UI_SELECT) != 0) {
+            System.out.println("Selected!!!!");
             if (sel == total - 1) {
                 sel = -1;
             } else {
@@ -145,15 +146,18 @@ public class tapectrl {
                         id = ++id % device_count(IO_CASSETTE);
                         break;
                     case 2:
+                        System.out.println("2");
                         if ((status & 1) == 0) {
                             device_seek(IO_CASSETTE, id, 0, SEEK_SET);
                         }
                         device_status(IO_CASSETTE, id, status & ~1);
                         break;
                     case 3:
+                        System.out.println("3");
                         device_status(IO_CASSETTE, id, status | 1);
                         break;
                     case 4:
+                        System.out.println("4");
                         device_seek(IO_CASSETTE, id, -11025, SEEK_CUR);
                         break;
                     case 5:

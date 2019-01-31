@@ -17,7 +17,10 @@ public class driver {
         driver_colecoa,
         driver_spectrum,
         driver_spec128,
-        driver_pentagon,
+        //driver_pentagon,
+        driver_specpls2,
+        driver_specpls3,
+        
         null
     };
 }

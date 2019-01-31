@@ -48,6 +48,8 @@ import static mame056.cpuexecH.Z80_NMI_INT;
 import static mame056.cpuintrfH.*;
 import static mame056.memoryH.opbase_handlerPtr;
 import static mame056.memory.*;
+import static mess.cassetteH.cassette_args;
+import static mess.cassette.*;
 import static mess.device.device_close;
 import static mess.deviceH.IO_CARTSLOT;
 import static mess.deviceH.IO_CASSETTE;
@@ -277,6 +279,7 @@ public class spectrum
 		int lo, hi, a_reg;
 		int load_addr, return_addr, af_reg, de_reg, sp_reg;
 		
+                //System.out.println("spectrum_tape_opbaseoverride");
 	
 	/*        logerror("PC=%02x\n", address); */
 	
@@ -1030,48 +1033,51 @@ public class spectrum
 	
 	public static io_initPtr spectrum_cassette_init = new io_initPtr() {
             public int handler(int id) {
-		/*TODO*///		Object file;
-/*TODO*///		cassette_args args;
-/*TODO*///	
-/*TODO*///		if ((device_filename(IO_CASSETTE, id) != null) &&(stricmp(device_filename(IO_CASSETTE, id).substring(device_filename(IO_CASSETTE, id).length()-4), ".tap")==0))
-/*TODO*///		{
-/*TODO*///			int datasize;
-/*TODO*///			UBytePtr data;
-/*TODO*///	
-/*TODO*///			file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_R, OSD_FOPEN_READ);
-/*TODO*///			logerror(".TAP file found\n");
-/*TODO*///			if (file != null)
-/*TODO*///				datasize = osd_fsize(file);
-/*TODO*///			else
-/*TODO*///				datasize = 0;
-/*TODO*///			if (datasize != 0)
-/*TODO*///			{
-/*TODO*///				data = new UBytePtr(datasize);
-/*TODO*///	
-/*TODO*///				if (data != null)
-/*TODO*///				{
-/*TODO*///					pSnapshotData = data;
-/*TODO*///					SnapshotDataSize = datasize;
-/*TODO*///	
-/*TODO*///					osd_fread(file, data, datasize);
-/*TODO*///					osd_fclose(file);
-/*TODO*///	
-/*TODO*///					/* Always reset tape position when loading new tapes */
-/*TODO*///					TapePosition = 0;
-/*TODO*///					memory_set_opbase_handler(0, spectrum_tape_opbaseoverride);
-/*TODO*///					spectrum_snapshot_type = SPECTRUM_TAPEFILE_TAP;
-/*TODO*///					logerror(".TAP file successfully loaded\n");
-/*TODO*///					return INIT_PASS;
-/*TODO*///				}
-/*TODO*///			}
-/*TODO*///			osd_fclose(file);
-/*TODO*///			return INIT_FAIL;
-/*TODO*///		}
-/*TODO*///	
-/*TODO*///		memset(args, 0, sizeof(args));
-/*TODO*///		args.create_smpfreq = 22050;	/* maybe 11025 Hz would be sufficient? */
-/*TODO*///		return cassette_init(id, args);
-            return INIT_PASS;
+		Object file;
+                cassette_args args;
+	
+		if ((device_filename(IO_CASSETTE, id) != null) &&(stricmp(device_filename(IO_CASSETTE, id).substring(device_filename(IO_CASSETTE, id).length()-4), ".tap")==0))
+		{
+			int datasize;
+			UBytePtr data;
+
+			file = image_fopen(IO_CASSETTE, id, OSD_FILETYPE_IMAGE_R, 0);
+			logerror(".TAP file found\n");
+			if (file != null)
+				datasize = osd_fsize(file);
+			else
+				datasize = 0;
+			if (datasize != 0)
+			{
+				data = new UBytePtr(datasize);
+	
+				if (data != null)
+				{
+					pSnapshotData = data;
+					SnapshotDataSize = datasize;
+	
+					osd_fread(file, data, datasize);
+					osd_fclose(file);
+	
+					/* Always reset tape position when loading new tapes */
+					TapePosition = 0;
+					memory_set_opbase_handler(0, spectrum_tape_opbaseoverride);
+					spectrum_snapshot_type = SPECTRUM_TAPEFILE_TAP;
+					logerror(".TAP file successfully loaded\n");
+                                        System.out.println(".TAP file successfully loaded");
+					return INIT_PASS;
+				}
+			}
+			osd_fclose(file);
+                        System.out.println("Exit");
+			return INIT_FAIL;
+		}
+	
+		//memset(args, 0, sizeof(args));
+                args = new cassette_args();
+		args.create_smpfreq = 22050;	/* maybe 11025 Hz would be sufficient? */
+		return cassette_init(id, args);
+            //return INIT_PASS;
 	}};
 	
 	public static io_exitPtr spectrum_cassette_exit = new io_exitPtr() {

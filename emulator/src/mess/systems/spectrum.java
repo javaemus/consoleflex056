@@ -138,9 +138,14 @@ import static mess.deviceH.IO_END;
 import static mess.deviceH.IO_FLOPPY;
 import static mess.deviceH.IO_QUICKLOAD;
 import static mess.deviceH.IO_SNAPSHOT;
+import static mess.includes.flopdrvH.*;
 import static mess.includes.flopdrvH.floppy_type.FLOPPY_DRIVE_SS_40;
+import static mess.includes.nec765H.*;
 import static mess.includes.spectrumH.*;
 import static mess.includes.spectrumH.TIMEX_CART_TYPE.TIMEX_CART_DOCK;
+import static mess.machine.dsk.dsk_floppy_exit;
+import static mess.machine.dsk.dsk_floppy_load;
+import static mess.machine.nec765.*;
 import mess.messH.IODevice;
 import static mess.messH.IO_RESET_ALL;
 import static mess.messH.IPT_KEYBOARD;
@@ -151,6 +156,16 @@ import sound.speakerH.Speaker_interface;
 import static mess.machine.spectrum.*;
 import static mess.messH.IO_RESET_NONE;
 import static mess.vidhrdw.spectrum.*;
+import static sound.wave.wave_close;
+import static sound.wave.wave_info;
+import static sound.wave.wave_input;
+import static sound.wave.wave_input_chunk;
+import static sound.wave.wave_open;
+import static sound.wave.wave_output;
+import static sound.wave.wave_output_chunk;
+import static sound.wave.wave_seek;
+import static sound.wave.wave_status;
+import static sound.wave.wave_tell;
 
 public class spectrum
 {
@@ -636,11 +651,16 @@ public class spectrum
 	public static int spectrum_plus3_port_1ffd_data = -1;
 	
 	
-	/*TODO*///static nec765_interface spectrum_plus3_nec765_interface =
-	/*TODO*///{
-	/*TODO*///		null,
-	/*TODO*///		null
-	/*TODO*///};
+	static nec765_interface spectrum_plus3_nec765_interface = new nec765_interface()
+	{
+            public void interrupt(int state) {
+                // nothing to do
+            }
+
+            public void dma_drq(int state, int read_write) {
+                // nothing to do
+            }
+	};
 	
 	
 	static int spectrum_plus3_memory_selections[]=
@@ -653,8 +673,8 @@ public class spectrum
 	
 	static WriteHandlerPtr spectrum_plus3_port_3ffd_w = new WriteHandlerPtr() {
             public void handler(int offset, int data) {
-                /*TODO*///if ((~readinputport(16) & 0x20) != 0)
-                /*TODO*///    nec765_data_w(0,data);
+                if ((~readinputport(16) & 0x20) != 0)
+                    nec765_data_w.handler(0,data);
             }
         };
 	
@@ -663,8 +683,8 @@ public class spectrum
                 if ((readinputport(16) & 0x20) != 0)
                     return 0xff;
                 else
-                    return 0xff;
-                    /*TODO*///return nec765_data_r(0);
+                    //return 0xff;
+                    return nec765_data_r.handler(0);
             }
         };
 	
@@ -673,8 +693,8 @@ public class spectrum
                 if ((readinputport(16) & 0x20) != 0)
                     return 0xff;
                 else
-                    return 0xff;
-                    /*TODO*///return nec765_status_r(0);
+                    //return 0xff;
+                    return nec765_status_r.handler(0);
             }
         };
 	
@@ -903,7 +923,7 @@ public class spectrum
 			memory_set_bankhandler_w(7, 0, MWA_BANK7);
 			memory_set_bankhandler_w(8, 0, MWA_BANK8);
 	
-			/*TODO*///nec765_init(spectrum_plus3_nec765_interface, NEC765A);
+			nec765_init(spectrum_plus3_nec765_interface, NEC765A);
 	
 			floppy_drive_set_geometry(0, FLOPPY_DRIVE_SS_40);
 			floppy_drive_set_geometry(1, FLOPPY_DRIVE_SS_40);
@@ -919,7 +939,7 @@ public class spectrum
 	
 	public static StopMachinePtr spectrum_plus3_exit_machine = new StopMachinePtr() {
             public void handler() {
-                /*TODO*///nec765_stop();
+                nec765_stop();
 		spectrum_free_ram();
             }
         };
@@ -2847,20 +2867,20 @@ public class spectrum
                                 IO_CASSETTE, 
                                 1,
                                 "wav\0tap\0", 
-                                IO_RESET_ALL, 
+                                IO_RESET_NONE, 
                                 null,
                                 spectrum_cassette_init, 
                                 null, //spectrum_cassette_exit
-                                null,				/* info */
-                                null,				/* open */
-                                null,				/* close */
-                                null,				/* status */
-                                null,				/* seek */
-                                null,                           /* tell */
-                                null,				/* input */
-                                null,				/* output */
-                                null,				/* input_chunk */
-                                null				/* output_chunk */),
+                                wave_info,			/* info */						
+                wave_open,			/* open */						
+                wave_close, 		/* close */ 					
+                wave_status,		/* status */					
+                wave_seek,			/* seek */						
+                wave_tell,			/* tell */						
+                wave_input, 		/* input */ 					
+                wave_output,		/* output */					
+                wave_input_chunk,	/* input_chunk */				
+                wave_output_chunk	/* output_chunk */),
 		new IODevice(
 			IO_CARTSLOT,		/* type */
 			1,					/* count */
@@ -2928,12 +2948,12 @@ public class spectrum
 			"dsk\0",            /* file extensions */
 			IO_RESET_NONE,		/* reset if file changed */
 			null,
-			null, /*TODO*///dsk_floppy_load,	/* init */
-			null, /*TODO*///dsk_floppy_exit,	/* exit */
+			dsk_floppy_load,	/* init */
+			dsk_floppy_exit,	/* exit */
 			null,				/* info */
 			null,				/* open */
 			null,				/* close */
-	                floppy_status,                           /* status */
+	                floppy_status,                  /* status */
 			null,				/* seek */
                         null,                           /* tell */
 			null,				/* input */
@@ -3049,9 +3069,10 @@ public class spectrum
         public static GameDriver driver_spec128 = new GameDriver("1986", "spec128", "spectrum.java", rom_spec128, null, machine_driver_spectrum_128, input_ports_spectrum, null, io_spectrum, "Sinclair Research", "ZX Spectrum 128");
 	//COMPX( 1985, spec128s, spec128,  spectrum_128,	 spectrum, 0,			 "Sinclair Research",    "ZX Spectrum 128 (Spain)" ,GAME_NOT_WORKING)
 	//COMPX( 1986, specpls2, spec128,  spectrum_128,	 spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +2" ,GAME_NOT_WORKING)
-	//COMPX( 1987, specpl2a, spec128,  spectrum_plus3, spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +2a" ,GAME_NOT_WORKING)
+	public static GameDriver driver_specpls2 = new GameDriver("1986", "specpls2", "spectrum.java", rom_specpls2, null, machine_driver_spectrum_128, input_ports_spectrum, null, io_spectrum, "Amstrad plc", "ZX Spectrum +2");
+        //COMPX( 1987, specpl2a, spec128,  spectrum_plus3, spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +2a" ,GAME_NOT_WORKING)
 	//COMPX( 1987, specpls3, spec128,  spectrum_plus3, spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +3" ,GAME_NOT_WORKING)
-	
+	public static GameDriver driver_specpls3 = new GameDriver("1987", "specpls3", "spectrum.java", rom_specpls3, null, machine_driver_spectrum_plus3, input_ports_spectrum, null, io_specpls3, "Amstrad plc", "ZX Spectrum +3");
 	//COMPX( 1986, specp2fr, spec128,  spectrum_128,	 spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +2 (France)" ,GAME_NOT_WORKING)
 	//COMPX( 1986, specp2sp, spec128,  spectrum_128,	 spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +2 (Spain)" ,GAME_NOT_WORKING)
 	//COMPX( 1987, specp3sp, spec128,  spectrum_plus3, spectrum, 0,			 "Amstrad plc",          "ZX Spectrum +3 (Spain)" ,GAME_NOT_WORKING)
